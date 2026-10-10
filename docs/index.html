@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>simon-app</title>
+<link rel="icon" href="logo.svg" type="image/svg+xml">
+<style>
+  :root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--mute:#8a90a2;--line:#e4e6ee;--accent:#6366f1}
+  @media(prefers-color-scheme:dark){:root{--bg:#12141c;--card:#1b1e29;--ink:#eceef5;--mute:#8a90a2;--line:#2a2e3d}}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  input,button{font:inherit;color:inherit} input:not([type=checkbox]){padding:.6rem .75rem;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:.55rem .9rem}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .row{display:flex;gap:.5rem;margin:.5rem 0;align-items:center} .row input:not([type=checkbox]){flex:1;min-width:0}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:.8rem 0}
+  ul{list-style:none;padding:0;margin:0} li{display:flex;gap:.5rem;align-items:center;padding:.45rem 0}
+  li.done span{text-decoration:line-through;color:var(--mute)} small{color:var(--mute)} .err{color:#ef4444}
+  .code{font:700 1.4rem ui-monospace,monospace;letter-spacing:.06em;color:var(--accent);margin:.3rem 0}
+
+  /* Inlogscherm */
+  .login{max-width:420px;margin:0 auto;padding:2rem 1rem} .login .logo{text-align:center} .login .logo img{width:84px}
+  .tabs{display:flex;gap:.4rem;margin:1rem 0 0} .tabs button{flex:1} .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Telefoon-homescherm */
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    background:linear-gradient(160deg,#4f46e5 0%,#7c3aed 45%,#06b6d4 100%);color:#fff}
+  .status{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1.4rem .2rem;font-weight:600;font-size:.95rem}
+  .status button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:99px;padding:.3rem .8rem;font-size:.8rem}
+  .hello{padding:.4rem 1.4rem 0;opacity:.85;font-size:.9rem}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem .4rem;padding:1.5rem 1rem;flex:1;align-content:start}
+  .app{display:flex;flex-direction:column;align-items:center;gap:.35rem;background:none;border:0;color:#fff;padding:0;font-size:.72rem;position:relative}
+  .ico{width:58px;height:58px;border-radius:15px;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+  .ico svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .badge{position:absolute;top:-6px;right:4px;background:#ef4444;color:#fff;font-size:.7rem;font-weight:700;border-radius:99px;min-width:20px;padding:0 .35rem;line-height:20px;text-align:center}
+  .dock{display:flex;justify-content:center;gap:1.6rem;margin:0 1rem 1rem;padding:.9rem;border-radius:26px;background:rgba(255,255,255,.22);backdrop-filter:blur(14px)}
+
+  /* Geopende app */
+  .appview{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  .appbar{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0}
+  .appbar .ico{width:32px;height:32px;border-radius:9px;box-shadow:none} .appbar .ico svg{width:18px;height:18px}
+  .appbar b{flex:1} .appview main{padding:0 1rem 2rem}
+  .home{display:block;margin:0 auto 1rem;width:130px;height:5px;border-radius:9px;background:var(--mute);opacity:.5;border:0;padding:0}
+  .center{text-align:center;padding:3rem 1rem}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut }
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy }
+  from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { firebaseConfig, ADMIN_EMAIL } from './firebase-config.js';
+
+const fb = initializeApp(firebaseConfig);
+const auth = getAuth(fb);
+const db = getFirestore(fb);
+
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const svg = (d) => `<svg viewBox="0 0 24 24">${d}</svg>`;
+const META = {
+  installer: { n: 'App Installer', core: true, c: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', i: svg('<path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>') },
+  notifications: { n: 'Notificaties', core: true, c: 'linear-gradient(135deg,#f97316,#ef4444)', i: svg('<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>') },
+  lijst: { n: 'Lijst', c: 'linear-gradient(135deg,#22c55e,#15803d)', i: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>') },
+  join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
+  notify: { n: 'Notificatie-maker', admin: true, locked: true, c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
+};
+const ico = (id) => `<span class="ico" style="background:${META[id].c}">${META[id].i}</span>`;
+
+const norm = (c) => String(c || '').trim().toUpperCase();
+const sha = async (s) => [...new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s)))].map((b) => b.toString(16).padStart(2, '0')).join('');
+// Een inlogcode wordt het wachtwoord; het e-mailadres wordt van de code afgeleid.
+const emailFor = async (code) => `u${(await sha('simon-app:' + norm(code))).slice(0, 24)}@simon-app.invalid`;
+const newCode = () => { const h = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase(); return `${h.slice(0, 5)}-${h.slice(5, 10)}-${h.slice(10, 16)}`; };
+const nice = (e) => ({ 'auth/invalid-credential': 'Ongeldige code', 'auth/too-many-requests': 'Te veel pogingen, probeer later opnieuw', 'auth/network-request-failed': 'Geen verbinding', 'permission-denied': 'Geen toegang' }[e.code] || e.message || 'Er ging iets mis');
+
+let me = null;      // { uid, name, admin, status, apps, lastRead }
+let unlockedUntil = 0;
+
+const logout = async () => { await signOut(auth); location.reload(); };
+
+onAuthStateChanged(auth, async (u) => {
+  if (signupInFlight) return;
+  if (!u) { me = null; return loginView(); }
+  try { await boot(u); } catch (e) { $('#app').innerHTML = `<div class="login"><div class="box center"><h3>Er ging iets mis</h3><p class="err">${esc(nice(e))}</p><button id="out">Uitloggen</button></div></div>`; $('#out').onclick = logout; }
+});
+
+async function boot(u) {
+  const admin = u.providerData.some((p) => p.providerId === 'google.com') && u.emailVerified && u.email === ADMIN_EMAIL;
+  const ref = doc(db, 'users', u.uid);
+  let snap = await getDoc(ref);
+  if (admin && !snap.exists()) { await setDoc(ref, { name: 'Simon', status: 'approved', created: Date.now(), apps: ['lijst', 'join', 'notify'], lastRead: 0 }); snap = await getDoc(ref); }
+  if (!snap.exists()) { me = { uid: u.uid, name: '', status: 'denied' }; return waitView(); }
+  const d = snap.data();
+  me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0 };
+  if (me.status !== 'approved') return waitView();
+  await homeView();
+}
+
+/* ---------- Inloggen / account aanmaken ---------- */
+function loginView(mode = 'login') {
+  $('#app').innerHTML = `<div class="login">
+    <div class="logo"><img src="logo.svg" alt=""><h1>simon-app</h1></div>
+    <div class="tabs"><button data-m="login" class="${mode === 'login' ? 'on' : ''}">Inloggen</button><button data-m="signup" class="${mode === 'signup' ? 'on' : ''}">Account aanmaken</button></div>
+    <div class="box">${mode === 'login' ? `
+      <div class="row"><input id="code" placeholder="Inlogcode" autocomplete="off"><button class="pri" id="go">Inloggen</button></div>
+      <div id="e" class="err"></div>
+      <p style="text-align:center;margin:.8rem 0 0"><small><a href="#" id="g">Admin? Inloggen met Google</a></small></p>` : `
+      <p>Maak een account aan. Je krijgt een eigen inlogcode en Simon moet je daarna goedkeuren voordat je erin kan.</p>
+      <div class="row"><input id="name" placeholder="Je naam"><button class="pri" id="go">Aanmaken</button></div>
+      <div id="e" class="err"></div>`}</div></div>`;
+  document.querySelectorAll('[data-m]').forEach((b) => b.onclick = () => loginView(b.dataset.m));
+  const go = async () => {
+    $('#e').textContent = '';
+    try {
+      if (mode === 'login') await signInWithEmailAndPassword(auth, await emailFor($('#code').value), norm($('#code').value));
+      else await signup($('#name').value);
+    } catch (e) { $('#e').textContent = nice(e); }
+  };
+  $('#go').onclick = go;
+  $('#app').querySelector('input').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  if ($('#g')) $('#g').onclick = async (e) => { e.preventDefault(); try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { $('#e').textContent = nice(err); } };
+}
+
+async function signup(name) {
+  name = String(name || '').trim().slice(0, 60);
+  if (!name) throw new Error('Naam is verplicht');
+  const code = newCode();
+  signupInFlight = true;
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, await emailFor(code), norm(code));
+    await setDoc(doc(db, 'users', cred.user.uid), { name, status: 'pending', created: Date.now(), apps: [], lastRead: 0 });
+  } finally { signupInFlight = false; }
+  codeView(name, code);
+}
+let signupInFlight = false;
+
+function codeView(name, code) {
+  $('#app').innerHTML = `<div class="login"><div class="logo"><img src="logo.svg" alt=""></div>
+    <div class="box"><h3>Account aangemaakt, ${esc(name)}!</h3>
+      <p>Dit is jouw inlogcode:</p><div class="code">${esc(code)}</div>
+      <p><b>Bewaar hem goed</b>, hij wordt maar één keer getoond. Je verzoek staat nu bij Simon.</p>
+      <button class="pri" id="ok">Ik heb hem bewaard</button></div></div>`;
+  $('#ok').onclick = () => location.reload();
+}
+
+function waitView() {
+  const denied = me.status === 'denied' || me.status === 'removed';
+  $('#app').innerHTML = `<div class="login"><div class="logo"><img src="logo.svg" alt=""></div>
+    <div class="box center"><h3>${denied ? 'Geen toegang' : 'Wachten op goedkeuring'}</h3>
+    <p>${denied ? 'Simon heeft je verzoek niet goedgekeurd.' : `Hoi ${esc(me.name)}, Simon moet je join request nog goedkeuren.`}</p>
+    <div class="row" style="justify-content:center">${denied ? '' : '<button id="re">Opnieuw checken</button>'}<button id="out">Uitloggen</button></div></div></div>`;
+  $('#out').onclick = logout;
+  if ($('#re')) $('#re').onclick = () => boot(auth.currentUser);
+}
+
+/* ---------- Notificaties ophalen ---------- */
+async function myNotifications() {
+  const col = collection(db, 'notifications');
+  const snaps = me.admin ? [await getDocs(query(col, orderBy('created', 'desc')))]
+    : await Promise.all([getDocs(query(col, where('to', '==', 'all'))), getDocs(query(col, where('to', '==', me.uid)))]);
+  const seen = new Map();
+  snaps.forEach((s) => s.forEach((d) => seen.set(d.id, { id: d.id, ...d.data() })));
+  return [...seen.values()].sort((a, b) => b.created - a.created).slice(0, 100);
+}
+
+/* ---------- Homescherm ---------- */
+async function homeView() {
+  const ids = Object.keys(META).filter((id) => !META[id].admin || me.admin);
+  const installed = (id) => META[id].core || me.apps.includes(id);
+  const [notes, pend] = await Promise.all([
+    myNotifications().catch(() => []),
+    me.admin ? getDocs(query(collection(db, 'users'), where('status', '==', 'pending'))).then((s) => s.size).catch(() => 0) : 0,
+  ]);
+  const unread = notes.filter((n) => n.created > me.lastRead).length;
+  const badge = { notifications: unread, join: pend };
+  const tile = (id) => `<button class="app" data-app="${id}">${ico(id)}${badge[id] ? `<span class="badge">${badge[id]}</span>` : ''}${esc(META[id].n)}</button>`;
+  const mine = ids.filter(installed);
+  const time = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  $('#app').innerHTML = `<div class="phone">
+    <div class="status"><span>${time}</span><button id="out">Uitloggen</button></div>
+    <div class="hello">Hoi ${esc(me.name)} 👋</div>
+    <div class="grid">${mine.filter((i) => !META[i].core).map(tile).join('') || '<small style="grid-column:1/-1;text-align:center">Geen apps. Open de App Installer.</small>'}</div>
+    <div class="dock">${mine.filter((i) => META[i].core).map(tile).join('')}</div></div>`;
+  $('#out').onclick = logout;
+  document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+}
+
+async function openApp(id) {
+  $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
+    <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
+  $('#close').onclick = homeView; $('#home').onclick = homeView;
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView })[id](); }
+  catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
+}
+
+/* ---------- App Installer ---------- */
+async function installerView() {
+  const list = Object.keys(META).filter((id) => !META[id].core && (!META[id].admin || me.admin));
+  $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><ul>${list.map((id) => { const on = me.apps.includes(id); return `
+    <li>${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}${META[id].locked ? ' 🔒' : ''}</span>
+    <button class="${on ? '' : 'pri'}" data-i="${id}">${on ? 'Verwijderen' : 'Installeren'}</button></li>`; }).join('')}</ul>
+    <small>App Installer en Notificaties zitten er altijd bij.</small></div>`;
+  document.querySelectorAll('[data-i]').forEach((b) => b.onclick = async () => {
+    const id = b.dataset.i;
+    me.apps = me.apps.includes(id) ? me.apps.filter((x) => x !== id) : [...me.apps, id];
+    await updateDoc(doc(db, 'users', me.uid), { apps: me.apps });
+    installerView();
+  });
+}
+
+/* ---------- Notificaties ---------- */
+async function notificationsView() {
+  const list = await myNotifications();
+  const last = me.lastRead;
+  $('#view').innerHTML = `<div class="box"><h3>Notificaties</h3>${list.length ? `<ul>${list.map((n) => `
+    <li style="${n.created > last ? 'font-weight:600' : 'opacity:.55'}"><span style="flex:1">${esc(n.text)}<br><small>${new Date(n.created).toLocaleString('nl-NL')}${me.admin ? ` · aan ${n.to === 'all' ? 'iedereen' : esc(n.toName || n.to)}` : ''}</small></span></li>`).join('')}</ul>` : '<small>Nog niets.</small>'}</div>`;
+  me.lastRead = Date.now();
+  await updateDoc(doc(db, 'users', me.uid), { lastRead: me.lastRead });
+}
+
+/* ---------- Lijst ---------- */
+async function lijstView() {
+  const snap = await getDocs(query(collection(db, 'items'), orderBy('created', 'desc')));
+  const items = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  $('#view').innerHTML = `<div class="box"><h3>Gedeelde lijst</h3>
+    <div class="row"><input id="txt" placeholder="Nieuw item"><button class="pri" id="add">Toevoegen</button></div>
+    <ul>${items.map((i) => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" ${i.done ? 'checked' : ''} data-t="${i.id}">
+      <span style="flex:1">${esc(i.text)} <small>${esc(i.by)}</small></span><button data-d="${i.id}">✕</button></li>`).join('')}</ul></div>`;
+  const add = async () => {
+    const text = $('#txt').value.trim().slice(0, 500);
+    if (text) { await addDoc(collection(db, 'items'), { text, done: false, by: me.name, uid: me.uid, created: Date.now() }); lijstView(); }
+  };
+  $('#add').onclick = add; $('#txt').onkeydown = (e) => { if (e.key === 'Enter') add(); };
+  document.querySelectorAll('[data-t]').forEach((e) => e.onchange = async () => { await updateDoc(doc(db, 'items', e.dataset.t), { done: e.checked }); lijstView(); });
+  document.querySelectorAll('[data-d]').forEach((e) => e.onclick = async () => { await deleteDoc(doc(db, 'items', e.dataset.d)); lijstView(); });
+}
+
+/* ---------- Join requests (admin) ---------- */
+async function joinView() {
+  const snap = await getDocs(collection(db, 'users'));
+  const users = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((u) => u.id !== me.uid);
+  const pending = users.filter((u) => u.status === 'pending').sort((a, b) => a.created - b.created);
+  const members = users.filter((u) => u.status === 'approved');
+  const set = async (id, status, welcome) => {
+    await updateDoc(doc(db, 'users', id), { status });
+    if (welcome) await addDoc(collection(db, 'notifications'), { to: id, toName: users.find((u) => u.id === id)?.name, text: 'Welkom! Je join request is goedgekeurd.', created: Date.now() });
+    joinView();
+  };
+  $('#view').innerHTML = `<div class="box"><h3>Join requests</h3>
+    ${pending.length ? pending.map((u) => `<div class="row"><span style="flex:1">${esc(u.name)}<br><small>${new Date(u.created).toLocaleString('nl-NL')}</small></span>
+      <button class="pri" data-a="${u.id}">Goedkeuren</button><button data-n="${u.id}">Weigeren</button></div>`).join('') : '<small>Geen openstaande verzoeken.</small>'}</div>
+    <div class="box"><h3>Leden</h3>${members.length ? members.map((u) => `<div class="row"><span style="flex:1">${esc(u.name)}</span><button data-r="${u.id}">Verwijderen</button></div>`).join('') : '<small>Nog geen leden.</small>'}</div>`;
+  document.querySelectorAll('[data-a]').forEach((e) => e.onclick = () => set(e.dataset.a, 'approved', true));
+  document.querySelectorAll('[data-n]').forEach((e) => e.onclick = () => set(e.dataset.n, 'denied'));
+  document.querySelectorAll('[data-r]').forEach((e) => e.onclick = () => confirm('Dit lid verwijderen?') && set(e.dataset.r, 'removed'));
+}
+
+/* ---------- Notificatie-maker (admin, vergrendeld) ---------- */
+async function notifyView() {
+  if (Date.now() > unlockedUntil) return lockView();
+  const snap = await getDocs(query(collection(db, 'users'), where('status', '==', 'approved')));
+  const users = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((u) => u.id !== me.uid);
+  $('#view').innerHTML = `<div class="box"><h3>Notificatie sturen</h3>
+    <div class="row"><input id="txt" placeholder="Bericht"></div>
+    <div class="row"><select id="to" style="flex:1;padding:.6rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit">
+      <option value="all">Iedereen</option>${users.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
+      <button class="pri" id="send">Versturen</button></div><div id="msg"></div></div>`;
+  $('#send').onclick = async () => {
+    const text = $('#txt').value.trim().slice(0, 500), to = $('#to').value;
+    if (!text) { $('#msg').innerHTML = '<span class="err">Bericht is verplicht</span>'; return; }
+    try {
+      await addDoc(collection(db, 'notifications'), { to, toName: users.find((u) => u.id === to)?.name || null, text, created: Date.now() });
+      $('#txt').value = ''; $('#msg').textContent = 'Verstuurd ✓';
+    } catch (e) { $('#msg').innerHTML = `<span class="err">${esc(nice(e))}</span>`; }
+  };
+}
+async function lockView() {
+  const ref = doc(db, 'config', 'pin');
+  const cur = (await getDoc(ref)).data();
+  $('#view').innerHTML = `<div class="box center"><h3>🔒 Vergrendeld</h3>
+    <p>${cur ? 'Voer je slotcode in om notificaties te maken.' : 'Kies een slotcode voor deze app.'}</p>
+    <div class="row"><input id="pin" type="password" placeholder="Slotcode"><button class="pri" id="un">${cur ? 'Ontgrendel' : 'Instellen'}</button></div><div id="e" class="err"></div></div>`;
+  const go = async () => {
+    const h = await sha('pin:' + norm($('#pin').value));
+    if (!norm($('#pin').value)) return;
+    if (!cur) await setDoc(ref, { hash: h });
+    else if (h !== cur.hash) { $('#e').textContent = 'Ongeldige code'; return; }
+    unlockedUntil = Date.now() + 15 * 60e3; notifyView();
+  };
+  $('#un').onclick = go; $('#pin').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+}
+</script>
+</body>
+</html>

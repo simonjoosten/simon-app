@@ -1,20 +1,11 @@
 # simon-app
 
-Gedeelde webapp met telefoon-homescherm, inlogcodes en goedkeuring door de admin.
+Gedeelde app met telefoon-homescherm, inlogcodes en goedkeuring door de admin.
+Draait als statische pagina op GitHub Pages (`docs/`) met Firebase (Auth + Firestore) als achterkant.
 
-## Starten
-```
-cp .env.example .env   # zet ADMIN_CODE in .env
-node server.js         # Node 22+; open http://localhost:3000
-```
+- `docs/` — de website (GitHub Pages)
+- `docs/firebase-config.js` — Firebase web-config (openbaar, geen geheim)
+- `firestore.rules` — de echte beveiliging; plak in Firebase → Firestore → Regels
+- `legacy/` — eerdere versie met eigen Node-server (niet meer in gebruik)
 
-## Apps
-- **App Installer** en **Notificaties**: zitten er altijd bij.
-- **Lijst**: gedeelde lijst.
-- **Join requests** (admin): verzoeken goedkeuren/weigeren, leden verwijderen.
-- **Notificatie-maker** (admin): vergrendeld, vraagt de admin-code opnieuw.
-
-## Online zetten (Render)
-1. Maak een account op render.com en kies **New → Blueprint**, koppel deze GitHub-repo.
-2. Vul bij `ADMIN_CODE` je eigen admin-code in (niet in GitHub zetten).
-3. Render bouwt en start de app; de database staat op een schijf in `/var/data`.
+Admin logt in met Google; leden loggen in met hun eigen inlogcode nadat de admin ze heeft goedgekeurd.

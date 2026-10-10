@@ -1,0 +1,49 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    function signedIn() { return request.auth != null; }
+    function isAdmin() {
+      return signedIn() && request.auth.token.email == 'ADMIN_EMAIL_HIER' && request.auth.token.email_verified == true;
+    }
+    function isMember() {
+      return signedIn()
+        && exists(/databases/$(db)/documents/users/$(request.auth.uid))
+        && get(/databases/$(db)/documents/users/$(request.auth.uid)).data.status == 'approved';
+    }
+
+    match /users/{uid} {
+      allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
+      allow create: if isAdmin()
+        || (signedIn() && request.auth.uid == uid
+            && request.auth.token.firebase.sign_in_provider == 'password'
+            && request.resource.data.keys().hasOnly(['name', 'status', 'created', 'apps', 'lastRead'])
+            && request.resource.data.status == 'pending'
+            && request.resource.data.name is string
+            && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60);
+      allow update: if isAdmin()
+        || (signedIn() && request.auth.uid == uid && resource.data.status == 'approved'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['apps', 'lastRead']));
+      allow delete: if isAdmin();
+    }
+
+    match /items/{id} {
+      allow read: if isMember() || isAdmin();
+      allow create: if (isMember() || isAdmin())
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.text is string && request.resource.data.text.size() <= 500;
+      allow update: if (isMember() || isAdmin())
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['done']);
+      allow delete: if isMember() || isAdmin();
+    }
+
+    match /notifications/{id} {
+      allow read: if isAdmin()
+        || (isMember() && (resource.data.to == 'all' || resource.data.to == request.auth.uid));
+      allow create, delete: if isAdmin();
+    }
+
+    match /config/{doc} {
+      allow read, write: if isAdmin();
+    }
+  }
+}
