@@ -18,3 +18,11 @@ export const getDocs = async (q) => {
   const docs = rows.map(([p, d]) => snap(p, d)); return { docs, size: docs.length, forEach: (f) => docs.forEach(f) };
 };
 export const __store = store;
+
+// --- extra voor de Klusjes-test ---
+const DEL = { __delete: true };
+export const deleteField = () => DEL;
+export const addDoc = async (col, data) => { const ref = doc(col); await setDoc(ref, data); return ref; };
+export const updateDoc = async (ref, data) => { const cur = store.get(ref.path); if (!cur) throw Object.assign(new Error('Geen document: ' + ref.path), { code: 'not-found' }); const next = { ...cur }; for (const [k, v] of Object.entries(data)) { if (v && v.__delete) delete next[k]; else next[k] = JSON.parse(JSON.stringify(v)); } store.set(ref.path, next); };
+export const onSnapshot = () => () => {};
+export const writeBatch = () => ({ update() {}, commit: async () => {} });

@@ -48,7 +48,7 @@ const GIF_CATS = [
 ];
 const seg = (str) => [...new Intl.Segmenter().segment(str)].map((x) => x.segment);
 
-const resizeImage = (file, max = 1024) => new Promise((res, rej) => {
+export const resizeImage = (file, max = 1024) => new Promise((res, rej) => {
   const img = new Image(); const url = URL.createObjectURL(file);
   img.onload = () => {
     let { width: w, height: h } = img; const k = Math.min(1, max / Math.max(w, h)); w = Math.round(w * k); h = Math.round(h * k);

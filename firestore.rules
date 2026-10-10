@@ -113,6 +113,48 @@ service cloud.firestore {
       allow delete: if isMember() && resource.data.uid == request.auth.uid;
     }
 
+    // ---------- Klusjes ----------
+    match /chores/{id} {
+      allow read: if isAdmin() || (isMember() && (resource.data.to == 'all' || resource.data.to == request.auth.uid));
+      allow create, delete: if isAdmin();
+      allow update: if isAdmin()
+        || (isMember() && (resource.data.to == 'all' || resource.data.to == request.auth.uid) && (
+            // klaarmelden met bericht/foto
+            (resource.data.status == 'open'
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'doneBy', 'doneByName', 'doneAt', 'proofMsg', 'proofPhoto', 'proofAt'])
+              && request.resource.data.status == 'review'
+              && request.resource.data.doneBy == request.auth.uid
+              && (!('proofMsg' in request.resource.data) || request.resource.data.proofMsg.size() <= 300)
+              && (!('proofPhoto' in request.resource.data) || request.resource.data.proofPhoto.size() < 450000))
+            // eigen bewijs opruimen
+            || (resource.data.doneBy == request.auth.uid
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['proofMsg', 'proofPhoto'])
+              && !('proofMsg' in request.resource.data) && !('proofPhoto' in request.resource.data))));
+    }
+
+    match /taskstats/{uid} {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /milestones/{id} {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    match /milestoneClaims/{cid} {
+      allow read: if isAdmin() || (isMember() && resource.data.uid == request.auth.uid);
+      allow create: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && cid == request.resource.data.milestone + '__' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['milestone', 'uid', 'name', 'title', 'status', 'created'])
+        && request.resource.data.status == 'pending'
+        && exists(/databases/$(db)/documents/taskstats/$(request.auth.uid))
+        && get(/databases/$(db)/documents/taskstats/$(request.auth.uid)).data.total
+           >= get(/databases/$(db)/documents/milestones/$(request.resource.data.milestone)).data.need;
+      allow update, delete: if isAdmin();
+    }
+
     match /config/{doc} {
       allow read, write: if isAdmin();
     }
