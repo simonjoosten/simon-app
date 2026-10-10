@@ -7,5 +7,5 @@ button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:.
 import { emojiView } from './emoji.js';
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message));
-localStorage.removeItem('emix:fav:t1'); emojiView({ view: document.getElementById('view'), esc, uid: 't1' }); window.__ready = true;
+localStorage.removeItem('emix:fav:t1'); await emojiView({ view: document.getElementById('view'), esc, uid: 't1' }); window.__ready = true;
 </script>
