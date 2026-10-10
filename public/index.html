@@ -95,7 +95,7 @@ function loginView(mode = 'login') {
     } catch (e) { $('#e').textContent = e.message; }
   };
   $('#go').onclick = go;
-  $('#app').querySelector('input').onkeydown = (e) => e.key === 'Enter' && go();
+  $('#app').querySelector('input').onkeydown = (e) => { if (e.key === 'Enter') go(); };
 }
 
 function codeView(r) {
@@ -171,7 +171,7 @@ async function lijstView() {
     <ul>${items.map((i) => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" ${i.done ? 'checked' : ''} data-t="${i.id}">
       <span style="flex:1">${esc(i.text)} <small>${esc(i.by)}</small></span><button data-d="${i.id}">✕</button></li>`).join('')}</ul></div>`;
   const add = async () => { if ($('#txt').value.trim()) { await api('/api/items', 'POST', { text: $('#txt').value }); lijstView(); } };
-  $('#add').onclick = add; $('#txt').onkeydown = (e) => e.key === 'Enter' && add();
+  $('#add').onclick = add; $('#txt').onkeydown = (e) => { if (e.key === 'Enter') add(); };
   document.querySelectorAll('[data-t]').forEach((e) => e.onchange = async () => { await api('/api/items/' + e.dataset.t, 'PATCH'); lijstView(); });
   document.querySelectorAll('[data-d]').forEach((e) => e.onclick = async () => { await api('/api/items/' + e.dataset.d, 'DELETE'); lijstView(); });
 }
@@ -212,7 +212,7 @@ function lockView() {
   $('#view').innerHTML = `<div class="box center"><h3>🔒 Vergrendeld</h3><p>Voer je admin-code in om notificaties te maken.</p>
     <div class="row"><input id="pin" type="password" placeholder="Admin-code"><button class="pri" id="un">Ontgrendel</button></div><div id="e" class="err"></div></div>`;
   const go = async () => { try { await api('/api/notify/unlock', 'POST', { code: $('#pin').value }); notifyView(); } catch (e) { $('#e').textContent = e.message; } };
-  $('#un').onclick = go; $('#pin').onkeydown = (e) => e.key === 'Enter' && go();
+  $('#un').onclick = go; $('#pin').onkeydown = (e) => { if (e.key === 'Enter') go(); };
 }
 start();
 </script>
