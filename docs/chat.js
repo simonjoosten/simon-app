@@ -15,6 +15,14 @@ const EMOJI = {
   '🍕': '🍕🍔🍟🌭🍿🍩🍪🍫🍦🍺🥤☕🍎🍌🍓🍉',
   '🚗': '🚗🚕🚓🚑🚒🏎️🚀✈️🚲⚽🏀🎮🎧🎵🎬📸',
 };
+// Categorieën voor GIF's: Nederlandse naam -> Engelse zoekterm (GIPHY zoekt in het Engels)
+const GIF_CATS = [
+  ['🔥 Populair', ''], ['👋 Hoi', 'hello wave'], ['😂 Lachen', 'laughing'], ['😭 Huilen', 'crying'], ['😡 Boos', 'angry'],
+  ['❤️ Liefde', 'love heart'], ['🎉 Feest', 'party celebrate'], ['💃 Dansen', 'dance'], ['👍 Goed zo', 'thumbs up'],
+  ['🤔 Hmm', 'thinking'], ['😮 Wow', 'wow shocked'], ['🙏 Bedankt', 'thank you'], ['🥱 Moe', 'sleepy tired'],
+  ['😎 Cool', 'cool'], ['🤦 Oeps', 'facepalm'], ['👏 Applaus', 'applause clapping'], ['🍕 Eten', 'food eating'],
+  ['🐶 Dieren', 'cute animals'], ['⚽ Sport', 'sports'], ['🚗 Auto', 'car'], ['😴 Welterusten', 'good night'], ['☀️ Goedemorgen', 'good morning'],
+];
 const seg = (str) => [...new Intl.Segmenter().segment(str)].map((x) => x.segment);
 
 const resizeImage = (file, max = 1024) => new Promise((res, rej) => {
@@ -192,16 +200,22 @@ export async function chatView(c) {
       p.dataset.k = 'gif';
       const key = GIPHY_KEY || (await getDoc(doc(db, 'config', 'giphy'))).data()?.key;
       if (!key) { p.innerHTML = `<div class="box"><small>GIF's staan nog niet aan. Simon moet eerst een GIPHY-sleutel instellen (in Chat → Chats, onderaan).</small></div>`; return; }
-      p.innerHTML = `<div class="box" style="padding:.5rem"><div class="row" style="margin:0 0 .4rem"><input id="gq" placeholder="Zoek een GIF"></div><div id="gres" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;max-height:14rem;overflow:auto"></div><small>Powered by GIPHY</small></div>`;
+      p.innerHTML = `<div class="box" style="padding:.5rem">
+        <div id="gcats" style="display:flex;gap:.3rem;overflow-x:auto;padding-bottom:.4rem">${GIF_CATS.map(([l, q], i) => `<button data-gc="${i}" style="white-space:nowrap;padding:.3rem .6rem">${l}</button>`).join('')}</div>
+        <div class="row" style="margin:0 0 .4rem"><input id="gq" placeholder="Of zoek (liefst in het Engels)"></div>
+        <div id="gres" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;max-height:14rem;overflow:auto"></div><small>Powered by GIPHY</small></div>`;
       const search = async (q) => {
+        $('#gres').innerHTML = '<small>Laden…</small>';
         const url = q ? `https://api.giphy.com/v1/gifs/search?api_key=${encodeURIComponent(key)}&q=${encodeURIComponent(q)}&limit=24&rating=pg-13` : `https://api.giphy.com/v1/gifs/trending?api_key=${encodeURIComponent(key)}&limit=24&rating=pg-13`;
         try {
-          const j = await (await fetch(url)).json();
-          if (!j.data) throw new Error(j.message || 'GIPHY gaf geen resultaat');
-          $('#gres').innerHTML = j.data.map((g) => `<img data-g="${esc(g.images.fixed_height.url)}" src="${esc(g.images.fixed_height_small.url)}" style="width:100%;border-radius:8px;cursor:pointer" alt="">`).join('') || '<small>Niets gevonden.</small>';
+          const r = await fetch(url);
+          const j = await r.json();
+          if (!r.ok || !j.data) throw new Error((j.meta && j.meta.msg) || j.message || `GIPHY-fout ${r.status}`);
+          $('#gres').innerHTML = j.data.map((g) => `<img data-g="${esc(g.images.fixed_height.url)}" src="${esc(g.images.fixed_height_small.url)}" style="width:100%;border-radius:8px;cursor:pointer" alt="">`).join('') || '<small>Niets gevonden. Probeer een categorie.</small>';
           $('#gres').querySelectorAll('[data-g]').forEach((im) => im.onclick = async () => { try { await post({ type: 'gif', url: im.dataset.g }, 'GIF'); p.innerHTML = ''; p.dataset.k = ''; } catch (e) { alert(nice(e)); } });
-        } catch (e) { $('#gres').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+        } catch (e) { $('#gres').innerHTML = `<span class="err">GIF's laden lukt niet: ${esc(e.message)}</span>`; }
       };
+      p.querySelectorAll('[data-gc]').forEach((b) => b.onclick = () => { $('#gq').value = ''; search(GIF_CATS[b.dataset.gc][1]); });
       let t; $('#gq').oninput = (e) => { clearTimeout(t); t = setTimeout(() => search(e.target.value.trim()), 400); };
       search('');
     };
