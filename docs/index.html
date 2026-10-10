@@ -72,6 +72,9 @@ const META = {
   join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
   klusjes: { n: 'Klusjes', c: 'linear-gradient(135deg,#f59e0b,#ea580c)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/>') },
   klusjesadmin: { n: 'Klusjes Admin', admin: true, c: 'linear-gradient(135deg,#7c2d12,#431407)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM12 11l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1L9 13.3l2-.3z"/>') },
+  dobbel: { n: 'Dobbel & kies', c: 'linear-gradient(135deg,#f43f5e,#be123c)', i: svg('<rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8.5 8.5h.01M15.5 8.5h.01M12 12h.01M8.5 15.5h.01M15.5 15.5h.01"/>') },
+  pixel: { n: 'Pixel-art', c: 'linear-gradient(135deg,#10b981,#0369a1)', i: svg('<path d="M4 4h4v4H4zM12 4h4v4h-4zM8 8h4v4H8zM16 8h4v4h-4zM4 12h4v4H4zM12 12h4v4h-4zM8 16h4v4H8z"/>') },
+  piano: { n: 'Piano', c: 'linear-gradient(135deg,#334155,#0f172a)', i: svg('<rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v14M12 5v14M16 5v14M7 5v8h2V5M11 5v8h2V5M15 5v8h2V5"/>') },
   emojimix: { n: 'Emoji-mixer', c: 'linear-gradient(135deg,#fbbf24,#ec4899)', i: svg('<circle cx="9" cy="12" r="5"/><circle cx="15" cy="12" r="5"/><path d="M7.5 11h.01M10.5 11h.01M13.5 11h.01M16.5 11h.01"/>') },
   weer: { n: 'Weer', c: 'linear-gradient(135deg,#38bdf8,#2563eb)', i: svg('<path d="M7 18a4 4 0 010-8 5.5 5.5 0 0110.5 1.5A3.5 3.5 0 0117 18z"/><path d="M8 21l1-2M12 21l1-2M16 21l1-2"/>') },
   gamescroller: { n: 'Gamescroller', c: 'linear-gradient(135deg,#8b5cf6,#ec4899)', i: svg('<rect x="3" y="8" width="18" height="10" rx="4"/><path d="M8 11v4M6 13h4"/><circle cx="15.5" cy="12" r="1"/><circle cx="18" cy="14" r="1"/>') },
@@ -243,7 +246,7 @@ async function openApp(id) {
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -331,6 +334,11 @@ async function notifyView() {
 /* ---------- Klusjes ---------- */
 async function klusjesApp() { const m = await import('./klusjes.js'); await m.klusjesView({ db, me, esc, nice, view: $('#view') }); }
 async function klusjesAdminApp() { const m = await import('./klusjes.js'); await m.klusjesAdminView({ db, me, esc, nice, view: $('#view') }); }
+
+/* ---------- Dobbel & kies, Pixel-art, Piano ---------- */
+async function dobbelApp() { const m = await import('./dice.js'); m.diceView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
+async function pixelApp() { const m = await import('./pixel.js'); m.pixelView({ view: $('#view'), esc, uid: me.uid }); }
+async function pianoApp() { const m = await import('./piano.js'); m.pianoView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
 
 /* ---------- Emoji-mixer ---------- */
 async function emojiApp() { const m = await import('./emoji.js'); m.emojiView({ view: $('#view'), esc, uid: me.uid }); }

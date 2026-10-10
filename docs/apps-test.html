@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apps-test</title>
+<style>:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--line:#e4e6ee;--accent:#6366f1}body{font-family:system-ui;background:var(--bg);color:var(--ink);margin:0;padding:.6rem;max-width:430px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:.8rem 0}.row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}.row.wrap{flex-wrap:wrap}.row input:not([type=checkbox]):not([type=range]):not([type=color]){flex:1;min-width:0;padding:.5rem;border:1px solid var(--line);border-radius:10px}
+button{border:1px solid var(--line);background:#fff;color:inherit;border-radius:10px;padding:.45rem .7rem;font:inherit}button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}button:disabled{opacity:.5}.err{color:#ef4444}.center{text-align:center}small{color:#8a90a2}.chip{background:var(--line);border-radius:99px;padding:.1rem .5rem}</style>
+<div id="view"></div>
+<script type="module">
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message)); window.addEventListener('unhandledrejection', (e) => window.__errs.push(String(e.reason && e.reason.message || e.reason)));
+const which = new URLSearchParams(location.search).get('a') || 'dice'; const view = document.getElementById('view');
+const mod = await import(`./${which}.js`); const fn = mod.diceView || mod.pixelView || mod.pianoView;
+fn({ view, esc, uid: 't1', addCleanup: () => {} }); window.__ready = true;
+</script>
