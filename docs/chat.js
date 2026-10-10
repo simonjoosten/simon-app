@@ -17,11 +17,34 @@ const EMOJI = {
 };
 // Categorieën voor GIF's: Nederlandse naam -> Engelse zoekterm (GIPHY zoekt in het Engels)
 const GIF_CATS = [
-  ['🔥 Populair', ''], ['👋 Hoi', 'hello wave'], ['😂 Lachen', 'laughing'], ['😭 Huilen', 'crying'], ['😡 Boos', 'angry'],
-  ['❤️ Liefde', 'love heart'], ['🎉 Feest', 'party celebrate'], ['💃 Dansen', 'dance'], ['👍 Goed zo', 'thumbs up'],
-  ['🤔 Hmm', 'thinking'], ['😮 Wow', 'wow shocked'], ['🙏 Bedankt', 'thank you'], ['🥱 Moe', 'sleepy tired'],
-  ['😎 Cool', 'cool'], ['🤦 Oeps', 'facepalm'], ['👏 Applaus', 'applause clapping'], ['🍕 Eten', 'food eating'],
-  ['🐶 Dieren', 'cute animals'], ['⚽ Sport', 'sports'], ['🚗 Auto', 'car'], ['😴 Welterusten', 'good night'], ['☀️ Goedemorgen', 'good morning'],
+  // Groeten & praten
+  ['🔥 Populair', ''], ['👋 Hoi', 'hello wave'], ['👋 Doei', 'bye goodbye'], ['☀️ Goedemorgen', 'good morning'], ['🌙 Welterusten', 'good night'],
+  ['🙏 Bedankt', 'thank you'], ['🤝 Graag gedaan', 'you are welcome'], ['🙇 Sorry', 'sorry apology'], ['👍 Goed zo', 'thumbs up'], ['👎 Nee', 'thumbs down'],
+  ['✅ Ja', 'yes nod'], ['🚫 Nee hoor', 'no way shake head'], ['🤷 Weet ik niet', 'shrug'], ['❓ Wat?', 'what confused'], ['🤔 Hmm', 'thinking'],
+  ['🙄 Ja hoor', 'eye roll'], ['😏 Slim', 'smirk'], ['🤫 Sssst', 'shush quiet'], ['👀 Kijk', 'looking watching'], ['😳 Oeps', 'awkward embarrassed'],
+  // Gevoelens
+  ['😂 Lachen', 'laughing'], ['🤣 Dubbel liggen', 'dying laughing'], ['😊 Blij', 'happy'], ['🥳 Feest', 'party celebrate'], ['😍 Verliefd', 'in love heart eyes'],
+  ['❤️ Liefde', 'love heart'], ['😘 Kusje', 'kiss'], ['🤗 Knuffel', 'hug'], ['😭 Huilen', 'crying'], ['🥺 Verdrietig', 'sad'],
+  ['😡 Boos', 'angry'], ['🤬 Woedend', 'furious rage'], ['😤 Gefrustreerd', 'frustrated'], ['😱 Schrik', 'scared scream'], ['😨 Bang', 'afraid'],
+  ['😮 Wow', 'wow shocked'], ['🤯 Mind blown', 'mind blown'], ['🥱 Moe', 'sleepy tired'], ['😴 Slapen', 'sleeping'], ['🤒 Ziek', 'sick'],
+  ['🤢 Vies', 'disgusted'], ['😎 Cool', 'cool sunglasses'], ['💪 Sterk', 'strong flex'], ['😅 Zenuwachtig', 'nervous sweating'], ['😌 Opgelucht', 'relieved'],
+  ['😬 Awkward', 'awkward cringe'], ['🤩 Geweldig', 'amazing excited'], ['🥹 Ontroerd', 'touched emotional'], ['😈 Stout', 'naughty mischief'], ['🤪 Gek', 'crazy silly'],
+  // Reacties & acties
+  ['👏 Applaus', 'applause clapping'], ['🎉 Gefeliciteerd', 'congratulations'], ['🎂 Verjaardag', 'happy birthday'], ['🏆 Winnaar', 'winner victory'], ['🙌 Yes!', 'celebration yes'],
+  ['🤦 Facepalm', 'facepalm'], ['😤 Pfff', 'annoyed ugh'], ['🙈 Beschaamd', 'embarrassed hide'], ['🫡 Salute', 'salute'], ['🤞 Succes', 'good luck fingers crossed'],
+  ['💃 Dansen', 'dance'], ['🕺 Feestdans', 'party dance'], ['🏃 Rennen', 'running'], ['🚶 Wandelen', 'walking'], ['🤸 Springen', 'jumping'],
+  ['⏰ Te laat', 'late hurry'], ['⏳ Wachten', 'waiting'], ['🍿 Popcorn', 'popcorn watching'], ['🔥 Lekker bezig', 'fire nice job'], ['💥 Boem', 'explosion'],
+  ['🤡 Gekkigheid', 'clown funny'], ['💤 Saai', 'bored'], ['🙃 Ironisch', 'sarcasm'], ['🎤 Mic drop', 'mic drop'], ['🧠 Slim', 'smart genius'],
+  // Eten & drinken
+  ['🍕 Pizza', 'pizza'], ['🍔 Hamburger', 'burger'], ['🍟 Friet', 'french fries'], ['🍪 Koekjes', 'cookies'], ['🍫 Chocolade', 'chocolate'],
+  ['🍦 IJs', 'ice cream'], ['🍺 Bier', 'beer cheers'], ['☕ Koffie', 'coffee'], ['🥤 Drinken', 'drinking'], ['😋 Lekker', 'yummy delicious'],
+  // Dieren
+  ['🐶 Hond', 'dog'], ['🐱 Kat', 'cat'], ['🐹 Schattig', 'cute animals'], ['🦆 Eend', 'duck'], ['🐵 Aap', 'monkey'],
+  // Sport & spelletjes
+  ['⚽ Voetbal', 'soccer football'], ['🏀 Basketbal', 'basketball'], ['🎮 Gamen', 'gaming'], ['🏎️ Racen', 'racing'], ['🚗 Auto', 'car'],
+  // Overig
+  ['🤖 Robot', 'robot'], ['👽 Alien', 'alien'], ['👻 Spook', 'ghost'], ['🎬 Film', 'movie scene'], ['💰 Geld', 'money rich'],
+  ['🌧️ Regen', 'rain'], ['☀️ Zon', 'sunshine summer'], ['❄️ Sneeuw', 'snow winter'], ['🎄 Kerst', 'christmas'], ['🎃 Halloween', 'halloween'],
 ];
 const seg = (str) => [...new Intl.Segmenter().segment(str)].map((x) => x.segment);
 
@@ -201,7 +224,7 @@ export async function chatView(c) {
       const key = GIPHY_KEY || (await getDoc(doc(db, 'config', 'giphy'))).data()?.key;
       if (!key) { p.innerHTML = `<div class="box"><small>GIF's staan nog niet aan. Simon moet eerst een GIPHY-sleutel instellen (in Chat → Chats, onderaan).</small></div>`; return; }
       p.innerHTML = `<div class="box" style="padding:.5rem">
-        <div id="gcats" style="display:flex;gap:.3rem;overflow-x:auto;padding-bottom:.4rem">${GIF_CATS.map(([l, q], i) => `<button data-gc="${i}" style="white-space:nowrap;padding:.3rem .6rem">${l}</button>`).join('')}</div>
+        <div id="gcats" style="display:flex;flex-wrap:wrap;gap:.3rem;max-height:8rem;overflow-y:auto;padding-bottom:.4rem">${GIF_CATS.map(([l, q], i) => `<button data-gc="${i}" style="white-space:nowrap;padding:.3rem .6rem">${l}</button>`).join('')}</div>
         <div class="row" style="margin:0 0 .4rem"><input id="gq" placeholder="Of zoek (liefst in het Engels)"></div>
         <div id="gres" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;max-height:14rem;overflow:auto"></div><small>Powered by GIPHY</small></div>`;
       const search = async (q) => {
