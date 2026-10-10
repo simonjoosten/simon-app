@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Weer-test</title>
+<style>:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--line:#e4e6ee;--accent:#6366f1}body{font-family:system-ui;background:var(--bg);color:var(--ink);margin:0;padding:1rem;max-width:430px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:.8rem 0}.row{display:flex;gap:.5rem;margin:.5rem 0;align-items:center}.row input{flex:1;min-width:0;padding:.55rem;border:1px solid var(--line);border-radius:10px}
+button{border:1px solid var(--line);background:#fff;border-radius:10px;padding:.5rem .8rem}button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}.err{color:#ef4444}.center{text-align:center}small{color:#8a90a2}</style>
+<div id="view"></div>
+<script type="module">
+import { weerView } from './weer.js';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message)); window.addEventListener('unhandledrejection', (e) => window.__errs.push(String(e.reason)));
+localStorage.setItem('weer:loc:t1', JSON.stringify({ name: 'Utrecht', lat: 52.09, lon: 5.12 }));
+await weerView({ view: document.getElementById('view'), esc, uid: 't1', addCleanup: () => {} }); window.__ready = true;
+</script>
