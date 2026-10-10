@@ -107,7 +107,10 @@ function loginView(mode = 'login') {
     <div class="logo"><img src="logo.svg" alt=""><h1>simon-app</h1></div>
     <div class="tabs"><button data-m="login" class="${mode === 'login' ? 'on' : ''}">Inloggen</button><button data-m="signup" class="${mode === 'signup' ? 'on' : ''}">Account aanmaken</button></div>
     <div class="box">${mode === 'login' ? `
-      <div class="row"><input id="code" placeholder="Inlogcode" autocomplete="off"><button class="pri" id="go">Inloggen</button></div>
+      <form id="f" autocomplete="on">
+        <input type="text" name="username" autocomplete="username" value="simon-app" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;height:0;width:0;border:0;padding:0">
+        <div class="row"><input id="code" name="password" type="password" autocomplete="current-password" placeholder="Inlogcode"><button class="pri" id="go" type="submit">Inloggen</button></div>
+      </form>
       <div id="e" class="err"></div>
       <p style="text-align:center;margin:.8rem 0 0"><small><a href="#" id="g">Admin? Inloggen met Google</a></small></p>` : `
       <p>Maak een account aan. Je krijgt een eigen inlogcode en Simon moet je daarna goedkeuren voordat je erin kan.</p>
@@ -121,8 +124,8 @@ function loginView(mode = 'login') {
       else await signup($('#name').value);
     } catch (e) { $('#e').textContent = nice(e); }
   };
-  $('#go').onclick = go;
-  $('#app').querySelector('input').onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  if (mode === 'login') $('#f').onsubmit = (e) => { e.preventDefault(); go(); };
+  else { $('#go').onclick = go; $('#name').onkeydown = (e) => { if (e.key === 'Enter') go(); }; }
   if ($('#g')) $('#g').onclick = async (e) => { e.preventDefault(); try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { $('#e').textContent = nice(err); } };
 }
 
