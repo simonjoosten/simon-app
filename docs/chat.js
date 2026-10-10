@@ -135,9 +135,9 @@ export async function chatView(c) {
         const mine = m.from === me.uid;
         let inner = '';
         if (m.type === 'text') inner = esc(m.text).replace(/\n/g, '<br>');
-        else if (m.type === 'image') inner = `<img src="${m.data}" style="max-width:100%;border-radius:10px;display:block" alt="">`;
-        else if (m.type === 'gif') inner = `<img src="${esc(m.url)}" style="max-width:100%;border-radius:10px;display:block" alt="GIF">`;
-        else if (m.type === 'video') inner = `<button data-vid="${m.id}" data-parts="${m.parts}" data-mime="${esc(m.mime || 'video/mp4')}">▶ Filmpje laden</button><div data-vbox="${m.id}"></div>`;
+        else if (m.type === 'image') inner = `<img src="${m.data}" style="max-width:100%;border-radius:10px;display:block" alt=""><a href="${m.data}" download="foto-${m.id}.jpg" style="color:inherit;font-size:.8rem">⬇ Opslaan</a>`;
+        else if (m.type === 'gif') inner = `<img src="${esc(m.url)}" style="max-width:100%;border-radius:10px;display:block" alt="GIF"><a href="${esc(m.url)}" target="_blank" rel="noopener" style="color:inherit;font-size:.8rem">⬇ Openen</a>`;
+        else if (m.type === 'video') inner = `<button data-vid="${m.id}" data-parts="${m.parts}" data-mime="${esc(m.mime || 'video/mp4')}">▶ Filmpje laden en bekijken</button><div data-vbox="${m.id}"></div>`;
         return `<div style="align-self:${mine ? 'flex-end' : 'flex-start'};max-width:82%;background:${mine ? 'var(--accent)' : 'var(--card)'};color:${mine ? '#fff' : 'inherit'};border:1px solid var(--line);border-radius:14px;padding:.45rem .65rem">${inner}<div style="font-size:.68rem;opacity:.65;margin-top:.15rem">${when(m.created)}${mine ? ` · <a href="#" data-del="${m.id}" style="color:inherit">verwijder</a>` : ''}</div></div>`;
       }).join('') || '<small style="margin:auto">Nog geen berichten.</small>';
       if (atEnd || sn.metadata.fromCache === false) box.scrollTop = box.scrollHeight;
@@ -154,7 +154,8 @@ export async function chatView(c) {
         const parts = s.docs.sort((x, y) => x.id.localeCompare(y.id)).map((d) => b64ToBytes(d.data().d));
         if (parts.length < Number(b.dataset.parts)) throw new Error('Filmpje is nog niet compleet');
         const url = URL.createObjectURL(new Blob(parts, { type: b.dataset.mime }));
-        document.querySelector(`[data-vbox="${b.dataset.vid}"]`).innerHTML = `<video src="${url}" controls playsinline style="max-width:100%;border-radius:10px"></video>`;
+        const ext = (b.dataset.mime.split('/')[1] || 'mp4').replace('quicktime', 'mov');
+        document.querySelector(`[data-vbox="${b.dataset.vid}"]`).innerHTML = `<video src="${url}" controls playsinline style="max-width:100%;border-radius:10px"></video><a href="${url}" download="filmpje-${b.dataset.vid}.${ext}" style="color:inherit;font-size:.8rem">⬇ Opslaan</a>`;
         b.remove();
       } catch (e) { b.disabled = false; b.textContent = '▶ Opnieuw proberen'; alert(nice(e)); }
     };
