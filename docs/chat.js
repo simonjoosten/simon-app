@@ -1,6 +1,7 @@
 // Chat-app: vrienden toevoegen, accepteren/blokkeren, berichten met emoji's, GIF's, foto's en filmpjes.
 import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy, limit, onSnapshot }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { GIPHY_KEY } from './firebase-config.js';
 
 export const pairId = (a, b) => [a, b].sort().join('_');
 const CHUNK = 450000; // deelbaar door 3, zodat base64-stukjes aan elkaar passen
@@ -73,7 +74,7 @@ export async function chatView(c) {
         return `<div class="box row" data-open="${f.id}" style="cursor:pointer;margin:.5rem 0"><div style="flex:1;min-width:0"><b>${esc(nameOf(otherOf(f)))}</b><br><small style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(f.last || 'Zeg hoi 👋')}</small></div>${unread ? '<span class="badge" style="position:static">●</span>' : `<small>${when(f.lastAt)}</small>`}</div>`;
       }).join('') : '<div class="box"><small>Nog geen gesprekken. Voeg iemand toe via het tabblad Toevoegen.</small></div>';
       if (blocked.length) body += `<div class="box"><b>Geblokkeerd</b>${blocked.map((f) => `<div class="row"><span style="flex:1">${esc(nameOf(otherOf(f)))}</span><button data-unblock="${f.id}">Deblokkeer</button></div>`).join('')}</div>`;
-      if (isAdmin) body += '<div class="box"><b>GIF-sleutel (Simon)</b><div id="gkey"></div></div>';
+      if (isAdmin && !GIPHY_KEY) body += '<div class="box"><b>GIF-sleutel (Simon)</b><div id="gkey"></div></div>';
     } else if (tab === 'req') {
       body = `<div class="box"><b>Verzoeken aan jou</b>${incoming.length ? incoming.map((f) => `<div class="row wrap"><span style="flex:1">${esc(nameOf(f.requester))}</span><button class="pri" data-acc="${f.id}">Accepteer</button><button data-blk="${f.id}">Blokkeer</button></div>`).join('') : '<br><small>Geen verzoeken.</small>'}</div>
         ${outgoing.length ? `<div class="box"><b>Verstuurd</b>${outgoing.map((f) => `<div class="row"><span style="flex:1">${esc(nameOf(otherOf(f)))} <small>wacht op antwoord</small></span><button data-cancel="${f.id}">Annuleer</button></div>`).join('')}</div>` : ''}`;
@@ -189,7 +190,7 @@ export async function chatView(c) {
     $('#gif').onclick = async () => {
       const p = $('#panel'); if (p.dataset.k === 'gif') { p.innerHTML = ''; p.dataset.k = ''; return; }
       p.dataset.k = 'gif';
-      const key = (await getDoc(doc(db, 'config', 'giphy'))).data()?.key;
+      const key = GIPHY_KEY || (await getDoc(doc(db, 'config', 'giphy'))).data()?.key;
       if (!key) { p.innerHTML = `<div class="box"><small>GIF's staan nog niet aan. Simon moet eerst een GIPHY-sleutel instellen (in Chat → Chats, onderaan).</small></div>`; return; }
       p.innerHTML = `<div class="box" style="padding:.5rem"><div class="row" style="margin:0 0 .4rem"><input id="gq" placeholder="Zoek een GIF"></div><div id="gres" style="display:grid;grid-template-columns:1fr 1fr;gap:.3rem;max-height:14rem;overflow:auto"></div><small>Powered by GIPHY</small></div>`;
       const search = async (q) => {
