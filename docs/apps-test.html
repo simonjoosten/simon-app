@@ -7,6 +7,6 @@ button{border:1px solid var(--line);background:#fff;color:inherit;border-radius:
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message)); window.addEventListener('unhandledrejection', (e) => window.__errs.push(String(e.reason && e.reason.message || e.reason)));
 const which = new URLSearchParams(location.search).get('a') || 'dice'; const view = document.getElementById('view');
-const mod = await import(`./${which}.js`); const fn = mod.diceView || mod.pixelView || mod.pianoView;
+const mod = await import(`./${which}.js`); const fn = mod.diceView || mod.pixelView || mod.pianoView || mod.kompasView || mod.mopView || mod.memeView || mod.muziekView || mod.kleurView;
 fn({ view, esc, uid: 't1', addCleanup: () => {} }); window.__ready = true;
 </script>
