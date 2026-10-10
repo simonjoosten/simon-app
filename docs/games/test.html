@@ -1,0 +1,50 @@
+<!doctype html><meta charset="utf-8"><title>Spel-test</title>
+<style>body{font:14px system-ui;margin:1rem}.ok{color:#15803d}.bad{color:#b91c1c;font-weight:700}#stage{position:fixed;right:0;top:0;width:360px;height:640px;opacity:.01;pointer-events:none}</style>
+<h3 id="h">Bezig…</h3><pre id="out"></pre><div id="stage"></div>
+<script type="module">
+const out = document.getElementById('out'); const stage = document.getElementById('stage');
+const log = (t, bad) => { out.insertAdjacentHTML('beforeend', `<div class="${bad ? 'bad' : 'ok'}">${t}</div>`); };
+const REG = await import('./registry.js');
+const errors = []; window.addEventListener('error', (e) => errors.push(e.message)); window.addEventListener('unhandledrejection', (e) => errors.push(String(e.reason && e.reason.message || e.reason)));
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const fire = (el, type, x, y) => el.dispatchEvent(new PointerEvent(type, { bubbles: true, clientX: x, clientY: y, pointerId: 1, isPrimary: true, pointerType: 'touch' }));
+let bad = 0, total = 0;
+for (const f of REG.MINIS) {
+  let g; try { g = (await f()).default; } catch (e) { log(`✗ import: ${e.message}`, 1); bad++; continue; }
+  total++; errors.length = 0;
+  const host = document.createElement('div'); host.style.cssText = 'position:relative;width:360px;height:640px;overflow:hidden'; stage.innerHTML = ''; stage.appendChild(host);
+  let ended = 0, score = 0; let inst;
+  try {
+    inst = g.create(host, { w: 360, h: 640, score: (n) => { score = n; }, end: () => { ended++; } });
+    for (let i = 0; i < 12; i++) { // tikken en vegen
+      const x = 40 + (i * 27) % 280, y = 120 + (i * 53) % 420;
+      fire(host, 'pointerdown', x, y); fire(host, 'pointermove', x + 30, y - 40); fire(host, 'pointerup', x + 30, y - 40); host.click();
+      window.dispatchEvent(new KeyboardEvent('keydown', { key: ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight', ' '][i % 5], bubbles: true }));
+      await sleep(60);
+    }
+    await sleep(400); inst && inst.destroy && inst.destroy(); await sleep(150);
+    if (errors.length) { bad++; log(`✗ ${g.id}: ${errors[0]}`, 1); } else log(`✓ ${g.id} (${g.name})${ended ? ' [eindigde]' : ''}`);
+  } catch (e) { bad++; log(`✗ ${g.id}: ${e.message}`, 1); try { inst && inst.destroy && inst.destroy(); } catch {} }
+}
+for (const f of REG.BIGS) {
+  let g; try { g = (await f()).default; } catch (e) { log(`✗ import: ${e.message}`, 1); bad++; continue; }
+  total++; errors.length = 0; let data = null;
+  const host = document.createElement('div'); host.style.cssText = 'width:400px;height:640px;overflow:auto'; stage.innerHTML = ''; stage.appendChild(host);
+  try {
+    const inst = await g.create(host, { load: async () => data, save: (o) => { data = o; JSON.stringify(o); }, toast() {} });
+    await sleep(300); host.querySelectorAll('button').forEach((b, i) => { if (i < 25) b.click(); }); await sleep(500);
+    inst && inst.destroy && inst.destroy(); await sleep(100);
+    if (errors.length) { bad++; log(`✗ ${g.id}: ${errors[0]}`, 1); } else log(`✓ ${g.id} (${g.name})${data ? ' [opgeslagen]' : ' [!! niets opgeslagen]'}`);
+  } catch (e) { bad++; log(`✗ ${g.id}: ${e.message}`, 1); }
+}
+let nclips = 0; const ids = new Set();
+for (const f of REG.CLIP_FILES) {
+  let m; try { m = await f(); } catch (e) { log(`✗ clips import: ${e.message}`, 1); bad++; continue; }
+  const cv = document.createElement('canvas'); cv.width = 360; cv.height = 640; const ctx = cv.getContext('2d');
+  for (const c of m.CLIPS) { total++; nclips++; if (ids.has(c.id)) { bad++; log(`✗ dubbel id ${c.id}`, 1); } ids.add(c.id);
+    try { for (const t of [0, (c.dur || 6) / 2, (c.dur || 6) - 0.01]) { ctx.save(); ctx.clearRect(0, 0, 360, 640); c.draw(ctx, t, 360, 640); ctx.restore(); } } catch (e) { bad++; log(`✗ clip ${c.id}: ${e.message}`, 1); } }
+}
+log(`Clips: ${nclips}`);
+document.getElementById('h').textContent = `Klaar: ${total} getest, ${bad} mislukt`; document.title = bad ? 'FAIL' : 'PASS';
+window.__done = { total, bad };
+</script>

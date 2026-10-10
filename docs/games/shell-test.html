@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Shell-test</title>
+<script type="importmap">{"imports":{"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js":"./fake-firestore.js"}}</script>
+<body style="margin:0;background:#222"><div id="view"></div>
+<script type="module">
+import { gamescroller } from './shell.js';
+import { setDoc, doc } from './fake-firestore.js';
+await setDoc(doc({}, 'scores', 'snake__u2'), { game: 'snake', uid: 'u2', name: 'Broer', best: 42, updated: 1 });
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message)); window.addEventListener('unhandledrejection', (e) => window.__errs.push(String(e.reason)));
+await gamescroller({ db: {}, me: { uid: 'u1', name: 'Simon', admin: true }, esc, nice: (e) => e.message, close: () => { window.__closed = true; } });
+window.__ready = true;
+</script>

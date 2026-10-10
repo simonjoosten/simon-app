@@ -85,6 +85,55 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // ---------- Gamescroller ----------
+    match /scores/{sid} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && sid == request.resource.data.game + '__' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['game', 'uid', 'name', 'best', 'updated'])
+        && request.resource.data.game is string && request.resource.data.game.size() < 40
+        && request.resource.data.best is number && request.resource.data.best >= 0 && request.resource.data.best < 1000000000
+        && request.resource.data.name == get(userDoc(request.auth.uid)).data.name;
+      allow update: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && sid == request.resource.data.game + '__' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['game', 'uid', 'name', 'best', 'updated'])
+        && request.resource.data.best is number && request.resource.data.best >= resource.data.best && request.resource.data.best < 1000000000
+        && request.resource.data.name == get(userDoc(request.auth.uid)).data.name;
+    }
+
+    match /saves/{sid} {
+      allow read: if isMember() && resource.data.uid == request.auth.uid;
+      allow create, update: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && sid == request.resource.data.game + '__' + request.auth.uid
+        && request.resource.data.keys().hasOnly(['game', 'uid', 'data', 'updated'])
+        && request.resource.data.data is string && request.resource.data.data.size() < 260000;
+      allow delete: if isMember() && resource.data.uid == request.auth.uid;
+    }
+
+    match /shorts/{sid} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'title', 'parts', 'mime', 'created'])
+        && request.resource.data.name == get(userDoc(request.auth.uid)).data.name
+        && request.resource.data.title is string && request.resource.data.title.size() <= 80
+        && request.resource.data.mime is string
+        && request.resource.data.parts is int && request.resource.data.parts >= 1 && request.resource.data.parts <= 24;
+      allow delete: if isAdmin() || (isMember() && resource.data.uid == request.auth.uid);
+
+      match /chunks/{n} {
+        allow read: if isMember();
+        allow create: if isMember()
+          && request.resource.data.keys().hasOnly(['d', 'by'])
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.d is string && request.resource.data.d.size() < 700000;
+        allow delete: if isAdmin() || (isMember() && resource.data.by == request.auth.uid);
+      }
+    }
+
     match /config/{doc} {
       allow read, write: if isAdmin();
     }
