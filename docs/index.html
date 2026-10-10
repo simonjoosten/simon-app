@@ -70,6 +70,7 @@ const META = {
   notifications: { n: 'Notificaties', core: true, c: 'linear-gradient(135deg,#f97316,#ef4444)', i: svg('<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>') },
   lijst: { n: 'Lijst', c: 'linear-gradient(135deg,#22c55e,#15803d)', i: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>') },
   join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
+  chat: { n: 'Chat', c: 'linear-gradient(135deg,#06b6d4,#0e7490)', i: svg('<path d="M21 12a8 8 0 01-11.6 7.1L4 20l1-4.6A8 8 0 1121 12z"/><path d="M8.5 11h7M8.5 14h4"/>') },
   limo: { n: 'Limo', c: 'linear-gradient(135deg,#f59e0b,#b45309)', i: svg('<path d="M3 13l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5v4a1 1 0 01-1 1h-1a2 2 0 01-4 0H9a2 2 0 01-4 0H4a1 1 0 01-1-1z"/><path d="M3 13h18"/>') },
   limoadmin: { n: 'Limo Admin', admin: true, c: 'linear-gradient(135deg,#475569,#0f172a)', i: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 9.5V3M9.9 13.2L4 16M14.1 13.2L20 16"/>') },
   notify: { n: 'Notificatie-maker', admin: true, c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
@@ -81,7 +82,7 @@ const sha = async (s) => [...new Uint8Array(await crypto.subtle.digest('SHA-256'
 // Een inlogcode wordt het wachtwoord; het e-mailadres wordt van de code afgeleid.
 const emailFor = async (code) => `u${(await sha('simon-app:' + norm(code))).slice(0, 24)}@simon-app.invalid`;
 const newCode = () => { const h = [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('').toUpperCase(); return `${h.slice(0, 5)}-${h.slice(5, 10)}-${h.slice(10, 16)}`; };
-const nice = (e) => ({ 'auth/invalid-credential': 'Ongeldige code', 'auth/too-many-requests': 'Te veel pogingen, probeer later opnieuw', 'auth/network-request-failed': 'Geen verbinding', 'permission-denied': 'Geen toegang' }[e.code] || e.message || 'Er ging iets mis');
+const nice = (e) => ({ 'auth/invalid-credential': 'Ongeldige code', 'auth/too-many-requests': 'Te veel pogingen, probeer later opnieuw', 'auth/network-request-failed': 'Geen verbinding', 'permission-denied': 'Geen toegang (de regels in Firebase staan dit niet toe)' }[e.code] || (e.code ? `${e.message || 'Fout'} (${e.code})` : e.message) || 'Er ging iets mis');
 
 let me = null;      // { uid, name, admin, status, apps, lastRead }
 
@@ -103,6 +104,8 @@ async function boot(u) {
   me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0, points: d.points || 0 };
   if (admin && !me.apps.includes('limoadmin')) { me.apps = [...me.apps, 'limoadmin']; await updateDoc(ref, { apps: me.apps }); }
   if (me.status !== 'approved') return waitView();
+  // Profiel (naam) voor de chat, zodat anderen je kunnen vinden
+  try { const p = await getDoc(doc(db, 'profiles', u.uid)); if (!p.exists() || p.data().name !== me.name) await setDoc(doc(db, 'profiles', u.uid), { name: me.name }); } catch (e) { console.error(e); }
   await homeView();
 }
 
@@ -193,7 +196,7 @@ async function myNotifications() {
 /* ---------- Live luisteraars ---------- */
 let unsubs = [];
 const stop = () => { unsubs.forEach((u) => u()); unsubs = []; };
-const live = (q, cb) => unsubs.push(onSnapshot(q, cb, () => {}));
+const live = (q, cb, onErr) => unsubs.push(onSnapshot(q, cb, (e) => { console.error(e); if (onErr) onErr(e); }));
 function setBadge(id, n) {
   const b = document.querySelector(`[data-app="${id}"]`); if (!b) return;
   let el = b.querySelector('.badge');
@@ -225,6 +228,7 @@ async function homeView() {
   document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
   const col = collection(db, 'limoRequests');
   if (me.admin && me.apps.includes('limoadmin')) live(query(col, where('status', '==', 'pending')), (sn) => setBadge('limoadmin', sn.size));
+  if (me.apps.includes('chat')) import('./chat.js').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
   if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
 }
 
@@ -233,7 +237,7 @@ async function openApp(id) {
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -318,14 +322,21 @@ async function notifyView() {
   };
 }
 
+/* ---------- Chat ---------- */
+async function chatApp() {
+  const m = await import('./chat.js');
+  await m.chatView({ db, me, live, $, esc, nice, isAdmin: me.admin, stop });
+}
+
 /* ---------- Limo (leden) ---------- */
 async function pushNtfy(text) {
   try {
     const t = (await getDoc(doc(db, 'config', 'push'))).data()?.topic;
-    if (!t) return;
-    await fetch('https://ntfy.sh/', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    if (!t) return 'Geen onderwerp ingesteld';
+    const r = await fetch('https://ntfy.sh/', { method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ topic: t, title: 'Limo', message: text, click: location.href.split('?')[0].split('#')[0], tags: ['car'] }) });
-  } catch {}
+    return r.ok ? 'ok' : `ntfy gaf fout ${r.status}`;
+  } catch (e) { return 'Geen verbinding met ntfy'; }
 }
 const when = (t) => new Date(t).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 const kind = (t) => (t === 'taxi' ? '🚕 Taxi' : '🛠 Service');
@@ -337,8 +348,10 @@ async function limoView() {
     <div class="box"><h3>Nieuwe aanvraag</h3>
       <div class="row"><label style="flex:1"><input type="radio" name="t" value="taxi" checked> 🚕 Taxi</label><label style="flex:1"><input type="radio" name="t" value="service"> 🛠 Service</label></div>
       <div class="row"><input id="note" placeholder="Opmerking (optioneel)" maxlength="200"></div>
-      <div class="row"><button class="pri" id="send" style="flex:1">Aanvragen met mijn locatie</button></div>
-      <small>Simon krijgt je locatie te zien. Je browser vraagt eerst of dat mag.</small><div id="msg"></div></div>
+      <div class="row wrap"><button id="loc" style="flex:1">📍 Mijn locatie delen</button></div>
+      <div id="locmsg"><small>Tik hierboven: je browser vraagt dan om toestemming.</small></div>
+      <div class="row"><button class="pri" id="send" style="flex:1">Aanvragen</button></div>
+      <div id="msg"></div></div>
     <div id="reqs"></div>`;
   const draw = () => {
     $('#pts').textContent = points;
@@ -368,29 +381,39 @@ async function limoView() {
   live(query(collection(db, 'limoRequests'), where('uid', '==', me.uid)), (sn) => {
     reqs = sn.docs.map((d) => ({ id: d.id, ...d.data() })).filter((r) => !r.dismissed).sort((a, b) => b.created - a.created); draw();
   });
-  const send = async (withLoc) => {
+  let loc = null;
+  const locError = (e) => {
+    const code = e && e.code;
+    const how = '<br><small>Safari op iPhone: Instellingen → Privacy en beveiliging → Locatievoorzieningen → Safari-websites → Tijdens gebruik. Op de Mac: Systeeminstellingen → Privacy en beveiliging → Locatievoorzieningen → Safari aan, en Safari → Instellingen → Websites → Locatie → Sta toe.</small>';
+    return code === 1 ? `<span class="err">Locatie is geweigerd.</span>${how}` : code === 3 ? '<span class="err">Locatie duurde te lang, probeer het opnieuw.</span>' : `<span class="err">Locatie niet beschikbaar.</span>${how}`;
+  };
+  const getLoc = () => new Promise((res, rej) => {
+    if (!navigator.geolocation) return rej({ code: 2 });
+    navigator.geolocation.getCurrentPosition((p) => res({ lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) }), rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 });
+  });
+  const askLoc = async () => {
+    $('#locmsg').textContent = 'Locatie ophalen… (geef toestemming als je browser erom vraagt)';
+    try { loc = await getLoc(); $('#locmsg').innerHTML = `<small>📍 Locatie klaar (±${loc.acc} m)</small>`; return true; }
+    catch (e) { loc = null; $('#locmsg').innerHTML = locError(e); return false; }
+  };
+  $('#loc').onclick = askLoc;
+  $('#send').onclick = async () => {
+    $('#msg').textContent = '';
+    if (!loc && !(await askLoc())) {
+      if (!confirm('Je locatie lukt niet. Toch versturen zonder locatie?')) return;
+    }
     const type = document.querySelector('input[name=t]:checked').value;
     const note = $('#note').value.trim().slice(0, 200);
-    let loc = { lat: null, lng: null, acc: null };
-    $('#msg').textContent = '';
-    if (withLoc) {
-      $('#send').disabled = true; $('#msg').textContent = 'Locatie ophalen…';
-      try {
-        const p = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }) : rej());
-        loc = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
-      } catch {
-        $('#msg').innerHTML = '<span class="err">Locatie lukt niet. Geef toestemming in je browser, of </span><button id="noloc">verstuur zonder locatie</button>';
-        $('#noloc').onclick = () => send(false); $('#send').disabled = false; return;
-      }
-    }
+    $('#send').disabled = true;
     try {
-      await addDoc(collection(db, 'limoRequests'), { uid: me.uid, name: me.name, type, note, ...loc, status: 'pending', created: Date.now(), dismissed: false });
+      await addDoc(collection(db, 'limoRequests'), { uid: me.uid, name: me.name, type, note, lat: loc ? loc.lat : null, lng: loc ? loc.lng : null, acc: loc ? loc.acc : null, status: 'pending', created: Date.now(), dismissed: false });
       $('#note').value = ''; $('#msg').textContent = 'Aanvraag verstuurd ✓';
-      pushNtfy(`Nieuwe ${type === 'taxi' ? 'taxi' : 'service'}-aanvraag van ${me.name}`);
-    } catch (e) { $('#msg').innerHTML = `<span class="err">${esc(nice(e))}</span>`; }
+      const text = `Nieuwe ${type === 'taxi' ? 'taxi' : 'service'}-aanvraag van ${me.name}`;
+      addDoc(collection(db, 'notifications'), { to: ADMIN_UID, text, from: me.uid, created: Date.now() }).catch(() => {});
+      pushNtfy(text);
+    } catch (e) { $('#msg').innerHTML = `<span class="err">Versturen mislukt: ${esc(nice(e))}</span>`; }
     $('#send').disabled = false;
   };
-  $('#send').onclick = () => send(true);
 }
 
 /* ---------- Limo Admin ---------- */
@@ -432,7 +455,7 @@ async function limoAdminView() {
       await updateDoc(doc(db, 'limoRequests', r.id), { status: 'payment_requested', price });
       await note(r, `Simon vraagt vooraf betaling: ${price} Limo-punten.`);
     }));
-  });
+  }, (e) => { $('#areqs').innerHTML = `<div class="box err">Aanvragen laden mislukt: ${esc(nice(e))}</div>`; });
   live(collection(db, 'users'), (sn) => {
     const list = sn.docs.map((d) => ({ id: d.id, ...d.data() })).filter((u) => u.status === 'approved' && (u.apps || []).includes('limo')).sort((a, b) => a.name.localeCompare(b.name));
     const sig = JSON.stringify(list.map((u) => [u.id, u.name, u.points || 0])); if (sig === auserSig) return; auserSig = sig;
@@ -454,7 +477,7 @@ async function limoAdminView() {
     const t = 'simon-limo-' + [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('');
     await setDoc(doc(db, 'config', 'push'), { topic: t }); $('#topic').textContent = t; $('#pm').textContent = 'Opgeslagen. Abonneer in ntfy op dit nieuwe onderwerp.';
   };
-  $('#tst').onclick = async () => { await pushNtfy('Testmelding van Limo Admin'); $('#pm').textContent = 'Testmelding verstuurd.'; };
+  $('#tst').onclick = async () => { const r = await pushNtfy('Testmelding van Limo Admin'); $('#pm').textContent = r === 'ok' ? 'Testmelding verstuurd. Zie je hem niet op je iPhone? Check of je in ntfy op precies dit onderwerp bent geabonneerd.' : `Mislukt: ${r}`; };
 }
 </script>
 </body>

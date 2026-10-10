@@ -53,7 +53,12 @@ service cloud.firestore {
     match /notifications/{id} {
       allow read: if isAdmin()
         || (isMember() && (resource.data.to == 'all' || resource.data.to == request.auth.uid));
-      allow create, delete: if isAdmin();
+      allow create: if isAdmin()
+        || (isMember() && request.resource.data.to == 'nNoSFWamtZaVT4SPnYP3XxW3Uml1'
+            && request.resource.data.from == request.auth.uid
+            && request.resource.data.keys().hasOnly(['to', 'text', 'from', 'created'])
+            && request.resource.data.text is string && request.resource.data.text.size() <= 200);
+      allow delete: if isAdmin();
     }
 
     match /limoRequests/{id} {
@@ -86,6 +91,86 @@ service cloud.firestore {
     match /config/push {
       allow read: if isMember() || isAdmin();
       allow write: if isAdmin();
+    }
+    match /config/giphy {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
+    }
+
+    // ---------- Chat ----------
+    match /profiles/{uid} {
+      allow read: if isMember();
+      allow create, update: if isMember() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['name'])
+        && request.resource.data.name == get(userDoc(uid)).data.name;
+    }
+
+    match /friendships/{pid} {
+      allow read: if isMember() && request.auth.uid in resource.data.members;
+      allow create: if isMember()
+        && pid.split('_').size() == 2
+        && request.auth.uid in pid.split('_')
+        && request.resource.data.members == pid.split('_')
+        && request.resource.data.requester == request.auth.uid
+        && request.resource.data.status == 'pending'
+        && request.resource.data.blockedBy == null
+        && request.resource.data.keys().hasOnly(['members', 'requester', 'status', 'blockedBy', 'last', 'lastAt', 'lastFrom', 'reads'])
+        && exists(/databases/$(db)/documents/profiles/$(pid.split('_')[0]))
+        && exists(/databases/$(db)/documents/profiles/$(pid.split('_')[1]));
+      allow update: if isMember() && request.auth.uid in resource.data.members && (
+          // accepteren of blokkeren door degene die het verzoek kreeg
+          (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'blockedBy'])
+            && resource.data.status == 'pending' && resource.data.requester != request.auth.uid
+            && ((request.resource.data.status == 'accepted' && request.resource.data.blockedBy == null)
+                || (request.resource.data.status == 'blocked' && request.resource.data.blockedBy == request.auth.uid)))
+          // een vriend blokkeren
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'blockedBy'])
+            && resource.data.status == 'accepted'
+            && request.resource.data.status == 'blocked' && request.resource.data.blockedBy == request.auth.uid)
+          // deblokkeren (alleen door wie blokkeerde)
+          || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'blockedBy'])
+            && resource.data.status == 'blocked' && resource.data.blockedBy == request.auth.uid
+            && request.resource.data.status == 'accepted' && request.resource.data.blockedBy == null)
+          // laatste bericht bijwerken
+          || (resource.data.status == 'accepted'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['last', 'lastAt', 'lastFrom'])
+            && request.resource.data.lastFrom == request.auth.uid)
+          // gelezen-markering (alleen je eigen)
+          || (resource.data.status == 'accepted'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reads'])
+            && request.resource.data.reads.diff(resource.data.reads).affectedKeys().hasOnly([request.auth.uid])));
+      allow delete: if isMember() && request.auth.uid in resource.data.members
+        && (resource.data.status != 'blocked' || resource.data.blockedBy == request.auth.uid);
+    }
+
+    match /chats/{pid}/messages/{mid} {
+      function chatOk() {
+        return isMember() && request.auth.uid in pid.split('_')
+          && get(/databases/$(db)/documents/friendships/$(pid)).data.status == 'accepted';
+      }
+      allow read: if chatOk();
+      allow create: if chatOk()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.keys().hasOnly(['from', 'type', 'text', 'data', 'url', 'parts', 'mime', 'created'])
+        && request.resource.data.type in ['text', 'image', 'video', 'gif']
+        && (request.resource.data.type != 'text'
+            || (request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 2000))
+        && (request.resource.data.type != 'image'
+            || (request.resource.data.data is string && request.resource.data.data.size() < 900000 && request.resource.data.data.matches('data:image/.*')))
+        && (request.resource.data.type != 'gif'
+            || (request.resource.data.url is string && request.resource.data.url.matches('https://[a-z0-9]+\\.giphy\\.com/.*')))
+        && (request.resource.data.type != 'video'
+            || (request.resource.data.parts is int && request.resource.data.parts >= 1 && request.resource.data.parts <= 24));
+      allow delete: if chatOk() && resource.data.from == request.auth.uid;
+
+      match /chunks/{n} {
+        allow read: if chatOk();
+        allow create: if chatOk()
+          && request.resource.data.keys().hasOnly(['d', 'by'])
+          && request.resource.data.by == request.auth.uid
+          && request.resource.data.d is string && request.resource.data.d.size() < 700000;
+        allow delete: if chatOk() && resource.data.by == request.auth.uid;
+      }
     }
   }
 }
