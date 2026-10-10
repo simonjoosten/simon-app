@@ -53,7 +53,7 @@ import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWith
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { firebaseConfig, ADMIN_EMAIL } from './firebase-config.js';
+import { firebaseConfig, ADMIN_UID } from './firebase-config.js';
 
 const fb = initializeApp(firebaseConfig);
 const auth = getAuth(fb);
@@ -90,7 +90,7 @@ onAuthStateChanged(auth, async (u) => {
 });
 
 async function boot(u) {
-  const admin = u.providerData.some((p) => p.providerId === 'google.com') && u.emailVerified && u.email === ADMIN_EMAIL;
+  const admin = u.uid === ADMIN_UID && u.providerData.some((p) => p.providerId === 'google.com');
   const ref = doc(db, 'users', u.uid);
   let snap = await getDoc(ref);
   if (admin && !snap.exists()) { await setDoc(ref, { name: 'Simon', status: 'approved', created: Date.now(), apps: ['lijst', 'join', 'notify'], lastRead: 0 }); snap = await getDoc(ref); }

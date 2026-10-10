@@ -6,4 +6,4 @@ export const firebaseConfig = {
   projectId: 'VUL_IN',
   appId: 'VUL_IN',
 };
-export const ADMIN_EMAIL = 'VUL_IN'; // alleen voor de weergave; de regels beslissen echt
+export const ADMIN_UID = 'VUL_IN'; // Firebase-gebruikers-ID van de admin (geen e-mail); de regels beslissen echt
