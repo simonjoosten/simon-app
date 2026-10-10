@@ -106,9 +106,9 @@ function loginView(mode = 'login') {
     <div class="logo"><img src="logo.svg" alt=""><h1>simon-app</h1></div>
     <div class="tabs"><button data-m="login" class="${mode === 'login' ? 'on' : ''}">Inloggen</button><button data-m="signup" class="${mode === 'signup' ? 'on' : ''}">Account aanmaken</button></div>
     <div class="box">${mode === 'login' ? `
-      <form id="f" autocomplete="on">
-        <input type="text" name="username" autocomplete="username" value="simon-app" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;height:0;width:0;border:0;padding:0">
-        <div class="row"><input id="code" name="password" type="password" autocomplete="current-password" placeholder="Inlogcode"><button class="pri" id="go" type="submit">Inloggen</button></div>
+      <form id="f" autocomplete="on" method="get" action="./">
+        <input type="text" autocomplete="username" value="simon-app" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;height:0;width:0;border:0;padding:0">
+        <div class="row"><input id="code" type="password" autocomplete="current-password" placeholder="Inlogcode"><button class="pri" id="go" type="submit">Inloggen</button></div>
       </form>
       <div id="e" class="err"></div>
       <p style="text-align:center;margin:.8rem 0 0"><small><a href="#" id="g">Admin? Inloggen met Google</a></small></p>` : `
@@ -123,7 +123,17 @@ function loginView(mode = 'login') {
       else await signup($('#name').value);
     } catch (e) { $('#e').textContent = nice(e); }
   };
-  if (mode === 'login') $('#f').onsubmit = (e) => { e.preventDefault(); go(); };
+  if (mode === 'login') $('#f').onsubmit = async (e) => {
+    if (nativeSubmit) return; // echte verzending: dan biedt Safari aan om de code te bewaren
+    e.preventDefault();
+    $('#e').textContent = '';
+    signupInFlight = true;
+    try {
+      await signInWithEmailAndPassword(auth, await emailFor($('#code').value), norm($('#code').value));
+      nativeSubmit = true;
+      const f = $('#f'); (f.requestSubmit || f.submit).call(f);
+    } catch (err) { signupInFlight = false; $('#e').textContent = nice(err); }
+  };
   else { $('#go').onclick = go; $('#name').onkeydown = (e) => { if (e.key === 'Enter') go(); }; }
   if ($('#g')) $('#g').onclick = async (e) => { e.preventDefault(); try { await signInWithPopup(auth, new GoogleAuthProvider()); } catch (err) { $('#e').textContent = nice(err); } };
 }
@@ -140,6 +150,7 @@ async function signup(name) {
   codeView(name, code);
 }
 let signupInFlight = false;
+let nativeSubmit = false;
 
 function codeView(name, code) {
   $('#app').innerHTML = `<div class="login"><div class="logo"><img src="logo.svg" alt=""></div>
