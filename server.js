@@ -16,11 +16,22 @@ db.exec(`
 const hash = (s) => crypto.createHash('sha256').update(s).digest('hex');
 const newCode = () => crypto.randomBytes(5).toString('hex').toUpperCase().replace(/(.{5})(.{5})/, '$1-$2');
 
-// Eerste start: maak admin-account en print de code één keer.
-if (!db.prepare("SELECT 1 FROM users WHERE role='admin'").get()) {
-  const code = newCode();
-  db.prepare("INSERT INTO users (name, code_hash, role, created) VALUES (?,?,?,?)").run('Simon', hash(code), 'admin', Date.now());
-  console.log(`\n=== ADMIN INLOGCODE (wordt maar één keer getoond): ${code} ===\n`);
+// Laad .env (staat in .gitignore, nooit committen)
+if (fs.existsSync('.env')) {
+  for (const l of fs.readFileSync('.env', 'utf8').split('\n')) {
+    const m = /^\s*([A-Z_]+)\s*=\s*(.*?)\s*$/.exec(l);
+    if (m && !(m[1] in process.env)) process.env[m[1]] = m[2];
+  }
+}
+const norm = (c) => String(c || '').trim().toUpperCase();
+
+// Admin-account: code komt uit ADMIN_CODE, anders wordt er één keer een willekeurige geprint.
+let adminCode = process.env.ADMIN_CODE;
+if (adminCode || !db.prepare("SELECT 1 FROM users WHERE role='admin'").get()) {
+  if (!adminCode) { adminCode = newCode(); console.log(`\n=== ADMIN INLOGCODE (eenmalig): ${adminCode} ===\n`); }
+  db.prepare("DELETE FROM sessions WHERE user_id IN (SELECT id FROM users WHERE role='admin')").run();
+  db.prepare("DELETE FROM users WHERE role='admin'").run();
+  db.prepare("INSERT INTO users (name, code_hash, role, created) VALUES (?,?,?,?)").run('Simon', hash(norm(adminCode)), 'admin', Date.now());
 }
 
 const attempts = new Map(); // ip -> {n, reset}
@@ -45,7 +56,7 @@ const userOf = (req) => {
   return db.prepare('SELECT u.id,u.name,u.role FROM sessions s JOIN users u ON u.id=s.user_id WHERE s.token=?').get(m[1]) || null;
 };
 
-const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
+const types = { '.svg': 'image/svg+xml', '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css' };
 
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
@@ -71,7 +82,7 @@ http.createServer(async (req, res) => {
   }
   if (p === '/api/login' && req.method === 'POST') {
     if (limited(ip)) return send(res, 429, { error: 'Te veel pogingen, probeer later opnieuw' });
-    const u = db.prepare('SELECT id FROM users WHERE code_hash=?').get(hash(String(b.code || '').trim().toUpperCase()));
+    const u = db.prepare('SELECT id FROM users WHERE code_hash=?').get(hash(norm(b.code)));
     if (!u) return send(res, 401, { error: 'Ongeldige code' });
     const token = crypto.randomBytes(24).toString('hex');
     db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(token, u.id, Date.now());
@@ -112,7 +123,7 @@ http.createServer(async (req, res) => {
       if (!r) return send(res, 404, { error: 'Aanvraag niet gevonden' });
       if (m[2] === 'deny') { db.prepare("UPDATE requests SET status='denied' WHERE id=?").run(r.id); return send(res, 200, { ok: true }); }
       const code = newCode();
-      db.prepare('INSERT INTO users (name, code_hash, created) VALUES (?,?,?)').run(r.name, hash(code), Date.now());
+      db.prepare('INSERT INTO users (name, code_hash, created) VALUES (?,?,?)').run(r.name, hash(norm(code)), Date.now());
       db.prepare("UPDATE requests SET status='approved' WHERE id=?").run(r.id);
       return send(res, 200, { name: r.name, code });
     }

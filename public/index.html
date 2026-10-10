@@ -4,17 +4,31 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>simon-app</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
 <style>
-  body{font-family:system-ui,sans-serif;max-width:560px;margin:2rem auto;padding:0 1rem;color:#222}
-  input,button{font:inherit;padding:.5rem .7rem;border:1px solid #bbb;border-radius:6px}
-  button{cursor:pointer;background:#f3f3f3} .row{display:flex;gap:.5rem;margin:.5rem 0}
-  .row input{flex:1} li{display:flex;gap:.5rem;align-items:center;padding:.3rem 0}
-  li.done span{text-decoration:line-through;color:#888} small{color:#888} .err{color:#c00}
-  .box{border:1px solid #ddd;border-radius:8px;padding:1rem;margin:1rem 0}
+  :root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--mute:#8a90a2;--line:#e4e6ee;--accent:#6366f1}
+  @media(prefers-color-scheme:dark){:root{--bg:#12141c;--card:#1b1e29;--ink:#eceef5;--mute:#8a90a2;--line:#2a2e3d}}
+  *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+  header{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;background:var(--card);border-bottom:1px solid var(--line)}
+  header img{width:34px;height:34px} header b{font-size:1.1rem} header .sp{flex:1}
+  nav{display:flex;gap:.4rem;padding:.6rem 1rem;overflow-x:auto}
+  nav button{display:flex;flex-direction:column;align-items:center;gap:.25rem;min-width:84px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--mute);position:relative}
+  nav button.on{color:#fff;background:var(--accent);border-color:var(--accent)}
+  nav svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  nav span.badge{position:absolute;top:4px;right:6px;background:#ef4444;color:#fff;font-size:.7rem;border-radius:99px;padding:0 .4rem}
+  main{max-width:600px;margin:0 auto;padding:0 1rem 3rem}
+  input,button{font:inherit;color:inherit} input{padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card)}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:.5rem .8rem}
+  button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
+  .row{display:flex;gap:.5rem;margin:.5rem 0;align-items:center} .row input:not([type=checkbox]){flex:1}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:.8rem 0}
+  ul{list-style:none;padding:0;margin:0} li{display:flex;gap:.5rem;align-items:center;padding:.4rem 0}
+  li.done span{text-decoration:line-through;color:var(--mute)} small{color:var(--mute)} .err{color:#ef4444}
+  .code{font:700 1.3rem ui-monospace,monospace;letter-spacing:.05em;color:var(--accent)}
+  .login{max-width:420px;margin:2rem auto;padding:0 1rem} .login .logo{text-align:center} .login .logo img{width:84px}
 </style>
 </head>
 <body>
-<h1>simon-app</h1>
 <div id="app"></div>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -25,55 +39,69 @@ const api = async (url, method = 'GET', data) => {
   return j;
 };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const icons = {
+  lijst: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
+  join: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg>'
+};
+let me, tab = 'lijst';
 
 async function start() {
-  try { render(await api('/api/me')); } catch { loginView(); }
+  try { me = await api('/api/me'); main(); } catch { loginView(); }
 }
 
 function loginView() {
-  $('#app').innerHTML = `
+  $('#app').innerHTML = `<div class="login">
+    <div class="logo"><img src="/logo.svg" alt=""><h1>simon-app</h1></div>
     <div class="box"><h3>Inloggen</h3>
-      <div class="row"><input id="code" placeholder="Inlogcode (XXXXX-XXXXX)"><button id="go">Inloggen</button></div>
+      <div class="row"><input id="code" placeholder="Inlogcode"><button class="pri" id="go">Inloggen</button></div>
       <div id="e1" class="err"></div></div>
     <div class="box"><h3>Nog geen code?</h3>
       <div class="row"><input id="name" placeholder="Je naam"><button id="ask">Code aanvragen</button></div>
-      <div id="e2"></div></div>`;
-  $('#go').onclick = async () => { try { await api('/api/login', 'POST', { code: $('#code').value }); start(); } catch (e) { $('#e1').textContent = e.message; } };
+      <div id="e2"></div></div></div>`;
+  const login = async () => { try { await api('/api/login', 'POST', { code: $('#code').value }); start(); } catch (e) { $('#e1').textContent = e.message; } };
+  $('#go').onclick = login;
+  $('#code').onkeydown = (e) => e.key === 'Enter' && login();
   $('#ask').onclick = async () => {
     try { await api('/api/request', 'POST', { name: $('#name').value }); $('#e2').textContent = 'Aanvraag verstuurd! Simon moet hem eerst goedkeuren.'; }
     catch (e) { $('#e2').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
   };
 }
 
-async function render(me) {
-  const items = await api('/api/items');
+async function main() {
+  const pending = me.role === 'admin' ? (await api('/api/requests')).length : 0;
+  const tabs = [['lijst', 'Lijst']];
+  if (me.role === 'admin') tabs.push(['join', 'Join requests']);
+  if (!tabs.some((t) => t[0] === tab)) tab = 'lijst';
   $('#app').innerHTML = `
-    <p>Hoi ${esc(me.name)} <button id="out">Uitloggen</button></p>
-    <div id="admin"></div>
-    <div class="box"><h3>Gedeelde lijst</h3>
-      <div class="row"><input id="txt" placeholder="Nieuw item"><button id="add">Toevoegen</button></div>
-      <ul style="list-style:none;padding:0">${items.map((i) => `
-        <li class="${i.done ? 'done' : ''}"><input type="checkbox" ${i.done ? 'checked' : ''} data-t="${i.id}">
-        <span style="flex:1">${esc(i.text)} <small>${esc(i.by)}</small></span><button data-d="${i.id}">✕</button></li>`).join('')}</ul></div>`;
+    <header><img src="/logo.svg" alt=""><b>simon-app</b><span class="sp"></span><small>${esc(me.name)}</small><button id="out">Uitloggen</button></header>
+    <nav>${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${icons[k]}${l}${k === 'join' && pending ? `<span class="badge">${pending}</span>` : ''}</button>`).join('')}</nav>
+    <main id="view"></main>`;
   $('#out').onclick = async () => { await api('/api/logout', 'POST'); loginView(); };
-  $('#add').onclick = async () => { if ($('#txt').value.trim()) { await api('/api/items', 'POST', { text: $('#txt').value }); render(me); } };
-  document.querySelectorAll('[data-t]').forEach((e) => e.onchange = async () => { await api('/api/items/' + e.dataset.t, 'PATCH'); render(me); });
-  document.querySelectorAll('[data-d]').forEach((e) => e.onclick = async () => { await api('/api/items/' + e.dataset.d, 'DELETE'); render(me); });
-  if (me.role === 'admin') adminView();
+  document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; main(); });
+  if (tab === 'lijst') lijstView(); else joinView();
 }
 
-async function adminView() {
+async function lijstView() {
+  const items = await api('/api/items');
+  $('#view').innerHTML = `<div class="box"><h3>Gedeelde lijst</h3>
+    <div class="row"><input id="txt" placeholder="Nieuw item"><button class="pri" id="add">Toevoegen</button></div>
+    <ul>${items.map((i) => `<li class="${i.done ? 'done' : ''}"><input type="checkbox" ${i.done ? 'checked' : ''} data-t="${i.id}">
+      <span style="flex:1">${esc(i.text)} <small>${esc(i.by)}</small></span><button data-d="${i.id}">✕</button></li>`).join('')}</ul></div>`;
+  const add = async () => { if ($('#txt').value.trim()) { await api('/api/items', 'POST', { text: $('#txt').value }); lijstView(); } };
+  $('#add').onclick = add; $('#txt').onkeydown = (e) => e.key === 'Enter' && add();
+  document.querySelectorAll('[data-t]').forEach((e) => e.onchange = async () => { await api('/api/items/' + e.dataset.t, 'PATCH'); lijstView(); });
+  document.querySelectorAll('[data-d]').forEach((e) => e.onclick = async () => { await api('/api/items/' + e.dataset.d, 'DELETE'); lijstView(); });
+}
+
+let fresh = null; // laatst goedgekeurde code, eenmalig zichtbaar
+async function joinView() {
   const reqs = await api('/api/requests');
-  if (!reqs.length) return;
-  $('#admin').innerHTML = `<div class="box"><h3>Aanvragen voor toegang</h3>${reqs.map((r) => `
-    <div class="row"><span style="flex:1">${esc(r.name)}</span>
-    <button data-a="${r.id}">Goedkeuren</button><button data-n="${r.id}">Weigeren</button></div>`).join('')}<div id="newcode"></div></div>`;
-  document.querySelectorAll('[data-a]').forEach((e) => e.onclick = async () => {
-    const r = await api(`/api/requests/${e.dataset.a}/approve`, 'POST');
-    await adminView();
-    $('#admin').insertAdjacentHTML('afterbegin', `<div class="box">Code voor <b>${esc(r.name)}</b>: <b>${esc(r.code)}</b><br><small>Geef deze door; hij wordt maar één keer getoond.</small></div>`);
-  });
-  document.querySelectorAll('[data-n]').forEach((e) => e.onclick = async () => { await api(`/api/requests/${e.dataset.n}/deny`, 'POST'); adminView(); });
+  $('#view').innerHTML = `${fresh ? `<div class="box">Code voor <b>${esc(fresh.name)}</b>:<div class="code">${esc(fresh.code)}</div><small>Geef deze door; hij wordt maar één keer getoond.</small></div>` : ''}
+    <div class="box"><h3>Aanvragen voor toegang</h3>
+    ${reqs.length ? reqs.map((r) => `<div class="row"><span style="flex:1">${esc(r.name)} <small>${new Date(r.created).toLocaleString('nl-NL')}</small></span>
+      <button class="pri" data-a="${r.id}">Goedkeuren</button><button data-n="${r.id}">Weigeren</button></div>`).join('') : '<small>Geen openstaande aanvragen.</small>'}</div>`;
+  document.querySelectorAll('[data-a]').forEach((e) => e.onclick = async () => { fresh = await api(`/api/requests/${e.dataset.a}/approve`, 'POST'); main(); });
+  document.querySelectorAll('[data-n]').forEach((e) => e.onclick = async () => { await api(`/api/requests/${e.dataset.n}/deny`, 'POST'); fresh = null; main(); });
 }
 start();
 </script>
