@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: simon-app
+    runtime: node
+    plan: starter            # nodig voor een schijf (blijvende database)
+    buildCommand: "true"
+    startCommand: node server.js
+    envVars:
+      - key: NODE_VERSION
+        value: "24"
+      - key: DB_PATH
+        value: /var/data/data.db
+      - key: TRUST_PROXY
+        value: "true"
+      - key: ADMIN_CODE
+        sync: false          # vul je zelf in op Render, staat niet in GitHub
+    disk:
+      name: data
+      mountPath: /var/data
+      sizeGB: 1

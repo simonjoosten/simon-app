@@ -80,7 +80,9 @@ const types = { '.svg': 'image/svg+xml', '.html': 'text/html; charset=utf-8', '.
 http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
-  const ip = req.socket.remoteAddress;
+  const xff = (req.headers['x-forwarded-for'] || '').split(',').pop().trim();
+  const ip = process.env.TRUST_PROXY && xff ? xff : req.socket.remoteAddress;
+  const secure = req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : '';
 
   if (!p.startsWith('/api/')) {
     const file = path.join('public', p === '/' ? 'index.html' : path.normalize(p).replace(/^(\.\.[/\\])+/, ''));
@@ -103,7 +105,7 @@ http.createServer(async (req, res) => {
     // Direct inloggen zodat de nieuwe gebruiker op goedkeuring kan wachten.
     const token = crypto.randomBytes(24).toString('hex');
     db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(token, r.lastInsertRowid, Date.now());
-    return send(res, 200, { name, code }, { 'Set-Cookie': `session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000` });
+    return send(res, 200, { name, code }, { 'Set-Cookie': `session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${secure}` });
   }
   if (p === '/api/login' && req.method === 'POST') {
     if (limited('login:' + ip, 10, 15 * 60e3)) return send(res, 429, { error: 'Te veel pogingen, probeer later opnieuw' });
@@ -111,7 +113,7 @@ http.createServer(async (req, res) => {
     if (!u) return send(res, 401, { error: 'Ongeldige code' });
     const token = crypto.randomBytes(24).toString('hex');
     db.prepare('INSERT INTO sessions VALUES (?,?,?)').run(token, u.id, Date.now());
-    return send(res, 200, { ok: true }, { 'Set-Cookie': `session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000` });
+    return send(res, 200, { ok: true }, { 'Set-Cookie': `session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=2592000${secure}` });
   }
   if (p === '/api/logout' && req.method === 'POST') {
     const t = tokenOf(req);
