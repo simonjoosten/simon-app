@@ -67,7 +67,7 @@ const META = {
   notifications: { n: 'Notificaties', core: true, c: 'linear-gradient(135deg,#f97316,#ef4444)', i: svg('<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>') },
   lijst: { n: 'Lijst', c: 'linear-gradient(135deg,#22c55e,#15803d)', i: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>') },
   join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
-  notify: { n: 'Notificatie-maker', admin: true, locked: true, c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
+  notify: { n: 'Notificatie-maker', admin: true, c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
 };
 const ico = (id) => `<span class="ico" style="background:${META[id].c}">${META[id].i}</span>`;
 
@@ -79,7 +79,6 @@ const newCode = () => { const h = [...crypto.getRandomValues(new Uint8Array(8))]
 const nice = (e) => ({ 'auth/invalid-credential': 'Ongeldige code', 'auth/too-many-requests': 'Te veel pogingen, probeer later opnieuw', 'auth/network-request-failed': 'Geen verbinding', 'permission-denied': 'Geen toegang' }[e.code] || e.message || 'Er ging iets mis');
 
 let me = null;      // { uid, name, admin, status, apps, lastRead }
-let unlockedUntil = 0;
 
 const logout = async () => { await signOut(auth); location.reload(); };
 
@@ -209,7 +208,7 @@ async function openApp(id) {
 async function installerView() {
   const list = Object.keys(META).filter((id) => !META[id].core && (!META[id].admin || me.admin));
   $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><ul>${list.map((id) => { const on = me.apps.includes(id); return `
-    <li>${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}${META[id].locked ? ' 🔒' : ''}</span>
+    <li>${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}</span>
     <button class="${on ? '' : 'pri'}" data-i="${id}">${on ? 'Verwijderen' : 'Installeren'}</button></li>`; }).join('')}</ul>
     <small>App Installer en Notificaties zitten er altijd bij.</small></div>`;
   document.querySelectorAll('[data-i]').forEach((b) => b.onclick = async () => {
@@ -267,9 +266,8 @@ async function joinView() {
   document.querySelectorAll('[data-r]').forEach((e) => e.onclick = () => confirm('Dit lid verwijderen?') && set(e.dataset.r, 'removed'));
 }
 
-/* ---------- Notificatie-maker (admin, vergrendeld) ---------- */
+/* ---------- Notificatie-maker (admin) ---------- */
 async function notifyView() {
-  if (Date.now() > unlockedUntil) return lockView();
   const snap = await getDocs(query(collection(db, 'users'), where('status', '==', 'approved')));
   const users = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((u) => u.id !== me.uid);
   $('#view').innerHTML = `<div class="box"><h3>Notificatie sturen</h3>
@@ -284,25 +282,6 @@ async function notifyView() {
       await addDoc(collection(db, 'notifications'), { to, toName: users.find((u) => u.id === to)?.name || null, text, created: Date.now() });
       $('#txt').value = ''; $('#msg').textContent = 'Verstuurd ✓';
     } catch (e) { $('#msg').innerHTML = `<span class="err">${esc(nice(e))}</span>`; }
-  };
-}
-async function lockView() {
-  const ref = doc(db, 'config', 'pin');
-  const cur = (await getDoc(ref)).data();
-  $('#view').innerHTML = `<div class="box center"><h3>🔒 Vergrendeld</h3>
-    <p>${cur ? 'Voer je slotcode in om notificaties te maken.' : 'Kies een slotcode voor deze app.'}</p>
-    <form id="f" autocomplete="on">
-      <input type="text" name="username" autocomplete="username" value="simon-app-slot" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;height:0;width:0;border:0;padding:0">
-      <div class="row"><input id="pin" name="password" type="password" autocomplete="${cur ? 'current-password' : 'new-password'}" placeholder="Slotcode"><button class="pri" id="un" type="submit">${cur ? 'Ontgrendel' : 'Instellen'}</button></div>
-    </form><div id="e" class="err"></div></div>`;
-  $('#f').onsubmit = async (e) => {
-    e.preventDefault();
-    const raw = norm($('#pin').value);
-    if (!raw) return;
-    const h = await sha('pin:' + raw);
-    if (!cur) await setDoc(ref, { hash: h });
-    else if (h !== cur.hash) { $('#e').textContent = 'Ongeldige code'; return; }
-    unlockedUntil = Date.now() + 15 * 60e3; notifyView();
   };
 }
 </script>
