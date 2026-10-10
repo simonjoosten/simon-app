@@ -43,6 +43,9 @@
   .appbar b{flex:1} .appview main{padding:0 1rem 2rem}
   .home{display:block;margin:0 auto 1rem;width:130px;height:5px;border-radius:9px;background:var(--mute);opacity:.5;border:0;padding:0}
   .center{text-align:center;padding:3rem 1rem}
+  .row input[type=radio]{flex:none;width:auto}
+  .chip{display:inline-block;padding:.1rem .5rem;border-radius:99px;background:var(--line);font-size:.8rem}
+  .row.wrap{flex-wrap:wrap}
 </style>
 </head>
 <body>
@@ -51,7 +54,7 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, GoogleAuthProvider, signOut }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy }
+import { getFirestore, doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs, query, where, orderBy, onSnapshot, writeBatch }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { firebaseConfig, ADMIN_UID } from './firebase-config.js';
 
@@ -67,6 +70,8 @@ const META = {
   notifications: { n: 'Notificaties', core: true, c: 'linear-gradient(135deg,#f97316,#ef4444)', i: svg('<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>') },
   lijst: { n: 'Lijst', c: 'linear-gradient(135deg,#22c55e,#15803d)', i: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>') },
   join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
+  limo: { n: 'Limo', c: 'linear-gradient(135deg,#f59e0b,#b45309)', i: svg('<path d="M3 13l2-5a2 2 0 012-1h10a2 2 0 012 1l2 5v4a1 1 0 01-1 1h-1a2 2 0 01-4 0H9a2 2 0 01-4 0H4a1 1 0 01-1-1z"/><path d="M3 13h18"/>') },
+  limoadmin: { n: 'Limo Admin', admin: true, c: 'linear-gradient(135deg,#475569,#0f172a)', i: svg('<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="2.5"/><path d="M12 9.5V3M9.9 13.2L4 16M14.1 13.2L20 16"/>') },
   notify: { n: 'Notificatie-maker', admin: true, c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
 };
 const ico = (id) => `<span class="ico" style="background:${META[id].c}">${META[id].i}</span>`;
@@ -95,7 +100,8 @@ async function boot(u) {
   if (admin && !snap.exists()) { await setDoc(ref, { name: 'Simon', status: 'approved', created: Date.now(), apps: ['lijst', 'join', 'notify'], lastRead: 0 }); snap = await getDoc(ref); }
   if (!snap.exists()) { me = { uid: u.uid, name: '', status: u.providerData.some((p) => p.providerId === 'google.com') ? 'noaccount' : 'denied' }; return waitView(); }
   const d = snap.data();
-  me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0 };
+  me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0, points: d.points || 0 };
+  if (admin && !me.apps.includes('limoadmin')) { me.apps = [...me.apps, 'limoadmin']; await updateDoc(ref, { apps: me.apps }); }
   if (me.status !== 'approved') return waitView();
   await homeView();
 }
@@ -185,8 +191,21 @@ async function myNotifications() {
   return [...seen.values()].sort((a, b) => b.created - a.created).slice(0, 100);
 }
 
+/* ---------- Live luisteraars ---------- */
+let unsubs = [];
+const stop = () => { unsubs.forEach((u) => u()); unsubs = []; };
+const live = (q, cb) => unsubs.push(onSnapshot(q, cb, () => {}));
+function setBadge(id, n) {
+  const b = document.querySelector(`[data-app="${id}"]`); if (!b) return;
+  let el = b.querySelector('.badge');
+  if (!n) { if (el) el.remove(); return; }
+  if (!el) { el = document.createElement('span'); el.className = 'badge'; b.appendChild(el); }
+  el.textContent = n;
+}
+
 /* ---------- Homescherm ---------- */
 async function homeView() {
+  stop();
   const ids = Object.keys(META).filter((id) => !META[id].admin || me.admin);
   const installed = (id) => META[id].core || me.apps.includes(id);
   const [notes, pend] = await Promise.all([
@@ -205,13 +224,17 @@ async function homeView() {
     <div class="dock">${mine.filter((i) => META[i].core).map(tile).join('')}</div></div>`;
   $('#out').onclick = logout;
   document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+  const col = collection(db, 'limoRequests');
+  if (me.admin && me.apps.includes('limoadmin')) live(query(col, where('status', '==', 'pending')), (sn) => setBadge('limoadmin', sn.size));
+  if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
 }
 
 async function openApp(id) {
+  stop();
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -294,6 +317,145 @@ async function notifyView() {
       $('#txt').value = ''; $('#msg').textContent = 'Verstuurd ✓';
     } catch (e) { $('#msg').innerHTML = `<span class="err">${esc(nice(e))}</span>`; }
   };
+}
+
+/* ---------- Limo (leden) ---------- */
+async function pushNtfy(text) {
+  try {
+    const t = (await getDoc(doc(db, 'config', 'push'))).data()?.topic;
+    if (!t) return;
+    await fetch('https://ntfy.sh/', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ topic: t, title: 'Limo', message: text, click: location.href.split('?')[0].split('#')[0], tags: ['car'] }) });
+  } catch {}
+}
+const when = (t) => new Date(t).toLocaleString('nl-NL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+const kind = (t) => (t === 'taxi' ? '🚕 Taxi' : '🛠 Service');
+
+async function limoView() {
+  let points = me.points || 0, reqs = [];
+  $('#view').innerHTML = `
+    <div class="box center" style="padding:1.2rem"><small>Jouw Limo-punten</small><div class="code" id="pts" style="font-size:2.4rem">${points}</div></div>
+    <div class="box"><h3>Nieuwe aanvraag</h3>
+      <div class="row"><label style="flex:1"><input type="radio" name="t" value="taxi" checked> 🚕 Taxi</label><label style="flex:1"><input type="radio" name="t" value="service"> 🛠 Service</label></div>
+      <div class="row"><input id="note" placeholder="Opmerking (optioneel)" maxlength="200"></div>
+      <div class="row"><button class="pri" id="send" style="flex:1">Aanvragen met mijn locatie</button></div>
+      <small>Simon krijgt je locatie te zien. Je browser vraagt eerst of dat mag.</small><div id="msg"></div></div>
+    <div id="reqs"></div>`;
+  const draw = () => {
+    $('#pts').textContent = points;
+    $('#reqs').innerHTML = reqs.map((r) => {
+      let st = '', btn = '';
+      if (r.status === 'pending') st = '⏳ Wachten op Simon';
+      else if (r.status === 'payment_requested') {
+        st = `💳 Simon vraagt vooraf betaling: <b>${r.price}</b> punten`;
+        btn = points >= r.price ? `<button class="pri" data-pay="${r.id}">Betaal ${r.price} punten</button>` : '<small class="err">Je hebt te weinig punten</small>';
+      } else if (r.status === 'paid') st = '✅ Betaald, wachten op Simon';
+      else if (r.status === 'accepted') { st = '✅ Request geaccepteerd'; btn = `<button data-dis="${r.id}">Dismiss</button>`; }
+      else if (r.status === 'declined') { st = '❌ Request geweigerd'; btn = `<button data-dis="${r.id}">Dismiss</button>`; }
+      return `<div class="box"><b>${kind(r.type)}</b>${r.note ? ` · ${esc(r.note)}` : ''} <small>${when(r.created)}</small><br>${st}${btn ? `<div class="row">${btn}</div>` : ''}</div>`;
+    }).join('');
+    document.querySelectorAll('[data-dis]').forEach((b) => b.onclick = () => updateDoc(doc(db, 'limoRequests', b.dataset.dis), { dismissed: true }).catch((e) => alert(nice(e))));
+    document.querySelectorAll('[data-pay]').forEach((b) => b.onclick = async () => {
+      const r = reqs.find((x) => x.id === b.dataset.pay); b.disabled = true;
+      try {
+        const batch = writeBatch(db);
+        batch.update(doc(db, 'limoRequests', r.id), { status: 'paid', paidAt: Date.now() });
+        batch.update(doc(db, 'users', me.uid), { points: points - r.price, lastPaid: r.id });
+        await batch.commit();
+      } catch (e) { alert('Betalen is niet gelukt, probeer het opnieuw.'); b.disabled = false; }
+    });
+  };
+  live(doc(db, 'users', me.uid), (d) => { points = d.data()?.points || 0; me.points = points; draw(); });
+  live(query(collection(db, 'limoRequests'), where('uid', '==', me.uid)), (sn) => {
+    reqs = sn.docs.map((d) => ({ id: d.id, ...d.data() })).filter((r) => !r.dismissed).sort((a, b) => b.created - a.created); draw();
+  });
+  const send = async (withLoc) => {
+    const type = document.querySelector('input[name=t]:checked').value;
+    const note = $('#note').value.trim().slice(0, 200);
+    let loc = { lat: null, lng: null, acc: null };
+    $('#msg').textContent = '';
+    if (withLoc) {
+      $('#send').disabled = true; $('#msg').textContent = 'Locatie ophalen…';
+      try {
+        const p = await new Promise((res, rej) => navigator.geolocation ? navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 15000, maximumAge: 30000 }) : rej());
+        loc = { lat: p.coords.latitude, lng: p.coords.longitude, acc: Math.round(p.coords.accuracy) };
+      } catch {
+        $('#msg').innerHTML = '<span class="err">Locatie lukt niet. Geef toestemming in je browser, of </span><button id="noloc">verstuur zonder locatie</button>';
+        $('#noloc').onclick = () => send(false); $('#send').disabled = false; return;
+      }
+    }
+    try {
+      await addDoc(collection(db, 'limoRequests'), { uid: me.uid, name: me.name, type, note, ...loc, status: 'pending', created: Date.now(), dismissed: false });
+      $('#note').value = ''; $('#msg').textContent = 'Aanvraag verstuurd ✓';
+      pushNtfy(`Nieuwe ${type === 'taxi' ? 'taxi' : 'service'}-aanvraag van ${me.name}`);
+    } catch (e) { $('#msg').innerHTML = `<span class="err">${esc(nice(e))}</span>`; }
+    $('#send').disabled = false;
+  };
+  $('#send').onclick = () => send(true);
+}
+
+/* ---------- Limo Admin ---------- */
+async function limoAdminView() {
+  const push = (await getDoc(doc(db, 'config', 'push'))).data()?.topic || '';
+  $('#view').innerHTML = `
+    <div id="areqs"></div>
+    <div class="box"><h3>Limo-punten</h3><div id="ausers"></div></div>
+    <div class="box"><h3>Melding op je telefoon</h3>
+      <p><small>1. Installeer de gratis app <b>ntfy</b> op je iPhone. 2. Tik op + en abonneer op dit onderwerp. De melding bevat alleen een kort bericht (naam en soort), nooit de locatie. Hij gaat via ntfy.sh.</small></p>
+      <div class="code" id="topic" style="font-size:.95rem;word-break:break-all;user-select:all">${esc(push) || 'Nog geen onderwerp'}</div>
+      <div class="row wrap"><button id="mk">Nieuw onderwerp maken</button><button id="tst">Testmelding</button></div><div id="pm"></div></div>`;
+  let areqSig = '', auserSig = '';
+  live(collection(db, 'limoRequests'), (sn) => {
+    const all = sn.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => b.created - a.created);
+    const sig = JSON.stringify(all.map((r) => [r.id, r.status, r.price, r.dismissed])); if (sig === areqSig) return; areqSig = sig;
+    const open = all.filter((r) => ['pending', 'payment_requested', 'paid'].includes(r.status));
+    const done = all.filter((r) => ['accepted', 'declined'].includes(r.status)).slice(0, 8);
+    const card = (r) => {
+      const has = typeof r.lat === 'number' && typeof r.lng === 'number';
+      const loc = has ? `📍 <a href="https://maps.apple.com/?ll=${r.lat},${r.lng}&q=${encodeURIComponent(r.name)}" target="_blank" rel="noopener">Apple Kaarten</a> · <a href="https://www.google.com/maps?q=${r.lat},${r.lng}" target="_blank" rel="noopener">Google Maps</a> <small>(±${r.acc} m)</small>` : '<small>📍 Geen locatie meegestuurd</small>';
+      const chip = { pending: 'Nieuw', payment_requested: `Betaling gevraagd: ${r.price}`, paid: 'Betaald ✓', accepted: 'Geaccepteerd', declined: 'Geweigerd' }[r.status];
+      const isOpen = ['pending', 'payment_requested', 'paid'].includes(r.status);
+      return `<div class="box"><b>${kind(r.type)}</b> · ${esc(r.name)} <span class="chip">${chip}</span><br>${r.note ? `${esc(r.note)}<br>` : ''}${loc}<br><small>${when(r.created)}</small>
+        ${isOpen ? `<div class="row wrap"><button class="pri" data-acc="${r.id}">Accepteer</button><button data-dec="${r.id}">Weiger</button></div>
+        ${r.status === 'pending' ? `<div class="row"><input type="number" min="1" step="1" placeholder="Punten" id="pr-${r.id}"><button data-pay="${r.id}">Vraag betaling vooraf</button></div>` : ''}`
+        : `<div class="row"><button data-del="${r.id}">Verwijder</button></div>`}</div>`;
+    };
+    $('#areqs').innerHTML = `<div class="box"><h3>Aanvragen</h3>${open.length ? '' : '<small>Geen openstaande aanvragen.</small>'}</div>${open.map(card).join('')}${done.length ? `<small style="display:block;margin:.8rem 0 -.4rem">Afgerond</small>${done.map(card).join('')}` : ''}`;
+    const note = (r, text) => addDoc(collection(db, 'notifications'), { to: r.uid, toName: r.name, text, created: Date.now() });
+    const find = (id) => all.find((x) => x.id === id);
+    const run = (fn) => fn().catch((e) => alert(nice(e)));
+    document.querySelectorAll('[data-acc]').forEach((b) => b.onclick = () => run(async () => { const r = find(b.dataset.acc); await updateDoc(doc(db, 'limoRequests', r.id), { status: 'accepted' }); await note(r, `Je ${r.type === 'taxi' ? 'taxi' : 'service'}-aanvraag is geaccepteerd.`); }));
+    document.querySelectorAll('[data-dec]').forEach((b) => b.onclick = () => run(async () => { const r = find(b.dataset.dec); await updateDoc(doc(db, 'limoRequests', r.id), { status: 'declined' }); await note(r, 'Je aanvraag is geweigerd.'); }));
+    document.querySelectorAll('[data-del]').forEach((b) => b.onclick = () => run(() => deleteDoc(doc(db, 'limoRequests', b.dataset.del))));
+    document.querySelectorAll('[data-pay]').forEach((b) => b.onclick = () => run(async () => {
+      const r = find(b.dataset.pay); const price = parseInt($(`#pr-${r.id}`).value, 10);
+      if (!(price > 0)) return alert('Vul een aantal punten in (minimaal 1).');
+      await updateDoc(doc(db, 'limoRequests', r.id), { status: 'payment_requested', price });
+      await note(r, `Simon vraagt vooraf betaling: ${price} Limo-punten.`);
+    }));
+  });
+  live(collection(db, 'users'), (sn) => {
+    const list = sn.docs.map((d) => ({ id: d.id, ...d.data() })).filter((u) => u.status === 'approved' && (u.apps || []).includes('limo')).sort((a, b) => a.name.localeCompare(b.name));
+    const sig = JSON.stringify(list.map((u) => [u.id, u.name, u.points || 0])); if (sig === auserSig) return; auserSig = sig;
+    $('#ausers').innerHTML = list.length ? list.map((u) => `<div class="row wrap"><span style="flex:1;min-width:6rem"><b>${esc(u.name)}</b> <span class="chip">${u.points || 0} punten</span></span>
+      <input type="number" min="1" step="1" value="10" id="am-${u.id}" style="max-width:5rem"><button data-add="${u.id}">＋ Bij</button><button data-sub="${u.id}">− Af</button></div>`).join('')
+      : '<small>Nog niemand heeft de Limo-app geïnstalleerd.</small>';
+    const change = (id, sign) => {
+      const u = list.find((x) => x.id === id); const amt = parseInt($(`#am-${id}`).value, 10);
+      if (!(amt > 0)) return alert('Vul een aantal punten in.');
+      const next = Math.max(0, (u.points || 0) + sign * amt);
+      updateDoc(doc(db, 'users', id), { points: next })
+        .then(() => addDoc(collection(db, 'notifications'), { to: id, toName: u.name, text: `Je hebt ${amt} Limo-punten ${sign > 0 ? 'gekregen' : 'verloren'}. Nu: ${next}.`, created: Date.now() }))
+        .catch((e) => alert(nice(e)));
+    };
+    document.querySelectorAll('[data-add]').forEach((b) => b.onclick = () => change(b.dataset.add, 1));
+    document.querySelectorAll('[data-sub]').forEach((b) => b.onclick = () => change(b.dataset.sub, -1));
+  });
+  $('#mk').onclick = async () => {
+    const t = 'simon-limo-' + [...crypto.getRandomValues(new Uint8Array(8))].map((b) => b.toString(16).padStart(2, '0')).join('');
+    await setDoc(doc(db, 'config', 'push'), { topic: t }); $('#topic').textContent = t; $('#pm').textContent = 'Opgeslagen. Abonneer in ntfy op dit nieuwe onderwerp.';
+  };
+  $('#tst').onclick = async () => { await pushNtfy('Testmelding van Limo Admin'); $('#pm').textContent = 'Testmelding verstuurd.'; };
 }
 </script>
 </body>

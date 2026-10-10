@@ -11,6 +11,9 @@ service cloud.firestore {
         && exists(/databases/$(db)/documents/users/$(request.auth.uid))
         && get(/databases/$(db)/documents/users/$(request.auth.uid)).data.status == 'approved';
     }
+    function userDoc(uid) { return /databases/$(db)/documents/users/$(uid); }
+    function limoDoc(id) { return /databases/$(db)/documents/limoRequests/$(id); }
+    function isNum(v) { return v == null || v is number; }
 
     match /users/{uid} {
       allow read: if isAdmin() || (signedIn() && request.auth.uid == uid);
@@ -23,7 +26,17 @@ service cloud.firestore {
             && request.resource.data.name.size() > 0 && request.resource.data.name.size() <= 60);
       allow update: if isAdmin()
         || (signedIn() && request.auth.uid == uid && resource.data.status == 'approved'
-            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['apps', 'lastRead']));
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['apps', 'lastRead']))
+        // Betalen met Limo-punten: alleen samen met het betaalde verzoek (zelfde batch)
+        || (signedIn() && request.auth.uid == uid && resource.data.status == 'approved'
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'lastPaid'])
+            && request.resource.data.lastPaid is string
+            && get(limoDoc(request.resource.data.lastPaid)).data.uid == request.auth.uid
+            && get(limoDoc(request.resource.data.lastPaid)).data.status == 'payment_requested'
+            && get(limoDoc(request.resource.data.lastPaid)).data.price > 0
+            && getAfter(limoDoc(request.resource.data.lastPaid)).data.status == 'paid'
+            && request.resource.data.points == resource.data.get('points', 0) - get(limoDoc(request.resource.data.lastPaid)).data.price
+            && request.resource.data.points >= 0);
       allow delete: if isAdmin();
     }
 
@@ -43,8 +56,36 @@ service cloud.firestore {
       allow create, delete: if isAdmin();
     }
 
+    match /limoRequests/{id} {
+      allow read: if isAdmin() || (isMember() && resource.data.uid == request.auth.uid);
+      allow create: if isMember()
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.name == get(userDoc(request.auth.uid)).data.name
+        && request.resource.data.keys().hasOnly(['uid', 'name', 'type', 'note', 'lat', 'lng', 'acc', 'status', 'created', 'dismissed'])
+        && request.resource.data.type in ['taxi', 'service']
+        && request.resource.data.status == 'pending'
+        && request.resource.data.note is string && request.resource.data.note.size() <= 200
+        && isNum(request.resource.data.lat) && isNum(request.resource.data.lng) && isNum(request.resource.data.acc);
+      allow update: if isAdmin()
+        || (isMember() && resource.data.uid == request.auth.uid && (
+            // Dismiss na geaccepteerd of geweigerd
+            (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['dismissed'])
+              && resource.data.status in ['accepted', 'declined'])
+            // Betalen: punten gaan er in dezelfde batch van af
+            || (request.resource.data.diff(resource.data).affectedKeys().hasOnly(['status', 'paidAt'])
+              && resource.data.status == 'payment_requested'
+              && request.resource.data.status == 'paid'
+              && getAfter(userDoc(request.auth.uid)).data.get('points', 0) == get(userDoc(request.auth.uid)).data.get('points', 0) - resource.data.price
+              && getAfter(userDoc(request.auth.uid)).data.get('points', 0) >= 0)));
+      allow delete: if isAdmin();
+    }
+
     match /config/{doc} {
       allow read, write: if isAdmin();
+    }
+    match /config/push {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
     }
   }
 }
