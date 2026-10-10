@@ -291,15 +291,19 @@ async function lockView() {
   const cur = (await getDoc(ref)).data();
   $('#view').innerHTML = `<div class="box center"><h3>🔒 Vergrendeld</h3>
     <p>${cur ? 'Voer je slotcode in om notificaties te maken.' : 'Kies een slotcode voor deze app.'}</p>
-    <div class="row"><input id="pin" type="password" placeholder="Slotcode"><button class="pri" id="un">${cur ? 'Ontgrendel' : 'Instellen'}</button></div><div id="e" class="err"></div></div>`;
-  const go = async () => {
-    const h = await sha('pin:' + norm($('#pin').value));
-    if (!norm($('#pin').value)) return;
+    <form id="f" autocomplete="on">
+      <input type="text" name="username" autocomplete="username" value="simon-app-slot" tabindex="-1" aria-hidden="true" style="position:absolute;opacity:0;height:0;width:0;border:0;padding:0">
+      <div class="row"><input id="pin" name="password" type="password" autocomplete="${cur ? 'current-password' : 'new-password'}" placeholder="Slotcode"><button class="pri" id="un" type="submit">${cur ? 'Ontgrendel' : 'Instellen'}</button></div>
+    </form><div id="e" class="err"></div></div>`;
+  $('#f').onsubmit = async (e) => {
+    e.preventDefault();
+    const raw = norm($('#pin').value);
+    if (!raw) return;
+    const h = await sha('pin:' + raw);
     if (!cur) await setDoc(ref, { hash: h });
     else if (h !== cur.hash) { $('#e').textContent = 'Ongeldige code'; return; }
     unlockedUntil = Date.now() + 15 * 60e3; notifyView();
   };
-  $('#un').onclick = go; $('#pin').onkeydown = (e) => { if (e.key === 'Enter') go(); };
 }
 </script>
 </body>
