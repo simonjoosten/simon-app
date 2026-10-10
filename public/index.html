@@ -2,30 +2,47 @@
 <html lang="nl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>simon-app</title>
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
 <style>
   :root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--mute:#8a90a2;--line:#e4e6ee;--accent:#6366f1}
   @media(prefers-color-scheme:dark){:root{--bg:#12141c;--card:#1b1e29;--ink:#eceef5;--mute:#8a90a2;--line:#2a2e3d}}
-  *{box-sizing:border-box} body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink)}
-  header{display:flex;align-items:center;gap:.7rem;padding:.8rem 1rem;background:var(--card);border-bottom:1px solid var(--line)}
-  header img{width:34px;height:34px} header b{font-size:1.1rem} header .sp{flex:1}
-  nav{display:flex;gap:.4rem;padding:.6rem 1rem;overflow-x:auto}
-  nav button{display:flex;flex-direction:column;align-items:center;gap:.25rem;min-width:84px;padding:.7rem .8rem;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--mute);position:relative}
-  nav button.on{color:#fff;background:var(--accent);border-color:var(--accent)}
-  nav svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-  nav span.badge{position:absolute;top:4px;right:6px;background:#ef4444;color:#fff;font-size:.7rem;border-radius:99px;padding:0 .4rem}
-  main{max-width:600px;margin:0 auto;padding:0 1rem 3rem}
-  input,button{font:inherit;color:inherit} input{padding:.55rem .7rem;border:1px solid var(--line);border-radius:8px;background:var(--card)}
-  button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:8px;padding:.5rem .8rem}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  input,button{font:inherit;color:inherit} input:not([type=checkbox]){padding:.6rem .75rem;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+  button{cursor:pointer;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:.55rem .9rem}
   button.pri{background:var(--accent);border-color:var(--accent);color:#fff}
-  .row{display:flex;gap:.5rem;margin:.5rem 0;align-items:center} .row input:not([type=checkbox]){flex:1}
-  .box{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:1rem;margin:.8rem 0}
-  ul{list-style:none;padding:0;margin:0} li{display:flex;gap:.5rem;align-items:center;padding:.4rem 0}
+  .row{display:flex;gap:.5rem;margin:.5rem 0;align-items:center} .row input:not([type=checkbox]){flex:1;min-width:0}
+  .box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:.8rem 0}
+  ul{list-style:none;padding:0;margin:0} li{display:flex;gap:.5rem;align-items:center;padding:.45rem 0}
   li.done span{text-decoration:line-through;color:var(--mute)} small{color:var(--mute)} .err{color:#ef4444}
-  .code{font:700 1.3rem ui-monospace,monospace;letter-spacing:.05em;color:var(--accent)}
-  .login{max-width:420px;margin:2rem auto;padding:0 1rem} .login .logo{text-align:center} .login .logo img{width:84px}
+  .code{font:700 1.4rem ui-monospace,monospace;letter-spacing:.06em;color:var(--accent);margin:.3rem 0}
+
+  /* Inlogscherm */
+  .login{max-width:420px;margin:0 auto;padding:2rem 1rem} .login .logo{text-align:center} .login .logo img{width:84px}
+  .tabs{display:flex;gap:.4rem;margin:1rem 0 0} .tabs button{flex:1} .tabs button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+  /* Telefoon-homescherm */
+  .phone{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;
+    background:linear-gradient(160deg,#4f46e5 0%,#7c3aed 45%,#06b6d4 100%);color:#fff}
+  .status{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1.4rem .2rem;font-weight:600;font-size:.95rem}
+  .status button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:99px;padding:.3rem .8rem;font-size:.8rem}
+  .hello{padding:.4rem 1.4rem 0;opacity:.85;font-size:.9rem}
+  .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem .4rem;padding:1.5rem 1rem;flex:1;align-content:start}
+  .app{display:flex;flex-direction:column;align-items:center;gap:.35rem;background:none;border:0;color:#fff;padding:0;font-size:.72rem;position:relative}
+  .ico{width:58px;height:58px;border-radius:15px;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+  .ico svg{width:30px;height:30px;stroke:#fff;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .badge{position:absolute;top:-6px;right:4px;background:#ef4444;color:#fff;font-size:.7rem;font-weight:700;border-radius:99px;min-width:20px;padding:0 .35rem;line-height:20px;text-align:center}
+  .dock{display:flex;justify-content:center;gap:1.6rem;margin:0 1rem 1rem;padding:.9rem;border-radius:26px;background:rgba(255,255,255,.22);backdrop-filter:blur(14px)}
+
+  /* Geopende app */
+  .appview{max-width:430px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column}
+  .appbar{display:flex;align-items:center;gap:.6rem;padding:.8rem 1rem;background:var(--card);border-bottom:1px solid var(--line);position:sticky;top:0}
+  .appbar .ico{width:32px;height:32px;border-radius:9px;box-shadow:none} .appbar .ico svg{width:18px;height:18px}
+  .appbar b{flex:1} .appview main{padding:0 1rem 2rem}
+  .home{display:block;margin:0 auto 1rem;width:130px;height:5px;border-radius:9px;background:var(--mute);opacity:.5;border:0;padding:0}
+  .center{text-align:center;padding:3rem 1rem}
 </style>
 </head>
 <body>
@@ -35,52 +52,118 @@ const $ = (s) => document.querySelector(s);
 const api = async (url, method = 'GET', data) => {
   const r = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: data ? JSON.stringify(data) : undefined });
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || 'Er ging iets mis');
+  if (!r.ok) { const e = new Error(j.error || 'Er ging iets mis'); e.status = r.status; e.data = j; throw e; }
   return j;
 };
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const icons = {
-  lijst: '<svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/></svg>',
-  join: '<svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/></svg>'
+const svg = (d) => `<svg viewBox="0 0 24 24">${d}</svg>`;
+const META = {
+  installer: { c: 'linear-gradient(135deg,#3b82f6,#1d4ed8)', i: svg('<path d="M12 3v12m0 0l-4-4m4 4l4-4"/><path d="M4 17v2a2 2 0 002 2h12a2 2 0 002-2v-2"/>') },
+  notifications: { c: 'linear-gradient(135deg,#f97316,#ef4444)', i: svg('<path d="M6 8a6 6 0 0112 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10 21a2 2 0 004 0"/>') },
+  lijst: { c: 'linear-gradient(135deg,#22c55e,#15803d)', i: svg('<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6l1 1 2-2M4 12l1 1 2-2M4 18l1 1 2-2"/>') },
+  join: { c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
+  notify: { c: 'linear-gradient(135deg,#ec4899,#be123c)', i: svg('<path d="M3 11l18-7-7 18-3-8-8-3z"/>') },
 };
-let me, tab = 'lijst';
+const ico = (id) => `<span class="ico" style="background:${META[id].c}">${META[id].i}</span>`;
+let me, apps = [];
+
+const logout = async () => { try { await api('/api/logout', 'POST'); } catch {} location.reload(); };
 
 async function start() {
-  try { me = await api('/api/me'); main(); } catch { loginView(); }
+  try { me = await api('/api/me'); } catch { return loginView(); }
+  if (me.status !== 'approved') return waitView();
+  apps = await api('/api/apps');
+  homeView();
 }
 
-function loginView() {
+/* ---------- Inloggen / account aanmaken ---------- */
+function loginView(mode = 'login') {
   $('#app').innerHTML = `<div class="login">
     <div class="logo"><img src="/logo.svg" alt=""><h1>simon-app</h1></div>
-    <div class="box"><h3>Inloggen</h3>
-      <div class="row"><input id="code" placeholder="Inlogcode"><button class="pri" id="go">Inloggen</button></div>
-      <div id="e1" class="err"></div></div>
-    <div class="box"><h3>Nog geen code?</h3>
-      <div class="row"><input id="name" placeholder="Je naam"><button id="ask">Code aanvragen</button></div>
-      <div id="e2"></div></div></div>`;
-  const login = async () => { try { await api('/api/login', 'POST', { code: $('#code').value }); start(); } catch (e) { $('#e1').textContent = e.message; } };
-  $('#go').onclick = login;
-  $('#code').onkeydown = (e) => e.key === 'Enter' && login();
-  $('#ask').onclick = async () => {
-    try { await api('/api/request', 'POST', { name: $('#name').value }); $('#e2').textContent = 'Aanvraag verstuurd! Simon moet hem eerst goedkeuren.'; }
-    catch (e) { $('#e2').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+    <div class="tabs"><button data-m="login" class="${mode === 'login' ? 'on' : ''}">Inloggen</button><button data-m="signup" class="${mode === 'signup' ? 'on' : ''}">Account aanmaken</button></div>
+    <div class="box">${mode === 'login' ? `
+      <div class="row"><input id="code" placeholder="Inlogcode" autocomplete="off"><button class="pri" id="go">Inloggen</button></div>
+      <div id="e" class="err"></div>` : `
+      <p>Maak een account aan. Je krijgt een eigen inlogcode en Simon moet je daarna goedkeuren voordat je erin kan.</p>
+      <div class="row"><input id="name" placeholder="Je naam"><button class="pri" id="go">Aanmaken</button></div>
+      <div id="e" class="err"></div>`}</div></div>`;
+  document.querySelectorAll('[data-m]').forEach((b) => b.onclick = () => loginView(b.dataset.m));
+  const go = async () => {
+    try {
+      if (mode === 'login') { await api('/api/login', 'POST', { code: $('#code').value }); start(); }
+      else { const r = await api('/api/signup', 'POST', { name: $('#name').value }); codeView(r); }
+    } catch (e) { $('#e').textContent = e.message; }
   };
+  $('#go').onclick = go;
+  $('#app').querySelector('input').onkeydown = (e) => e.key === 'Enter' && go();
 }
 
-async function main() {
-  const pending = me.role === 'admin' ? (await api('/api/requests')).length : 0;
-  const tabs = [['lijst', 'Lijst']];
-  if (me.role === 'admin') tabs.push(['join', 'Join requests']);
-  if (!tabs.some((t) => t[0] === tab)) tab = 'lijst';
-  $('#app').innerHTML = `
-    <header><img src="/logo.svg" alt=""><b>simon-app</b><span class="sp"></span><small>${esc(me.name)}</small><button id="out">Uitloggen</button></header>
-    <nav>${tabs.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${icons[k]}${l}${k === 'join' && pending ? `<span class="badge">${pending}</span>` : ''}</button>`).join('')}</nav>
-    <main id="view"></main>`;
-  $('#out').onclick = async () => { await api('/api/logout', 'POST'); loginView(); };
-  document.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; main(); });
-  if (tab === 'lijst') lijstView(); else joinView();
+function codeView(r) {
+  $('#app').innerHTML = `<div class="login"><div class="logo"><img src="/logo.svg" alt=""></div>
+    <div class="box"><h3>Account aangemaakt, ${esc(r.name)}!</h3>
+      <p>Dit is jouw inlogcode:</p><div class="code">${esc(r.code)}</div>
+      <p><b>Bewaar hem goed</b>, hij wordt maar één keer getoond. Je verzoek staat nu bij Simon.</p>
+      <button class="pri" id="ok">Ik heb hem bewaard</button></div></div>`;
+  $('#ok').onclick = start;
 }
 
+function waitView() {
+  const denied = me.status === 'denied';
+  $('#app').innerHTML = `<div class="login"><div class="logo"><img src="/logo.svg" alt=""></div>
+    <div class="box center"><h3>${denied ? 'Verzoek geweigerd' : 'Wachten op goedkeuring'}</h3>
+    <p>${denied ? 'Simon heeft je verzoek niet goedgekeurd.' : `Hoi ${esc(me.name)}, Simon moet je join request nog goedkeuren.`}</p>
+    <div class="row" style="justify-content:center">${denied ? '' : '<button id="re">Opnieuw checken</button>'}<button id="out">Uitloggen</button></div></div></div>`;
+  $('#out').onclick = logout;
+  if ($('#re')) $('#re').onclick = start;
+}
+
+/* ---------- Homescherm ---------- */
+function homeView() {
+  const mine = apps.filter((a) => a.installed);
+  const dock = mine.filter((a) => a.core);
+  const rest = mine.filter((a) => !a.core);
+  const tile = (a) => `<button class="app" data-app="${a.id}">${ico(a.id)}${a.badge ? `<span class="badge">${a.badge}</span>` : ''}${esc(a.name)}</button>`;
+  const time = new Date().toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' });
+  $('#app').innerHTML = `<div class="phone">
+    <div class="status"><span>${time}</span><button id="out">Uitloggen</button></div>
+    <div class="hello">Hoi ${esc(me.name)} 👋</div>
+    <div class="grid">${rest.map(tile).join('') || '<small style="grid-column:1/-1;text-align:center">Geen apps. Open de App Installer.</small>'}</div>
+    <div class="dock">${dock.map(tile).join('')}</div></div>`;
+  $('#out').onclick = logout;
+  document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+}
+
+async function openApp(id) {
+  const a = apps.find((x) => x.id === id);
+  $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(a.name)}</b><button id="close">Sluiten</button></div><main id="view"></main>
+    <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
+  const close = async () => { apps = await api('/api/apps'); homeView(); };
+  $('#close').onclick = close; $('#home').onclick = close;
+  await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView })[id]();
+}
+
+/* ---------- App Installer ---------- */
+async function installerView() {
+  apps = await api('/api/apps');
+  const list = apps.filter((a) => !a.core);
+  $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><ul>${list.map((a) => `
+    <li>${ico(a.id)}<span style="flex:1;margin-left:.4rem">${esc(a.name)}${a.locked ? ' 🔒' : ''}</span>
+    <button class="${a.installed ? '' : 'pri'}" data-i="${a.id}" data-on="${a.installed}">${a.installed ? 'Verwijderen' : 'Installeren'}</button></li>`).join('')}</ul>
+    <small>App Installer en Notificaties zitten er altijd bij.</small></div>`;
+  document.querySelectorAll('[data-i]').forEach((b) => b.onclick = async () => {
+    await api(`/api/apps/${b.dataset.i}/install`, b.dataset.on === 'true' ? 'DELETE' : 'POST'); installerView();
+  });
+}
+
+/* ---------- Notificaties ---------- */
+async function notificationsView() {
+  const list = await api('/api/notifications');
+  $('#view').innerHTML = `<div class="box"><h3>Notificaties</h3>${list.length ? `<ul>${list.map((n) => `
+    <li style="${n.read ? 'opacity:.55' : 'font-weight:600'}"><span style="flex:1">${esc(n.text)}<br><small>${new Date(n.created).toLocaleString('nl-NL')}</small></span></li>`).join('')}</ul>` : '<small>Nog niets.</small>'}</div>`;
+  if (list.some((n) => !n.read)) await api('/api/notifications/read', 'POST');
+}
+
+/* ---------- Lijst ---------- */
 async function lijstView() {
   const items = await api('/api/items');
   $('#view').innerHTML = `<div class="box"><h3>Gedeelde lijst</h3>
@@ -93,15 +176,43 @@ async function lijstView() {
   document.querySelectorAll('[data-d]').forEach((e) => e.onclick = async () => { await api('/api/items/' + e.dataset.d, 'DELETE'); lijstView(); });
 }
 
-let fresh = null; // laatst goedgekeurde code, eenmalig zichtbaar
+/* ---------- Join requests (admin) ---------- */
 async function joinView() {
-  const reqs = await api('/api/requests');
-  $('#view').innerHTML = `${fresh ? `<div class="box">Code voor <b>${esc(fresh.name)}</b>:<div class="code">${esc(fresh.code)}</div><small>Geef deze door; hij wordt maar één keer getoond.</small></div>` : ''}
-    <div class="box"><h3>Aanvragen voor toegang</h3>
-    ${reqs.length ? reqs.map((r) => `<div class="row"><span style="flex:1">${esc(r.name)} <small>${new Date(r.created).toLocaleString('nl-NL')}</small></span>
-      <button class="pri" data-a="${r.id}">Goedkeuren</button><button data-n="${r.id}">Weigeren</button></div>`).join('') : '<small>Geen openstaande aanvragen.</small>'}</div>`;
-  document.querySelectorAll('[data-a]').forEach((e) => e.onclick = async () => { fresh = await api(`/api/requests/${e.dataset.a}/approve`, 'POST'); main(); });
-  document.querySelectorAll('[data-n]').forEach((e) => e.onclick = async () => { await api(`/api/requests/${e.dataset.n}/deny`, 'POST'); fresh = null; main(); });
+  const users = await api('/api/users');
+  const pending = users.filter((u) => u.status === 'pending');
+  const members = users.filter((u) => u.status === 'approved');
+  const act = (id, what) => api(`/api/users/${id}/${what}`, 'POST').then(joinView);
+  $('#view').innerHTML = `<div class="box"><h3>Join requests</h3>
+    ${pending.length ? pending.map((u) => `<div class="row"><span style="flex:1">${esc(u.name)}<br><small>${new Date(u.created).toLocaleString('nl-NL')}</small></span>
+      <button class="pri" data-a="${u.id}">Goedkeuren</button><button data-n="${u.id}">Weigeren</button></div>`).join('') : '<small>Geen openstaande verzoeken.</small>'}</div>
+    <div class="box"><h3>Leden</h3>${members.length ? members.map((u) => `<div class="row"><span style="flex:1">${esc(u.name)}</span><button data-r="${u.id}">Verwijderen</button></div>`).join('') : '<small>Nog geen leden.</small>'}</div>`;
+  document.querySelectorAll('[data-a]').forEach((e) => e.onclick = () => act(e.dataset.a, 'approve'));
+  document.querySelectorAll('[data-n]').forEach((e) => e.onclick = () => act(e.dataset.n, 'deny'));
+  document.querySelectorAll('[data-r]').forEach((e) => e.onclick = () => confirm('Dit lid verwijderen?') && act(e.dataset.r, 'remove'));
+}
+
+/* ---------- Notificatie-maker (admin, met code) ---------- */
+async function notifyView() {
+  let users;
+  try { await api('/api/notify/status'); users = await api('/api/users'); }
+  catch (e) { return e.data?.locked ? lockView() : void ($('#view').textContent = e.message); }
+  users = users.filter((u) => u.status === 'approved');
+  $('#view').innerHTML = `<div class="box"><h3>Notificatie sturen</h3>
+    <div class="row"><input id="txt" placeholder="Bericht"></div>
+    <div class="row"><select id="to" style="flex:1;padding:.6rem;border-radius:10px;border:1px solid var(--line);background:var(--card);color:inherit">
+      <option value="all">Iedereen</option>${users.map((u) => `<option value="${u.id}">${esc(u.name)}</option>`).join('')}</select>
+      <button class="pri" id="send">Versturen</button></div><div id="msg"></div></div>`;
+  $('#send').onclick = async () => {
+    const to = $('#to').value;
+    try { await api('/api/notify', 'POST', { text: $('#txt').value, to: to === 'all' ? 'all' : Number(to) }); $('#txt').value = ''; $('#msg').textContent = 'Verstuurd ✓'; }
+    catch (e) { $('#msg').innerHTML = `<span class="err">${esc(e.message)}</span>`; }
+  };
+}
+function lockView() {
+  $('#view').innerHTML = `<div class="box center"><h3>🔒 Vergrendeld</h3><p>Voer je admin-code in om notificaties te maken.</p>
+    <div class="row"><input id="pin" type="password" placeholder="Admin-code"><button class="pri" id="un">Ontgrendel</button></div><div id="e" class="err"></div></div>`;
+  const go = async () => { try { await api('/api/notify/unlock', 'POST', { code: $('#pin').value }); notifyView(); } catch (e) { $('#e').textContent = e.message; } };
+  $('#un').onclick = go; $('#pin').onkeydown = (e) => e.key === 'Enter' && go();
 }
 start();
 </script>
