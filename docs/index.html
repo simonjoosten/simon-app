@@ -184,8 +184,7 @@ function waitView() {
 /* ---------- Notificaties ophalen ---------- */
 async function myNotifications() {
   const col = collection(db, 'notifications');
-  const snaps = me.admin ? [await getDocs(query(col, orderBy('created', 'desc')))]
-    : await Promise.all([getDocs(query(col, where('to', '==', 'all'))), getDocs(query(col, where('to', '==', me.uid)))]);
+  const snaps = await Promise.all([getDocs(query(col, where('to', '==', 'all'))), getDocs(query(col, where('to', '==', me.uid)))]);
   const seen = new Map();
   snaps.forEach((s) => s.forEach((d) => seen.set(d.id, { id: d.id, ...d.data() })));
   return [...seen.values()].sort((a, b) => b.created - a.created).slice(0, 100);
@@ -258,7 +257,7 @@ async function notificationsView() {
   const list = await myNotifications();
   const last = me.lastRead;
   $('#view').innerHTML = `<div class="box"><h3>Notificaties</h3>${list.length ? `<ul>${list.map((n) => `
-    <li style="${n.created > last ? 'font-weight:600' : 'opacity:.55'}"><span style="flex:1">${esc(n.text)}<br><small>${new Date(n.created).toLocaleString('nl-NL')}${me.admin ? ` · aan ${n.to === 'all' ? 'iedereen' : esc(n.toName || n.to)}` : ''}</small></span></li>`).join('')}</ul>` : '<small>Nog niets.</small>'}</div>`;
+    <li style="${n.created > last ? 'font-weight:600' : 'opacity:.55'}"><span style="flex:1">${esc(n.text)}<br><small>${new Date(n.created).toLocaleString('nl-NL')}</small></span></li>`).join('')}</ul>` : '<small>Nog niets.</small>'}</div>`;
   me.lastRead = Date.now();
   await updateDoc(doc(db, 'users', me.uid), { lastRead: me.lastRead });
 }
