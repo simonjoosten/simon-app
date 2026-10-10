@@ -4,6 +4,7 @@ import os, sys
 root = os.path.join(os.path.dirname(__file__), '..', 'docs', 'games')
 def files(d):
     p = os.path.join(root, d)
+    if not os.path.isdir(p): return []
     return sorted(f[:-3] for f in os.listdir(p) if f.endswith('.js') and not f.startswith('_'))
 out = ['// Automatisch gemaakt door tools/make-registry.py, niet met de hand aanpassen.']
 for var, d in (('MINIS', 'mini'), ('BIGS', 'big'), ('CLIP_FILES', 'clips')):

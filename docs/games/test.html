@@ -15,7 +15,8 @@ for (const f of REG.MINIS) {
   const host = document.createElement('div'); host.style.cssText = 'position:relative;width:360px;height:640px;overflow:hidden'; stage.innerHTML = ''; stage.appendChild(host);
   let ended = 0, score = 0; let inst;
   try {
-    inst = g.create(host, { w: 360, h: 640, score: (n) => { score = n; }, end: () => { ended++; } });
+    let saved = null; const loads = []; inst = g.create(host, { w: 360, h: 640, score: (n) => { score = n; }, end: () => { ended++; }, load: async () => { loads.push(1); return saved; }, save: (o) => { JSON.stringify(o); saved = JSON.parse(JSON.stringify(o)); }, clear: () => { saved = null; } });
+    if (g.save && !['day', 'forever'].includes(g.save)) throw new Error('ongeldige save-waarde');
     for (let i = 0; i < 12; i++) { // tikken en vegen
       const x = 40 + (i * 27) % 280, y = 120 + (i * 53) % 420;
       fire(host, 'pointerdown', x, y); fire(host, 'pointermove', x + 30, y - 40); fire(host, 'pointerup', x + 30, y - 40); host.click();
@@ -23,19 +24,8 @@ for (const f of REG.MINIS) {
       await sleep(60);
     }
     await sleep(400); inst && inst.destroy && inst.destroy(); await sleep(150);
-    if (errors.length) { bad++; log(`✗ ${g.id}: ${errors[0]}`, 1); } else log(`✓ ${g.id} (${g.name})${ended ? ' [eindigde]' : ''}`);
+    if (errors.length) { bad++; log(`✗ ${g.id}: ${errors[0]}`, 1); } else log(`✓ ${g.id} (${g.name})${ended ? ' [eindigde]' : ''}${g.save ? ` [save ${g.save}${loads.length ? '' : ' !! load niet aangeroepen'}${saved ? ', slaat op' : ', bewaarde niets'}]` : ''}`);
   } catch (e) { bad++; log(`✗ ${g.id}: ${e.message}`, 1); try { inst && inst.destroy && inst.destroy(); } catch {} }
-}
-for (const f of REG.BIGS) {
-  let g; try { g = (await f()).default; } catch (e) { log(`✗ import: ${e.message}`, 1); bad++; continue; }
-  total++; errors.length = 0; let data = null;
-  const host = document.createElement('div'); host.style.cssText = 'width:400px;height:640px;overflow:auto'; stage.innerHTML = ''; stage.appendChild(host);
-  try {
-    const inst = await g.create(host, { load: async () => data, save: (o) => { data = o; JSON.stringify(o); }, toast() {} });
-    await sleep(300); host.querySelectorAll('button').forEach((b, i) => { if (i < 25) b.click(); }); await sleep(500);
-    inst && inst.destroy && inst.destroy(); await sleep(100);
-    if (errors.length) { bad++; log(`✗ ${g.id}: ${errors[0]}`, 1); } else log(`✓ ${g.id} (${g.name})${data ? ' [opgeslagen]' : ' [!! niets opgeslagen]'}`);
-  } catch (e) { bad++; log(`✗ ${g.id}: ${e.message}`, 1); }
 }
 let nclips = 0; const ids = new Set();
 for (const f of REG.CLIP_FILES) {

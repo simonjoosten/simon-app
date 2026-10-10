@@ -4,7 +4,7 @@ Alles is statisch: plain ES-modules in de browser, GEEN build-stap, GEEN npm-pak
 libraries (alleen emoji, canvas en DOM). Taal van alle teksten in het spel: **Nederlands**. Mobile-first (telefoon, ~360x640),
 maar moet ook met muis en toetsenbord werken. Veilig voor kinderen, geen geweld in beeld behalve cartoon-niveau.
 
-Houd elk bestand zelfstandig. Importeer nooit andere spelbestanden. Gebruik geen `alert`/`prompt`/`confirm`.
+Houd elk bestand zelfstandig. Importeer nooit andere spelbestanden. De huidige spellen staan in docs/games/mini/ (je mag ze bekijken voor stijl, maar niet kopiëren of wijzigen). Gebruik geen `alert`/`prompt`/`confirm`.
 
 ## 1. Minigame  (`docs/games/mini/<id>.js`)
 
@@ -23,41 +23,27 @@ export default {
   },
 };
 ```
-Regels:
-- Het spel start meteen bij `create` (de shell toont vooraf een "Speel"-knop). Een spel duurt typisch 20-120 seconden.
-- Elk spel is echt speelbaar, met moeilijker worden, een duidelijke game-over en een score. Geen placeholders.
-- Input: gebruik pointer events (`pointerdown/move/up`) voor touch + muis; voeg toetsenbord toe waar dat logisch is
-  (pijltjes/WASD/spatie). Luister op `host` (niet op `window`) voor pointer events; voor toetsen mag `window`, ruim op in destroy().
-- Teken met canvas (`devicePixelRatio` respecteren is een plus) of met DOM. Gebruik `requestAnimationFrame` met
-  tijdstap `dt` (geen vaste frame-aanname). Pauzeer niet zelf; de shell vernietigt het spel als het uit beeld gaat.
-- Geluid: niet nodig. Als je het doet: alleen WebAudio-beep, nooit autoplay-problemen veroorzaken (try/catch).
-- Kleuren: kies zelf een eigen achtergrond voor host (donker of kleurrijk), zorg dat tekst goed leesbaar is.
-- Geen errors in de console bij normaal spelen. Na `destroy()` mogen er geen callbacks meer lopen.
-- Voor `api.end` na destroy: doe niets.
 
-## 2. Big game (`docs/games/big/<id>.js`) – groter spel met opslaan
-
+### Opslaan van voortgang (alleen voor spellen die dat in hun opdracht hebben)
+Voeg dan een eigenschap `save` toe aan het spel-object: `save: 'day'` (de shell bewaart de stand 1 dag en wist hem daarna vanzelf)
+of `save: 'forever'` (blijft altijd). De beste score bewaart de shell sowieso zelf.
 ```js
 export default {
-  id: 'goudmijn', name: 'Goudmijn', emoji: '⛏️', desc: 'Delf goud, koop mijnwerkers, word rijk.',
-  async create(host, api) {
-    // host: <div> met scrolbare kolom (breedte max ~430px). Bouw UI met DOM (knoppen, tekst). Mag ook <canvas> gebruiken.
-    // api.load()  -> Promise<object|null>  : eerder opgeslagen voortgang (JSON-object) of null
-    // api.save(o) : bewaar voortgang (o = gewoon JSON-object, < 100 KB). Wordt gedebounced weggeschreven. Roep dit aan na
-    //               elke betekenisvolle verandering EN minstens elke ~10 s via setInterval.
-    // api.toast(t): korte melding onderin
-    return { destroy() { /* intervals/listeners opruimen; doe nog een laatste api.save */ } };
+  id: '...', name: '...', emoji: '...', hint: '...',
+  save: 'day',                         // of 'forever'
+  create(host, api) {
+    api.load().then((saved) => { /* saved = object of null; maak/herstel je spel */ });  // Promise -> object | null
+    api.save(obj);                     // bewaar de stand (JSON-object, KLEIN: maximaal ~10 KB). Roep aan na elke zet/betekenisvolle verandering en bij destroy.
+    api.clear();                       // wis de stand (bij gewonnen/verloren/nieuw spel)
+    return { destroy() { /* ruim op; werkt ook als load nog bezig is; doe in destroy nog een laatste api.save(...) */ } };
   },
 };
 ```
-Regels:
-- Een echt "groot" spel: diepte, progressie (upgrades, levels, verzamelingen), meerdere schermen/tabs binnen het spel, doelen.
-- Voortgang MOET opslaan en laden (api.load aan het begin). Offline-voortgang berekenen met `Date.now()` verschil (max 8 uur).
-- Zorg dat de balans redelijk is: eerste 2 minuten geven al snel iets te doen/kopen; getallen netjes formatteren (1,2K / 3,4M).
-- Maak de UI aantrekkelijk met emoji + inline CSS (gradients, afgeronde hoeken). Grote tikvlakken (min. 44px hoog).
-- Geen zware bibliotheken. Alles in één bestand, mag 400-900 regels zijn.
+Bewaar alleen wat nodig is om verder te spelen (bord, score, beurt, tegoeden), geen plaatjes of grote lijsten. Spellen zonder `save` roepen deze functies NIET aan.
+Spellen die nooit "af" zijn (tycoons, klikkers): roep `api.end` NIET aan, maar werk `api.score(n)` voortdurend bij; de shell bewaart de hoogste score zodra de speler stopt.
+Tycoontjes: speelbaar in 3-10 minuten per sessie, met een eigen thema, geld verdienen, upgrades kopen en een duidelijk doel; met `save: 'day'` of `'forever'` zoals in hun opdracht.
 
-## 3. Clips (korte geanimeerde grapjes)  (`docs/games/clips/<naam>.js`)
+## 2. Clips (korte geanimeerde grapjes)  (`docs/games/clips/<naam>.js`)
 
 ```js
 export const CLIPS = [
