@@ -94,7 +94,7 @@ async function boot(u) {
   const ref = doc(db, 'users', u.uid);
   let snap = await getDoc(ref);
   if (admin && !snap.exists()) { await setDoc(ref, { name: 'Simon', status: 'approved', created: Date.now(), apps: ['lijst', 'join', 'notify'], lastRead: 0 }); snap = await getDoc(ref); }
-  if (!snap.exists()) { me = { uid: u.uid, name: '', status: 'denied' }; return waitView(); }
+  if (!snap.exists()) { me = { uid: u.uid, name: '', status: u.providerData.some((p) => p.providerId === 'google.com') ? 'noaccount' : 'denied' }; return waitView(); }
   const d = snap.data();
   me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0 };
   if (me.status !== 'approved') return waitView();
@@ -149,11 +149,15 @@ function codeView(name, code) {
 }
 
 function waitView() {
+  const noAccount = me.status === 'noaccount';
   const denied = me.status === 'denied' || me.status === 'removed';
+  const title = noAccount ? 'Nog geen toegang' : denied ? 'Geen toegang' : 'Wachten op goedkeuring';
+  const text = noAccount ? 'Je bent ingelogd, maar dit account is nog niet ingesteld als admin of lid. Ben jij Simon? Stuur dan dit ID naar Claude:'
+    : denied ? 'Simon heeft je verzoek niet goedgekeurd.' : `Hoi ${esc(me.name)}, Simon moet je join request nog goedkeuren.`;
   $('#app').innerHTML = `<div class="login"><div class="logo"><img src="logo.svg" alt=""></div>
-    <div class="box center"><h3>${denied ? 'Geen toegang' : 'Wachten op goedkeuring'}</h3>
-    <p>${denied ? 'Simon heeft je verzoek niet goedgekeurd.' : `Hoi ${esc(me.name)}, Simon moet je join request nog goedkeuren.`}</p>
-    <div class="row" style="justify-content:center">${denied ? '' : '<button id="re">Opnieuw checken</button>'}<button id="out">Uitloggen</button></div></div></div>`;
+    <div class="box center"><h3>${title}</h3><p>${text}</p>
+    ${noAccount ? `<div class="code" style="font-size:.9rem;word-break:break-all;user-select:all">${esc(me.uid)}</div>` : ''}
+    <div class="row" style="justify-content:center">${(denied || noAccount) ? '' : '<button id="re">Opnieuw checken</button>'}<button id="out">Uitloggen</button></div></div></div>`;
   $('#out').onclick = logout;
   if ($('#re')) $('#re').onclick = () => boot(auth.currentUser);
 }
