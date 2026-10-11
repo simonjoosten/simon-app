@@ -73,6 +73,7 @@ const META = {
   klusjes: { n: 'Klusjes', c: 'linear-gradient(135deg,#f59e0b,#ea580c)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/>') },
   klusjesadmin: { n: 'Klusjes Admin', admin: true, c: 'linear-gradient(135deg,#7c2d12,#431407)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM12 11l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1L9 13.3l2-.3z"/>') },
   vraag: { n: 'Dagelijkse vraag', c: 'linear-gradient(135deg,#38bdf8,#818cf8)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17h.01"/>') },
+  vraagadmin: { n: 'Vraag Admin', admin: true, c: 'linear-gradient(135deg,#312e81,#1e1b4b)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17h.01"/><path d="M18 3l.8 1.6 1.7.3-1.2 1.2.3 1.7-1.6-.8-1.6.8.3-1.7-1.2-1.2 1.7-.3z"/>') },
   agenda: { n: 'Agenda', c: 'linear-gradient(135deg,#f472b6,#e11d48)', i: svg('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>') },
   gewoontes: { n: 'Gewoontes', c: 'linear-gradient(135deg,#34d399,#0f766e)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>') },
   huisdier: { n: 'Huisdier', c: 'linear-gradient(135deg,#fdba74,#f43f5e)', i: svg('<circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="5" cy="14" r="2"/><circle cx="19" cy="14" r="2"/><path d="M12 12c-3 0-5 3-5 5.5C7 19 9 20 12 20s5-1 5-2.5C17 15 15 12 12 12z"/>') },
@@ -121,7 +122,7 @@ async function boot(u) {
   if (!snap.exists()) { me = { uid: u.uid, name: '', status: u.providerData.some((p) => p.providerId === 'google.com') ? 'noaccount' : 'denied' }; return waitView(); }
   const d = snap.data();
   me = { uid: u.uid, name: d.name, admin, status: d.status, apps: d.apps || [], lastRead: d.lastRead || 0, points: d.points || 0 };
-  if (admin) { const need = ['limoadmin', 'klusjesadmin'].filter((a) => !me.apps.includes(a)); if (need.length) { me.apps = [...me.apps, ...need]; await updateDoc(ref, { apps: me.apps }); } }
+  if (admin) { const need = ['limoadmin', 'klusjesadmin', 'vraagadmin'].filter((a) => !me.apps.includes(a)); if (need.length) { me.apps = [...me.apps, ...need]; await updateDoc(ref, { apps: me.apps }); } }
   if (me.status !== 'approved') return waitView();
   // Profiel (naam) voor de chat, zodat anderen je kunnen vinden
   try { const p = await getDoc(doc(db, 'profiles', u.uid)); if (!p.exists() || p.data().name !== me.name) await setDoc(doc(db, 'profiles', u.uid), { name: me.name }); } catch (e) { console.error(e); }
@@ -260,7 +261,7 @@ async function openApp(id) {
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp, vraag: vraagApp, agenda: agendaApp, gewoontes: gewoontesApp, huisdier: huisdierApp, tijd: tijdApp, rekenen: rekenenApp })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp, vraag: vraagApp, agenda: agendaApp, gewoontes: gewoontesApp, huisdier: huisdierApp, tijd: tijdApp, rekenen: rekenenApp, vraagadmin: vraagAdminApp })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -357,6 +358,7 @@ async function pianoApp() { const m = await import('./piano.js'); m.pianoView({ 
 /* ---------- Vraag, Agenda, Gewoontes, Huisdier, Tijd, Rekenen ---------- */
 const appCtx = () => ({ db, me, esc, nice, uid: me.uid, view: $('#view'), addCleanup: (f) => unsubs.push(f) });
 async function vraagApp() { const m = await import('./vraag.js'); await m.vraagView(appCtx()); }
+async function vraagAdminApp() { const m = await import('./vraag.js'); await m.vraagView({ ...appCtx(), adminOnly: true }); }
 async function agendaApp() { const m = await import('./agenda.js'); await m.agendaView(appCtx()); }
 async function gewoontesApp() { const m = await import('./gewoontes.js'); await m.gewoontesView(appCtx()); }
 async function huisdierApp() { const m = await import('./huisdier.js'); await m.huisdierView(appCtx()); }

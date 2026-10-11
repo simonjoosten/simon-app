@@ -78,7 +78,9 @@ export async function vraagView(ctx) {
   const { db, me, esc, nice, view, addCleanup } = ctx;
   let alive = true; addCleanup(() => { alive = false; });
   const today = new Date(); const todayKey = dayKey(today);
-  let tab = 'vandaag';
+  const adminOnly = !!(ctx.adminOnly && me.admin);
+  let tab = adminOnly ? 'admin' : 'vandaag';
+  let adminToday = [];
   let adminQs = new Map(); // datum -> {q, by}
   let adminListOk = true;
   let mine = null, others = [], othersState = 'locked'; // locked | ok | error
@@ -183,8 +185,32 @@ export async function vraagView(ctx) {
     return h;
   }
 
+  async function loadAdminToday() {
+    try { const s = await getDocs(answersCol(todayKey)); adminToday = s.docs.map((d) => ({ id: d.id, ...d.data() })).sort((a, b) => (a.created || 0) - (b.created || 0)); }
+    catch (e) { console.error(e); adminToday = null; }
+  }
+  function drawAdminOnly() {
+    const up = Array.from({ length: 7 }, (_, i) => dayKey(addDays(today, i)));
+    let h = `<div class="box center"><small>${esc(longDate(today))}</small><div style="font-size:1.15rem;font-weight:700;margin:.4rem 0">${esc(questionFor(todayKey))}</div><small>${adminQs.has(todayKey) ? '✏️ Eigen vraag' : '📚 Uit de ingebouwde bank'}</small></div>`;
+    h += '<div class="box"><b>Antwoorden van vandaag</b>';
+    if (adminToday === null) h += '<div class="err" style="margin-top:.4rem">De antwoorden konden niet geladen worden.</div>';
+    else if (!adminToday.length) h += '<div style="margin-top:.4rem"><small>Nog niemand heeft geantwoord.</small></div>';
+    else h += adminToday.map((a) => `<div class="row" style="align-items:flex-start;margin:.5rem 0"><div style="flex:1"><b>${esc(a.name || '?')}</b> <small>${a.created ? new Date(a.created).toLocaleTimeString('nl-NL', { hour: '2-digit', minute: '2-digit' }) : ''}</small><div>${esc(a.text || '')}</div></div><button data-delans="${esc(a.id)}" title="Verwijder dit antwoord">🗑</button></div>`).join('');
+    h += '</div>';
+    h += '<div class="box"><b>Komende 7 dagen</b>' + up.map((k) => `<div class="row" style="margin:.35rem 0;align-items:flex-start"><small style="width:6.2rem;flex:none">${esc(longDate(parseKey(k)))}</small><span style="flex:1">${esc(questionFor(k))}</span><small>${adminQs.has(k) ? '✏️' : '📚'}</small></div>`).join('') + '<small>✏️ = jouw eigen vraag, 📚 = uit de bank</small></div>';
+    return h + drawAdmin();
+  }
+
   function draw() {
     if (!alive) return;
+    if (adminOnly) {
+      view.innerHTML = drawAdminOnly(); wireAdmin();
+      view.querySelectorAll('[data-delans]').forEach((b) => b.onclick = async () => {
+        if (!confirm('Dit antwoord verwijderen?')) return; b.disabled = true;
+        try { await deleteDoc(doc(db, 'dailyq', todayKey, 'answers', b.dataset.delans)); if (!alive) return; await loadAdminToday(); draw(); } catch (e) { if (alive) { alert(nice(e)); b.disabled = false; } }
+      });
+      return;
+    }
     const tabs = me.admin ? `<div class="row wrap"><button data-tab="vandaag" class="${tab === 'vandaag' ? 'pri' : ''}" style="flex:1">Vandaag</button><button data-tab="admin" class="${tab === 'admin' ? 'pri' : ''}" style="flex:1">Beheer</button></div>` : '';
     view.innerHTML = tabs + (tab === 'admin' && me.admin ? drawAdmin() : drawToday());
     view.querySelectorAll('[data-tab]').forEach((b) => b.onclick = async () => { tab = b.dataset.tab; if (tab === 'admin' && !plan.length) { await loadPlan(); } draw(); });
@@ -234,6 +260,7 @@ export async function vraagView(ctx) {
   }
 
   try {
+    if (adminOnly) { await loadQuestions(); await loadPlan(); await loadAdminToday(); if (alive) draw(); return; }
     await loadQuestions(); await loadToday();
     if (!alive) return;
     draw();
