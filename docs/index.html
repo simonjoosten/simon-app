@@ -72,6 +72,12 @@ const META = {
   join: { n: 'Join requests', admin: true, c: 'linear-gradient(135deg,#a855f7,#6d28d9)', i: svg('<circle cx="9" cy="8" r="4"/><path d="M2 21c0-4 3-6 7-6s7 2 7 6"/><path d="M19 8v6M16 11h6"/>') },
   klusjes: { n: 'Klusjes', c: 'linear-gradient(135deg,#f59e0b,#ea580c)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 13l2 2 4-4"/>') },
   klusjesadmin: { n: 'Klusjes Admin', admin: true, c: 'linear-gradient(135deg,#7c2d12,#431407)', i: svg('<rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM12 11l1 2 2 .3-1.5 1.4.4 2.1-1.9-1-1.9 1 .4-2.1L9 13.3l2-.3z"/>') },
+  vraag: { n: 'Dagelijkse vraag', c: 'linear-gradient(135deg,#38bdf8,#818cf8)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 115 0c0 1.7-2.5 2-2.5 4M12 17h.01"/>') },
+  agenda: { n: 'Agenda', c: 'linear-gradient(135deg,#f472b6,#e11d48)', i: svg('<rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/>') },
+  gewoontes: { n: 'Gewoontes', c: 'linear-gradient(135deg,#34d399,#0f766e)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>') },
+  huisdier: { n: 'Huisdier', c: 'linear-gradient(135deg,#fdba74,#f43f5e)', i: svg('<circle cx="8" cy="9" r="2"/><circle cx="16" cy="9" r="2"/><circle cx="5" cy="14" r="2"/><circle cx="19" cy="14" r="2"/><path d="M12 12c-3 0-5 3-5 5.5C7 19 9 20 12 20s5-1 5-2.5C17 15 15 12 12 12z"/>') },
+  tijd: { n: 'Tijd', c: 'linear-gradient(135deg,#94a3b8,#334155)', i: svg('<circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 3h6"/>') },
+  rekenen: { n: 'Rekenen', c: 'linear-gradient(135deg,#2dd4bf,#0369a1)', i: svg('<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/>') },
   kompas: { n: 'Kompas', c: 'linear-gradient(135deg,#0ea5e9,#1e3a8a)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/>') },
   mop: { n: 'Dagelijkse mop', c: 'linear-gradient(135deg,#facc15,#f97316)', i: svg('<circle cx="12" cy="12" r="9"/><path d="M8 14c1 2 7 2 8 0M9 9.5h.01M15 9.5h.01"/>') },
   meme: { n: 'Meme-maker', c: 'linear-gradient(135deg,#a3e635,#16a34a)', i: svg('<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 8h10M8 16h8"/>') },
@@ -242,6 +248,9 @@ async function homeView() {
   const col = collection(db, 'limoRequests');
   if (me.admin && me.apps.includes('limoadmin')) live(query(col, where('status', '==', 'pending')), (sn) => setBadge('limoadmin', sn.size));
   if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
+  const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+  if (me.apps.includes('vraag')) getDoc(doc(db, 'dailyq', today, 'answers', me.uid)).then((s) => { if (!s.exists()) setBadge('vraag', 1); }).catch(() => {});
+  if (me.apps.includes('agenda')) import('./agenda.js').then((m) => m.agendaToday(db)).then((n) => setBadge('agenda', n || 0)).catch(() => {});
   if (me.apps.includes('chat')) import('./chat.js').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
   if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
 }
@@ -251,7 +260,7 @@ async function openApp(id) {
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp, vraag: vraagApp, agenda: agendaApp, gewoontes: gewoontesApp, huisdier: huisdierApp, tijd: tijdApp, rekenen: rekenenApp })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -344,6 +353,15 @@ async function klusjesAdminApp() { const m = await import('./klusjes.js'); await
 async function dobbelApp() { const m = await import('./dice.js'); m.diceView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
 async function pixelApp() { const m = await import('./pixel.js'); m.pixelView({ view: $('#view'), esc, uid: me.uid }); }
 async function pianoApp() { const m = await import('./piano.js'); m.pianoView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
+
+/* ---------- Vraag, Agenda, Gewoontes, Huisdier, Tijd, Rekenen ---------- */
+const appCtx = () => ({ db, me, esc, nice, uid: me.uid, view: $('#view'), addCleanup: (f) => unsubs.push(f) });
+async function vraagApp() { const m = await import('./vraag.js'); await m.vraagView(appCtx()); }
+async function agendaApp() { const m = await import('./agenda.js'); await m.agendaView(appCtx()); }
+async function gewoontesApp() { const m = await import('./gewoontes.js'); await m.gewoontesView(appCtx()); }
+async function huisdierApp() { const m = await import('./huisdier.js'); await m.huisdierView(appCtx()); }
+async function tijdApp() { const m = await import('./tijd.js'); m.tijdView(appCtx()); }
+async function rekenenApp() { const m = await import('./rekenen.js'); m.rekenenView(appCtx()); }
 
 /* ---------- Kompas, Mop, Meme, Muziek, Kleurplaten ---------- */
 async function kompasApp() { const m = await import('./kompas.js'); m.kompasView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }

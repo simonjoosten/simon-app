@@ -155,6 +155,56 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    // ---------- Dagelijkse vraag, Agenda, Gewoontes, Huisdier ----------
+    match /dailyq/{day} {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
+      match /answers/{uid} {
+        // Antwoorden van anderen zie je pas nadat je zelf hebt geantwoord
+        allow read: if isAdmin()
+          || (isMember() && (request.auth.uid == uid
+              || exists(/databases/$(db)/documents/dailyq/$(day)/answers/$(request.auth.uid))));
+        allow create, update: if isMember() && request.auth.uid == uid
+          && request.resource.data.uid == uid
+          && request.resource.data.keys().hasOnly(['uid', 'name', 'text', 'created'])
+          && request.resource.data.name == get(userDoc(uid)).data.name
+          && request.resource.data.text is string && request.resource.data.text.size() > 0 && request.resource.data.text.size() <= 400;
+        allow delete: if isAdmin() || (isMember() && request.auth.uid == uid);
+      }
+    }
+
+    match /events/{id} {
+      allow read: if isMember() || isAdmin();
+      allow create: if isMember() && request.resource.data.by == request.auth.uid
+        && request.resource.data.keys().hasOnly(['title', 'date', 'time', 'note', 'repeat', 'color', 'by', 'byName', 'created'])
+        && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 80
+        && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && request.resource.data.repeat in ['none', 'weekly', 'yearly']
+        && request.resource.data.note is string && request.resource.data.note.size() <= 200;
+      allow update: if isAdmin()
+        || (isMember() && resource.data.by == request.auth.uid && request.resource.data.by == request.auth.uid
+            && request.resource.data.keys().hasOnly(['title', 'date', 'time', 'note', 'repeat', 'color', 'by', 'byName', 'created'])
+            && request.resource.data.title is string && request.resource.data.title.size() > 0 && request.resource.data.title.size() <= 80
+            && request.resource.data.date.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+            && request.resource.data.repeat in ['none', 'weekly', 'yearly']);
+      allow delete: if isAdmin() || (isMember() && resource.data.by == request.auth.uid);
+    }
+
+    match /habits/{uid} {
+      allow read, delete: if isMember() && request.auth.uid == uid;
+      allow create, update: if isMember() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['data', 'updated'])
+        && request.resource.data.data is string && request.resource.data.data.size() < 40000;
+    }
+
+    match /pets/{uid} {
+      allow read: if isMember() || isAdmin();
+      allow create, update: if isMember() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(['data', 'updated'])
+        && request.resource.data.data is string && request.resource.data.data.size() < 6000;
+      allow delete: if isMember() && request.auth.uid == uid;
+    }
+
     match /config/{doc} {
       allow read, write: if isAdmin();
     }

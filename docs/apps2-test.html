@@ -1,0 +1,15 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Apps2-test</title>
+<script type="importmap">{"imports":{"https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js":"./games/fake-firestore.js"}}</script>
+<style>:root{--bg:#f6f7fb;--card:#fff;--ink:#1f2330;--line:#e4e6ee;--accent:#6366f1}body{font-family:system-ui;background:var(--bg);color:var(--ink);margin:0;padding:.6rem;max-width:430px}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:1rem;margin:.8rem 0}.row{display:flex;gap:.5rem;margin:.4rem 0;align-items:center}.row.wrap{flex-wrap:wrap}.row input:not([type=checkbox]):not([type=range]):not([type=color]):not([type=radio]){flex:1;min-width:0;padding:.5rem;border:1px solid var(--line);border-radius:10px}
+button{border:1px solid var(--line);background:#fff;color:inherit;border-radius:10px;padding:.45rem .7rem;font:inherit}button.pri{background:var(--accent);color:#fff;border-color:var(--accent)}button:disabled{opacity:.5}.err{color:#ef4444}.center{text-align:center}small{color:#8a90a2}.chip{background:var(--line);border-radius:99px;padding:.1rem .5rem}.code{font:700 1.4rem monospace}</style>
+<div id="view"></div>
+<script type="module">
+import { setDoc, doc } from './games/fake-firestore.js';
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+window.__errs = []; window.addEventListener('error', (e) => window.__errs.push(e.message)); window.addEventListener('unhandledrejection', (e) => window.__errs.push(String(e.reason && e.reason.message || e.reason)));
+const q = new URLSearchParams(location.search); const which = q.get('a'); const admin = q.get('admin') === '1';
+await setDoc(doc({}, 'profiles', 't1'), { name: 'Simon' }); await setDoc(doc({}, 'profiles', 't2'), { name: 'Broer' }); await setDoc(doc({}, 'users', 't1'), { name: 'Simon', status: 'approved' }); await setDoc(doc({}, 'users', 't2'), { name: 'Broer', status: 'approved' });
+const mod = await import(`./${which}.js`); const fn = mod[({ vraag: 'vraagView', agenda: 'agendaView', gewoontes: 'gewoontesView', huisdier: 'huisdierView', tijd: 'tijdView', rekenen: 'rekenenView' })[which]];
+await fn({ db: {}, me: { uid: 't1', name: 'Simon', admin, apps: [] }, esc, nice: (e) => e.message, uid: 't1', view: document.getElementById('view'), addCleanup: () => {} }); window.__ready = true;
+</script>
