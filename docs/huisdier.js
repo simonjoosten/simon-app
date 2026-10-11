@@ -169,6 +169,8 @@ const ROOMS = [
   { id: 'speel', a: 'speelkamer', e: '🎾', n: 'Speelkamer', w: '#ffe1ee', f: '#f6c8da', sp: 62 },
 ].map((r) => ({ ...r, bg: `linear-gradient(180deg,${r.w} 0,${r.w} ${r.sp}%,${r.f} ${r.sp}%,${r.f} 100%)` }));
 const ROOM = Object.fromEntries(ROOMS.map((r) => [r.id, r]));
+const FP_N = 8;   // plekken per kamer (plek 7 en 8 zijn later toegevoegd: indexen 0-5 blijven gelijk)
+const IC_MAX = 160;   // max. aantal bijgehouden meubel-cooldowns in de state
 const RID = /^[a-z0-9-]{1,24}$/;   // veilige id's (meubels, kleding, huizen, recepten) in de state
 const ING_CROPS = new Set(['aardbei', 'tomaat', 'wortel', 'mais', 'aardappel', 'broccoli', 'appel', 'ui', 'paprika', 'spinazie', 'courgette']); // oogst die ook als ingrediënt (i_<id>) bestaat
 
@@ -190,7 +192,7 @@ const QUEST_TPL = [
 ];
 const QUEST_BY = Object.fromEntries(QUEST_TPL.map((q) => [q.id, q]));
 
-// Prestaties (minstens 24): [id, emoji, naam, uitleg, test(s, x)] met x = { age (dagen), lv, placed, clothes }
+// Prestaties (minstens 24): [id, emoji, naam, uitleg, test(s, x)] met x = { age (dagen), lv, placed, clothes, furn }
 const ACH = [
   ['egg', '🥚', 'Eerste ei', 'Je hebt een huisdier geadopteerd', () => true],
   ['hatch', '🐣', 'Uit het ei', 'Je ei is uitgekomen', (s) => !!s.h],
@@ -231,6 +233,11 @@ const ACH = [
   ['hide', '🙈', 'Verstoppertje-kampioen', 'Verstoppertje uitgespeeld met je huisdier', (s) => c(s, 'hide') >= 1],
   ['rest', '💛', 'Rustpunt', '5 keer even ingecheckt', (s) => c(s, 'checkin') >= 5],
   ['move', '🏠', 'Verhuizer', 'Een nieuw huis gekocht', (s) => (s.hu || []).length >= 2],
+  ['furn20', '🪑', 'Meubelverzamelaar', '20 meubels gekocht', (s, x) => x.furn >= 20],
+  ['decor24', '🏛️', 'Binnenhuisarchitect', '24 meubels geplaatst', (s, x) => x.placed >= 24],
+  ['ia1', '✨', 'Even uitproberen', 'Een interactief meubel gebruikt', (s) => c(s, 'ia') >= 1],
+  ['iaall', '🎠', 'Alles uitproberen', '20 verschillende interactieve meubels gebruikt', (s) => Object.keys(s.ic || {}).length >= 20],
+  ['ia100', '🤹', 'Speelvogel', '100 keer met meubels gespeeld', (s) => c(s, 'ia') >= 100],
 ].map(([id, e, n, d, t]) => ({ id, e, n, d, t }));
 function c(s, k) { return (s.st && s.st[k]) || 0; }
 
@@ -425,7 +432,7 @@ export function newPet(o, now = Date.now()) {
     v: 3, name: String(o.name || 'Maatje').slice(0, 16), type: o.type === 'mix' ? 'mix' : (TYPES[o.type] ? o.type : 'kat'),
     mix: o.type === 'mix' && Array.isArray(o.mix) ? o.mix.slice(0, 2) : 0, hue: int(o.hue) % NPAL, pe,
     born: now, h: 0, last: now, hunger: 80, happy: 80, energy: 80, clean: 80, bond: 10, xp: 0, coins: 20,
-    ill: 0, lw: 0, nap: 0, aw: 0, iv: {}, own: [], wr: {}, fp: {}, gd: [0, 0, 0, 0, 0, 0],
+    ill: 0, lw: 0, nap: 0, aw: 0, iv: {}, own: [], wr: {}, fp: {}, ic: {}, gd: [0, 0, 0, 0, 0, 0],
     sk: 0, sd: '', qd: '', ql: [], ach: [], st: {}, hs: {}, gc: { d: '', n: 0 }, rc: [], rm: 'woon', lvl: 1,
     hu: ['huisje'], hc: 'huisje', x: {}, dh: [],
   };
@@ -480,9 +487,15 @@ export function parseState(raw) {
       s.fp = {};
       if (x.fp && typeof x.fp === 'object') for (const r of ROOMS) {
         const a = Array.isArray(x.fp[r.id]) ? x.fp[r.id] : [];
-        s.fp[r.id] = Array.from({ length: 6 }, (_, i) => (typeof a[i] === 'string' && RID.test(a[i]) ? a[i] : 0));
+        s.fp[r.id] = Array.from({ length: FP_N }, (_, i) => (typeof a[i] === 'string' && RID.test(a[i]) ? a[i] : 0));
       }
       s.mg = int(x.mg);
+    }
+    // interactieve meubels: { meubel-id: laatste gebruik in seconden } (cooldown), nooit meer dan IC_MAX stuks
+    s.ic = {};
+    if (x.ic && typeof x.ic === 'object' && !Array.isArray(x.ic)) {
+      const e = Object.entries(x.ic).filter(([k, v]) => RID.test(k) && Number(v) > 0 && isFinite(Number(v))).map(([k, v]) => [k, Math.floor(Number(v))]).sort((a, b) => a[1] - b[1]).slice(-IC_MAX);
+      for (const [k, v] of e) s.ic[k] = v;
     }
     s.gd = Array.from({ length: 6 }, (_, i) => { const p = Array.isArray(x.gd) ? x.gd[i] : 0; return Array.isArray(p) && SEED[p[0]] ? [p[0], num(p[1], now), num(p[2], 0)] : 0; });
     s.sk = int(x.sk); s.sd = typeof x.sd === 'string' ? x.sd : ''; s.qd = typeof x.qd === 'string' ? x.qd : '';
@@ -515,11 +528,17 @@ export function parseState(raw) {
 export function packState(s) {
   const o = { ...s };
   const empty = (v) => v === 0 || v === '' || (Array.isArray(v) && !v.length) || (v && typeof v === 'object' && !Array.isArray(v) && !Object.keys(v).length);
-  for (const k of ['mix', 'ill', 'lw', 'nap', 'aw', 'iv', 'own', 'wr', 'fp', 'ql', 'ach', 'st', 'hs', 'rc', 'sk', 'sd', 'qd', 'grump', 'x', 'dh', 'mg']) if (empty(o[k])) delete o[k];
+  for (const k of ['mix', 'ill', 'lw', 'nap', 'aw', 'iv', 'own', 'wr', 'fp', 'ic', 'ql', 'ach', 'st', 'hs', 'rc', 'sk', 'sd', 'qd', 'grump', 'x', 'dh', 'mg']) if (empty(o[k])) delete o[k];
   const r = (v) => (typeof v === 'number' && !Number.isInteger(v) ? Math.round(v * 10) / 10 : v);
   for (const k of NEEDS) o[k] = r(o[k]);
+  // plattegrond compact: lege plekken achteraan weglaten (parseState vult weer aan tot FP_N)
+  if (o.fp && typeof o.fp === 'object') {
+    const fp = {};
+    for (const [k, a] of Object.entries(o.fp)) { const b = Array.isArray(a) ? a.slice() : []; while (b.length && !b[b.length - 1]) b.pop(); if (b.length) fp[k] = b; }
+    if (Object.keys(fp).length) o.fp = fp; else delete o.fp;
+  }
   let str = JSON.stringify(o);
-  for (const k of ['st', 'hs', 'rc', 'dh', 'x']) { if (str.length <= MAX_DATA) break; delete o[k]; str = JSON.stringify(o); }
+  for (const k of ['ic', 'st', 'hs', 'rc', 'dh', 'x']) { if (str.length <= MAX_DATA) break; delete o[k]; str = JSON.stringify(o); }
   return str.slice(0, MAX_DATA);
 }
 
@@ -648,6 +667,26 @@ const CSS = `
 .hd-conf span{position:absolute;font-size:24px;animation:hd-up 2.2s ease-out forwards}
 input.hd-in,select.hd-in{width:100%;box-sizing:border-box}
 input[type=range].hd-in{padding:0}
+.hd-ia{position:absolute;transform:translate(-50%,-100%);z-index:1;background:none!important;border:0!important;padding:0!important;margin:0;min-height:0!important;box-shadow:none!important;cursor:pointer;border-radius:12px;-webkit-tap-highlight-color:transparent}
+.hd-ia i{position:absolute;right:6%;top:4%;width:18px;height:18px;pointer-events:none}
+.hd-ia.rdy i:before,.hd-ia.rdy i:after{content:"✦";position:absolute;color:#ffd23a;text-shadow:0 0 6px rgba(255,200,60,.9),0 0 2px #fff;animation:hd-twinkle 2.6s ease-in-out infinite}
+.hd-ia.rdy i:before{left:0;top:0;font-size:15px}.hd-ia.rdy i:after{left:9px;top:9px;font-size:9px;animation-delay:1.1s}
+.hd-ia:focus-visible{outline:2px solid var(--accent)}
+.hd-iatag{display:inline-block;font-size:11px;line-height:1.4;padding:1px 7px;border-radius:9px;background:linear-gradient(90deg,#ffe9a8,#ffd1e0);color:#6b4a00;margin-top:2px}
+.hd-walk.hd-ia{animation:none!important;transition:transform .9s ease-in-out}
+.hd-pet.hd-ia-hop{animation:hd-jump .5s ease-in-out 5}
+.hd-pet.hd-ia-sway{transform-origin:50% 100%;animation:hd-sway .7s ease-in-out 4}
+.hd-pet.hd-ia-nod{transform-origin:50% 100%;animation:hd-nod .45s ease-in-out 6}
+.hd-pet.hd-ia-spin{animation:hd-spin 1.1s ease-in-out 2}
+.hd-pet.hd-ia-wiggle{transform-origin:50% 100%;animation:hd-wiggle .25s ease-in-out 10}
+.hd-pet.hd-ia-sleep{transform-origin:50% 100%;animation:hd-snooze 2.6s ease-in-out 1}
+@keyframes hd-twinkle{0%,100%{opacity:.15;transform:scale(.6) rotate(0)}50%{opacity:1;transform:scale(1.15) rotate(25deg)}}
+@keyframes hd-jump{0%,100%{transform:translateY(0)}50%{transform:translateY(-16%)}}
+@keyframes hd-sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
+@keyframes hd-nod{0%,100%{transform:translateY(0) scaleY(1)}50%{transform:translateY(3%) scaleY(.95)}}
+@keyframes hd-spin{0%{transform:perspective(400px) rotateY(0)}100%{transform:perspective(400px) rotateY(360deg)}}
+@keyframes hd-wiggle{0%,100%{transform:rotate(-8deg)}50%{transform:rotate(8deg)}}
+@keyframes hd-snooze{0%,100%{transform:none}20%,80%{transform:rotate(-12deg) translateY(7%) scale(.95)}}
 @keyframes hd-walk{0%{transform:translateX(-70%)}45%{transform:translateX(70%)}50%{transform:translateX(70%)}95%{transform:translateX(-70%)}100%{transform:translateX(-70%)}}
 @keyframes hd-flip{0%{transform:scaleX(1)}50%{transform:scaleX(-1)}100%{transform:scaleX(1)}}
 @keyframes pet-breath{0%,100%{transform:scale(1,1)}50%{transform:scale(1.018,.982)}}
@@ -661,7 +700,7 @@ input[type=range].hd-in{padding:0}
 @keyframes hd-up{from{transform:translateY(0) scale(.6);opacity:1}to{transform:translateY(-110px) scale(1.2);opacity:0}}
 @keyframes hd-pop{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 @keyframes hd-eggwob{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
-@media (prefers-reduced-motion:reduce){.hd-walk,.hd-flip,.hd-mood,.hd-eggfb,.pet-idle .pet-body,.pet-idle .pet-tail,.pet-idle .pet-ears,.pet-idle .pet-wings{animation:none!important}}
+@media (prefers-reduced-motion:reduce){.hd-walk.hd-ia{transition:none}.hd-ia i:before,.hd-ia i:after,.hd-pet[class*="hd-ia-"]{animation:none!important}.hd-walk,.hd-flip,.hd-mood,.hd-eggfb,.pet-idle .pet-body,.pet-idle .pet-tail,.pet-idle .pet-ears,.pet-idle .pet-wings{animation:none!important}}
 `;
 
 /* =====================================================================
@@ -917,7 +956,7 @@ export async function huisdierView(ctx) {
   function achCtx() {
     const now = Date.now();
     const placed = Object.values(S.fp || {}).reduce((a, arr) => a + arr.filter(Boolean).length, 0);
-    return { age: ageDays(S, now), lv: levelOf(S.xp).lv, placed, clothes: S.own.filter((i) => ACC[i]).length };
+    return { age: ageDays(S, now), lv: levelOf(S.xp).lv, placed, clothes: S.own.filter((i) => ACC[i]).length, furn: S.own.filter((i) => FURN_A[i]).length };
   }
   function checkAch() {
     if (checking || !S) return [];
@@ -1003,7 +1042,7 @@ export async function huisdierView(ctx) {
   const sleepingNowS = () => !!S && sleepingNow(S, Date.now());
   const fyOf = (roomId) => (ar && ar.FLOOR_Y && ar.FLOOR_Y[ROOM[roomId].a]) || 78;
   const nightOf = (s, now) => isNight(now) || sleepingNow(s, now);   // 's nachts of tijdens het slapen is de kamer donker
-  const fpOf = (r) => { S.fp = S.fp || {}; if (!Array.isArray(S.fp[r])) S.fp[r] = [0, 0, 0, 0, 0, 0]; return S.fp[r]; };
+  const fpOf = (r) => { S.fp = S.fp || {}; if (!Array.isArray(S.fp[r])) S.fp[r] = []; while (S.fp[r].length < FP_N) S.fp[r].push(0); return S.fp[r]; };
   function roomSvg(houseId, roomId, furn, night) {
     if (!ar) return '';
     try { return ar.roomSVG(houseId, ROOM[roomId].a, { night, furniture: furn, width: '100%', height: '100%' }); } catch (e) { console.error(e); return ''; }
@@ -1014,6 +1053,63 @@ export async function huisdierView(ctx) {
     const arr = (s.fp && s.fp[roomId]) || [];
     const pos = ar.SLOT_POS[ROOM[roomId].a] || [];
     return pos.map((p, i) => `<button class="hd-spot" style="left:${p.x}%;top:${p.y}%" data-do="spot" data-i="${i}" aria-label="Plek ${i + 1}">${arr[i] && FURN_A[arr[i]] ? furnSvg(arr[i], 44) : '＋'}</button>`).join('');
+  }
+  // interactieve meubels: een onzichtbare knop over elk geplaatst meubel dat iets kan (glinstering = klaar voor gebruik)
+  let iaTok = 0, iaTimers = [], iaXpAt = 0;
+  const IA_XP_GAP = 20000;   // hooguit 1 xp (en band) per 20 s uit meubelspel, over alle meubels samen
+  const iaTag = (id) => (ar && ar.INTERACT && ar.INTERACT[id] ? '<br><span class="hd-iatag">✨ Interactief</span>' : '');
+  function iaHTML(s, roomId, editMode) {
+    if (editMode || !ar || !ar.INTERACT || !ar.slotBox || !ar.interactLeft) return '';
+    const arr = (s.fp && s.fp[roomId]) || [], a = ROOM[roomId].a, now = Date.now();
+    let h = '';
+    arr.forEach((id, i) => {
+      if (!id || !ar.INTERACT[id]) return;
+      const b = ar.slotBox(a, i, id); if (!b) return;
+      const nm = FURN_A[id] ? FURN_A[id].name : id;
+      h += `<button class="hd-ia ${ar.interactLeft(s.ic, id, now) ? 'cd' : 'rdy'}" data-do="ia" data-i="${i}" data-v="${id}" style="left:${b.x}%;top:${b.y}%;width:${b.w}%;height:${b.h}%" aria-label="${esc(nm)} gebruiken"><i></i></button>`;
+    });
+    return h;
+  }
+  function iaRefresh() {
+    if (!ar || !ar.interactLeft || !S) return;
+    const now = Date.now();
+    view.querySelectorAll('.hd-ia').forEach((b) => { const l = ar.interactLeft(S.ic, b.dataset.v, now); b.classList.toggle('rdy', !l); b.classList.toggle('cd', !!l); });
+  }
+  // het huisdier loopt naar het meubel, doet de animatie en loopt terug naar zijn gewone looppad
+  function iaWalk(i, anim) {
+    const w = $('#hd-walk'), fl = $('#hd-pet'); if (!w || !fl || !ar || !ar.SLOT_POS) return;
+    const sl = (ar.SLOT_POS[ROOM[room].a] || [])[i]; if (!sl) return;
+    iaTimers.forEach(clearTimeout); iaTimers = [];
+    const tok = ++iaTok, rm = room;
+    const ok = () => tok === iaTok && rm === room;
+    const at = (fn, ms) => iaTimers.push(later(() => { if (ok()) fn(); }, ms));
+    const pe = fl.querySelector('.hd-pet'); if (pe) pe.className = pe.className.replace(/\bhd-ia-\w+/g, '').trim();
+    let cur = 0, f0 = 1;
+    try { cur = new DOMMatrixReadOnly(getComputedStyle(w).transform).m41; f0 = new DOMMatrixReadOnly(getComputedStyle(fl).transform).a || 1; } catch { /* oude browser: gewoon verspringen */ }
+    const gx = Math.max(-135, Math.min(135, (sl.x - 50) / 38 * 100));
+    w.classList.add('hd-ia'); w.style.transition = 'none'; w.style.transform = `translateX(${cur}px)`;
+    fl.style.animation = 'none'; fl.style.transform = `scaleX(${f0 < 0 ? -1 : 1})`;
+    void w.offsetWidth;
+    w.style.transition = ''; w.style.transform = `translateX(${gx}%)`;
+    fl.style.transform = `scaleX(${gx * w.offsetWidth / 100 > cur ? 1 : -1})`;
+    at(() => { const p = $('#hd-pet .hd-pet'); if (p) p.classList.add(`hd-ia-${anim}`); }, 950);
+    at(() => {
+      const p = $('#hd-pet .hd-pet'); if (p) p.className = p.className.replace(/\bhd-ia-\w+/g, '').trim();
+      const w2 = $('#hd-walk'), f2 = $('#hd-pet'); if (!w2 || !f2) return;
+      w2.style.transform = 'translateX(-70%)'; f2.style.transform = `scaleX(${gx > -70 ? -1 : 1})`;
+    }, 950 + 2700);
+    at(() => {
+      const w2 = $('#hd-walk'), f2 = $('#hd-pet'); if (!w2 || !f2) return;
+      w2.classList.remove('hd-ia'); w2.style.transform = ''; w2.style.transition = ''; f2.style.animation = ''; f2.style.transform = '';
+    }, 950 + 2700 + 950);
+  }
+  function iaFx(emoji, x, y, n = 2) {
+    const box = $('#hd-fx'); if (!box) return;
+    for (let k = 0; k < n; k++) {
+      const sp = document.createElement('span'); sp.className = 'hd-fxi'; sp.textContent = emoji;
+      sp.style.left = `${Math.max(4, Math.min(88, x - 4 + k * 5))}%`; sp.style.bottom = `${Math.max(8, 100 - y + 4)}%`; sp.style.animationDelay = `${k * 0.18}s`;
+      box.appendChild(sp); later(() => sp.remove(), 1800 + k * 180);
+    }
   }
   function furnSvg(id, size) { if (!ar) return ''; try { return ar.furnitureSVG(id, size); } catch (e) { console.error(e); return ''; } }
   function accSvg(slot, id, size) { if (!ART) return ''; try { return ART.accessorySVG(slot, id, size); } catch (e) { console.error(e); return ''; } }
@@ -1041,7 +1137,7 @@ export async function huisdierView(ctx) {
     body.innerHTML = `<div class="hd-roombar">${ROOMS.map((r) => `<button data-do="room" data-v="${r.id}" class="${r.id === room ? 'pri' : ''}">${r.e} ${r.n}</button>`).join('')}</div>${awayBoxHTML()}
       <div class="hd-stage" id="hd-stage" style="background:${R.bg}">
         <div class="hd-roomsvg" id="hd-room">${roomSvg(S.hc, room, fpOf(room), nightOf(S, now))}</div>
-        ${spotsHTML(S, room, edit)}
+        ${spotsHTML(S, room, edit)}${iaHTML(S, room, edit)}
         <div class="hd-bubble" id="hd-bub"></div>
         <div class="hd-walk" id="hd-walk" style="--fy:${fyOf(room)}" data-do="petvoice"><div class="hd-flip" id="hd-pet"></div></div>
         ${sl ? '<div class="hd-night" id="hd-night"><span>💤</span></div>' : ''}
@@ -1050,7 +1146,7 @@ export async function huisdierView(ctx) {
       <div class="center"><b>${esc(S.name)}</b> <small>· ${stageName()} · ${PERS[S.pe].e} ${PERS[S.pe].n} · <span id="hd-mn"></span></small></div>
       <div class="hd-bars" id="hd-bars">${NEEDS.map((k) => bar(k, NEED_LABEL[k], S[k])).join('')}${bar('bond', '💞 Band', S.bond)}</div>
       <div id="hd-panel"></div>`;
-    petKey = '';
+    petKey = ''; iaTok++;
     paintPet(true); paintLive(); renderPanel();
   }
   const stageName = () => STAGES[stageOf(S, Date.now())].n;
@@ -1092,7 +1188,7 @@ export async function huisdierView(ctx) {
       for (const k of [...NEEDS, 'bond']) { const b = view.querySelector(`[data-bar="${k}"]`); if (b) { b.style.width = `${Math.round(S[k])}%`; b.classList.toggle('low', S[k] < 25); } }
       const mn = $('#hd-mn'); if (mn) mn.textContent = MOOD_NL[mood];
       const nb = $('[data-nap]'); if (nb && S.nap > now) nb.textContent = `😴 Slaapt… ${fmtTime(S.nap - now)}`;
-      tickPlots(now);
+      tickPlots(now); iaRefresh();
     }
     if (now > sayUntil && (mood !== phraseMood || now - phraseAt > 15000 || !phrase)) {
       phraseMood = mood; phraseAt = now;
@@ -1278,8 +1374,8 @@ export async function huisdierView(ctx) {
         const list = ar.FURNITURE.filter((f) => f.room === R.a);
         inner = `<div class="hd-roombar">${ROOMS.map((r) => `<button data-do="srm" data-v="${r.id}" class="${r.id === R.id ? 'pri' : ''}">${r.e} ${r.n}</button>`).join('')}</div>
           <div class="hd-grid">${list.map((f) => (S.own.includes(f.id)
-    ? `<div class="hd-card on"><div class="th">${furnSvg(f.id, 64)}</div>${esc(f.name)}<br><small>✓ van jou</small></div>`
-    : card(`<div class="th">${furnSvg(f.id, 64)}</div>`, esc(f.name), f.price, f.minLevel, '', buyBtn('furn', f.id, f.price)))).join('')}</div><p class="center"><small>Plaats meubels via 🪑 Inrichten in de kamer.</small></p>`;
+    ? `<div class="hd-card on"><div class="th">${furnSvg(f.id, 64)}</div>${esc(f.name)}<br><small>✓ van jou</small>${iaTag(f.id)}</div>`
+    : card(`<div class="th">${furnSvg(f.id, 64)}</div>`, esc(f.name), f.price, f.minLevel, '', buyBtn('furn', f.id, f.price), iaTag(f.id)))).join('')}</div><p class="center"><small>Plaats meubels via 🪑 Inrichten in de kamer. Meubels met ✨ kun je in de kamer aantikken.</small></p>`;
       }
     } else if (shopTab === 'kleding') {
       if (!ART) inner = '<div class="box center"><small>De kleding is er nu even niet.</small></div>';
@@ -1929,12 +2025,32 @@ export async function huisdierView(ctx) {
       const i = Number(el.dataset.i); const arr = fpOf(room); const R = ROOM[room];
       const mine = ar.FURNITURE.filter((f) => f.room === R.a && S.own.includes(f.id));
       modal(`<b>Plek ${i + 1} in de ${R.n.toLowerCase()}</b>
-        ${mine.length ? `<div class="hd-grid" style="margin:10px 0">${mine.map((f) => { const at = arr.indexOf(f.id); return `<div class="hd-card ${arr[i] === f.id ? 'on' : ''}" data-do="place" data-i="${i}" data-v="${f.id}" style="cursor:pointer"><div class="th">${furnSvg(f.id, 64)}</div>${esc(f.name)}${at >= 0 && at !== i ? `<br><small>nu op plek ${at + 1}</small>` : ''}</div>`; }).join('')}</div>` : '<p><small>Je hebt voor deze kamer nog geen meubels. Koop ze in het winkeltje 🛍️ (tab Meubels).</small></p>'}
+        ${mine.length ? `<div class="hd-grid" style="margin:10px 0">${mine.map((f) => { const at = arr.indexOf(f.id); return `<div class="hd-card ${arr[i] === f.id ? 'on' : ''}" data-do="place" data-i="${i}" data-v="${f.id}" style="cursor:pointer"><div class="th">${furnSvg(f.id, 64)}</div>${esc(f.name)}${at >= 0 && at !== i ? `<br><small>nu op plek ${at + 1}</small>` : ''}${iaTag(f.id)}</div>`; }).join('')}</div>` : '<p><small>Je hebt voor deze kamer nog geen meubels. Koop ze in het winkeltje 🛍️ (tab Meubels).</small></p>'}
         <div class="hd-acts">${b('Leeg maken', 'place', `data-i="${i}" data-v=""`)}${b('Sluiten', 'close')}</div>`);
+    },
+    ia(el) {
+      if (!S.h || !ar || !ar.interactApply || edit) return;
+      const id = el.dataset.v, i = Number(el.dataset.i);
+      if (!ar.isInteractive(id) || fpOf(room)[i] !== id) return;
+      if (sleepingNowS()) return say('Zzz…', 2000);
+      if (S.ill) return say('Ik voel me te beroerd om te spelen…');
+      const now = Date.now();
+      const r = ar.interactApply(S, id, now, { bond: now - iaXpAt > IA_XP_GAP });
+      if (!r.ok) {
+        sfx('terug');
+        if (r.why === 'cd') return say(`${(FURN_A[id] || {}).name || 'Dit meubel'}: nog ${r.left >= 60 ? `${Math.ceil(r.left / 60)} min` : `${r.left} s`} wachten.`, 2500);
+        return say(r.msg || 'Nu even niet.', 2500);
+      }
+      const d = r.def, b = ar.slotBox(ROOM[room].a, i, id);
+      iaWalk(i, d.a);
+      later(() => { sfx(d.s); say(d.t, 3500); if (b) iaFx(d.f, b.x, b.y - b.h * 0.5, 2); }, 950);
+      S.st = S.st || {};
+      if (now - iaXpAt > IA_XP_GAP) { iaXpAt = now; addXp(1); }
+      bump('ia'); commit(false); iaRefresh();
     },
     place(el) {
       const i = Number(el.dataset.i), id = el.dataset.v; const arr = fpOf(room);
-      if (!(i >= 0 && i < 6)) return;
+      if (!(i >= 0 && i < FP_N)) return;
       if (id && !(S.own.includes(id) && FURN_A[id] && FURN_A[id].room === ROOM[room].a)) return;
       if (id) arr.forEach((x, k) => { if (x === id) arr[k] = 0; });
       arr[i] = id || 0;
@@ -2248,8 +2364,8 @@ export async function huisdierView(ctx) {
     import('./huisdier-games.js?v=1').then((m) => { gm = m; }).catch((e) => { console.error(e); gmErr = 'De spelletjes konden niet geladen worden.'; }),
     import('./huisdier-social.js?v=1').then((m) => { soc = m; }).catch((e) => { console.error(e); socErr = 'De vriendenfunctie kon niet geladen worden.'; }),
     import('./huisdier-art-pets.js?v=1').then((m) => { setArt(m); }).catch((e) => { console.error(e); }),
-    import('./huisdier-art-rooms.js?v=1').then((m) => { ar = m; for (const f of m.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
-    import('./huisdier-sound.js?v=1').then((m) => { snd = m.createSound(); snd.setEnabled(pref.on); snd.setVolume(pref.vol); }).catch((e) => { console.error(e); snd = null; }),
+    import('./huisdier-art-rooms.js?v=2').then((m) => { ar = m; for (const f of m.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
+    import('./huisdier-sound.js?v=2').then((m) => { snd = m.createSound(); snd.setEnabled(pref.on); snd.setVolume(pref.vol); }).catch((e) => { console.error(e); snd = null; }),
     ensureExtra(),
   ]);
   if (!alive) return;

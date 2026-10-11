@@ -9,6 +9,9 @@ export const SOUND_NAMES = [
   'tik', 'terug', 'munt', 'koop', 'eten', 'drinken', 'plons', 'poets', 'slaap', 'wakker',
   'kraak', 'uitgekomen', 'level', 'prestatie', 'knuffel', 'cadeau', 'fout', 'klaar', 'ziek',
   'beter', 'plant', 'oogst', 'koken', 'meubel', 'help', 'stem',
+  // interactieve meubels
+  'tv', 'bladzij', 'piano', 'sprong', 'bubbel', 'sissen', 'knetter', 'muziek', 'schommel',
+  'xyl', 'trommel', 'ster', 'spinnen', 'ploep', 'sproeien',
 ];
 export const SPECIES = ['kat', 'hond', 'konijn', 'panda', 'eend', 'kikker', 'eenhoorn', 'draak'];
 export const LOOP_NAMES = ['wiegenlied', 'tuin', 'regen'];
@@ -358,6 +361,79 @@ const SOUNDS = {
   meubel(c) {
     tone(c, { f: 320, to: 170, d: 0.1, v: 0.16, lp: 900, a: 0.002 });
     noise(c, { d: 0.03, v: 0.06, f: 900, q: 1, a: 0.001 });
+  },
+  // ---- interactieve meubels ----
+  tv(c) {
+    noise(c, { d: 0.22, v: 0.05, f: 3200, q: 0.5, a: 0.01 });
+    [0, 5, 9, 7].forEach((s, i) => tone(c, { f: nt(s + 12), t: 0.25 + i * 0.12, d: 0.14, v: 0.07, type: 'square', lp: 2000, a: 0.005 }));
+  },
+  bladzij(c) {
+    noise(c, { d: 0.16, v: 0.07, f: 2200, to: 5000, q: 0.6, a: 0.02 });
+    noise(c, { t: 0.32, d: 0.14, v: 0.06, f: 2000, to: 4500, q: 0.6, a: 0.02 });
+    tone(c, { f: nt(12), t: 0.5, d: 0.5, v: 0.04, lp: 2400, a: 0.02 });
+  },
+  piano(c) {
+    [0, 4, 7, 12, 7, 9, 12, 16].forEach((s, i) => {
+      tone(c, { f: nt(s), t: i * 0.11, d: 0.7, v: 0.1, type: 'triangle', lp: 2600, a: 0.004 });
+      tone(c, { f: nt(s) * 2, t: i * 0.11, d: 0.3, v: 0.03, lp: 3500, a: 0.003 });
+    });
+  },
+  sprong(c) {
+    [0, 0.32, 0.62].forEach((t, i) => {
+      tone(c, { f: 230 - i * 20, to: 620 - i * 60, t, d: 0.22, v: 0.12, lp: 1800, a: 0.01, vib: [18, 8] });
+    });
+    noise(c, { t: 0.9, d: 0.06, v: 0.04, f: 900, q: 1 });
+  },
+  bubbel(c) {
+    for (let i = 0; i < 12; i++) bubble(c, i * 0.07 + rnd(0, 0.05), 0.07);
+    noise(c, { d: 0.9, v: 0.012, type: 'lowpass', f: 1200, a: 0.1 });
+  },
+  sissen(c) {
+    noise(c, { d: 0.8, v: 0.06, type: 'highpass', f: 3500, q: 0.6, a: 0.03 });
+    noise(c, { t: 0.1, d: 0.5, v: 0.04, f: 5200, q: 1, a: 0.04 });
+    bell(c, nt(24), 0.85, 0.5, 0.06);
+  },
+  knetter(c) {
+    for (let i = 0; i < 9; i++) noise(c, { t: i * 0.09 + rnd(0, 0.06), d: 0.03, v: rnd(0.04, 0.09), f: rnd(1500, 4000), q: 1.4, a: 0.001 });
+    noise(c, { d: 0.9, v: 0.02, type: 'lowpass', f: 500, a: 0.15 });
+  },
+  muziek(c) {
+    [0, 4, 7, 4, 9, 7, 12].forEach((s, i) => {
+      tone(c, { f: nt(s), t: i * 0.14, d: 0.22, v: 0.09, type: 'square', lp: 1600, a: 0.006 });
+      tone(c, { f: nt(s - 12), t: i * 0.14, d: 0.22, v: 0.05, type: 'triangle', lp: 800, a: 0.006 });
+    });
+  },
+  schommel(c) {
+    [0, 0.5].forEach((t, i) => {
+      noise(c, { t, d: 0.45, v: 0.035, f: 500 + i * 200, to: 1100 - i * 400, q: 2, a: 0.1 });
+      tone(c, { f: 420 + i * 40, to: 560 - i * 60, t, d: 0.45, v: 0.025, type: 'triangle', lp: 1000, a: 0.1, vib: [9, 6] });
+    });
+  },
+  xyl(c) {
+    [0, 2, 4, 7, 9, 12].forEach((s, i) => bell(c, nt(s + 19), i * 0.09, 0.45, 0.09));
+  },
+  trommel(c) {
+    [0, 0.14, 0.28, 0.42, 0.56].forEach((t, i) => {
+      tone(c, { f: i % 2 ? 220 : 160, to: 70, t, d: 0.14, v: 0.17, lp: 700, a: 0.002 });
+      noise(c, { t, d: 0.05, v: 0.06, f: 2600, q: 0.8, a: 0.001 });
+    });
+    noise(c, { t: 0.7, d: 0.4, v: 0.05, f: 6000, q: 1.2, a: 0.01 });
+  },
+  ster(c) {
+    [0, 7, 12, 16, 19].forEach((s, i) => bell(c, nt(s + 24), i * 0.13, 0.7, 0.06));
+    tone(c, { f: nt(0), d: 1.1, v: 0.03, lp: 700, a: 0.3 });
+  },
+  spinnen(c) {
+    tone(c, { f: 70, to: 62, d: 1.4, v: 0.1, type: 'sawtooth', lp: 260, a: 0.25, trem: [22, 0.7] });
+    tone(c, { f: 140, to: 124, d: 1.4, v: 0.04, lp: 400, a: 0.25, trem: [22, 0.7] });
+  },
+  ploep(c) {
+    tone(c, { f: 380, to: 900, d: 0.1, v: 0.12, lp: 2000, a: 0.004 });
+    bell(c, nt(19), 0.1, 0.4, 0.06);
+  },
+  sproeien(c) {
+    noise(c, { d: 0.9, v: 0.05, f: 2600, to: 1200, q: 0.7, a: 0.08 });
+    for (let i = 0; i < 4; i++) bubble(c, 0.5 + i * 0.1, 0.04);
   },
   help(c) {
     bell(c, nt(16), 0, 0.7, 0.12);
