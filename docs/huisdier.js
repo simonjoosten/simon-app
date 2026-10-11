@@ -881,9 +881,9 @@ export async function huisdierView(ctx) {
   function modal(html) {
     let m = $('#hd-modal');
     if (!m) { m = document.createElement('div'); m.id = 'hd-modal'; m.className = 'hd-modal'; ($('.hd-root') || view).appendChild(m); }
-    m.innerHTML = `<div>${html}</div>`; m.hidden = false;
+    m.innerHTML = `<div>${html}</div>`; m.hidden = false; m.style.display = '';
   }
-  const closeModal = () => { const m = $('#hd-modal'); if (m) { m.hidden = true; m.innerHTML = ''; } };
+  const closeModal = () => { const m = $('#hd-modal'); if (m) m.remove(); };
   const confetti = () => `<div class="hd-conf" style="position:relative;height:0">${Array.from({ length: 9 }, (_, i) => `<span style="left:${8 + i * 10}%;top:20px;animation-delay:${i * 0.12}s">${['🎉', '✨', '💛', '⭐', '🎈'][i % 5]}</span>`).join('')}</div>`;
 
   /* ---------- XP, munten, voortgang ---------- */

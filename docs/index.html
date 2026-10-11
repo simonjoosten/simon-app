@@ -251,7 +251,7 @@ async function homeView() {
   if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
   const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   if (me.apps.includes('vraag')) getDoc(doc(db, 'dailyq', today, 'answers', me.uid)).then((s) => { if (!s.exists()) setBadge('vraag', 1); }).catch(() => {});
-  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
+  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js?v=3'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
   if (me.apps.includes('agenda')) import('./agenda.js').then((m) => m.agendaToday(db)).then((n) => setBadge('agenda', n || 0)).catch(() => {});
   if (me.apps.includes('chat')) import('./chat.js').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
   if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
@@ -362,7 +362,7 @@ async function vraagApp() { const m = await import('./vraag.js'); await m.vraagV
 async function vraagAdminApp() { const m = await import('./vraag.js'); await m.vraagView({ ...appCtx(), adminOnly: true }); }
 async function agendaApp() { const m = await import('./agenda.js'); await m.agendaView(appCtx()); }
 async function gewoontesApp() { const m = await import('./gewoontes.js'); await m.gewoontesView(appCtx()); }
-async function huisdierApp() { const m = await import('./huisdier.js'); await m.huisdierView(appCtx()); }
+async function huisdierApp() { const m = await import('./huisdier.js?v=3'); await m.huisdierView(appCtx()); }
 async function tijdApp() { const m = await import('./tijd.js'); m.tijdView(appCtx()); }
 async function rekenenApp() { const m = await import('./rekenen.js'); m.rekenenView(appCtx()); }
 
