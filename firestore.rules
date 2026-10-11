@@ -201,8 +201,61 @@ service cloud.firestore {
       allow read: if isMember() || isAdmin();
       allow create, update: if isMember() && request.auth.uid == uid
         && request.resource.data.keys().hasOnly(['data', 'updated'])
-        && request.resource.data.data is string && request.resource.data.data.size() < 6000;
+        && request.resource.data.data is string && request.resource.data.data.size() < 20000;
       allow delete: if isMember() && request.auth.uid == uid;
+    }
+
+    // Cadeautjes tussen huisdieren (eten, speelgoed, knuffel) en munten van de admin
+    match /petgifts/{id} {
+      allow read: if isAdmin()
+        || (isMember() && (resource.data.to == request.auth.uid || resource.data.from == request.auth.uid));
+      allow create: if (isMember() && request.resource.data.from == request.auth.uid
+            && request.resource.data.to != request.auth.uid
+            && request.resource.data.keys().hasOnly(['to', 'toName', 'from', 'fromName', 'kind', 'item', 'label', 'created', 'claimed'])
+            && request.resource.data.kind in ['food', 'toy', 'hug']
+            && request.resource.data.claimed == false
+            && request.resource.data.item is string && request.resource.data.item.size() <= 20
+            && request.resource.data.label is string && request.resource.data.label.size() <= 40)
+        || (isAdmin() && request.resource.data.from == request.auth.uid
+            && request.resource.data.keys().hasOnly(['to', 'toName', 'from', 'fromName', 'kind', 'item', 'label', 'created', 'claimed', 'amount'])
+            && request.resource.data.claimed == false
+            && (request.resource.data.kind != 'coins' || (request.resource.data.amount is int && request.resource.data.amount >= 1 && request.resource.data.amount <= 500)));
+      allow update: if isMember() && resource.data.to == request.auth.uid && resource.data.claimed == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['claimed'])
+        && request.resource.data.claimed == true;
+      allow delete: if isAdmin() || (isMember() && resource.data.to == request.auth.uid);
+    }
+
+    // Toestemming van de eigenaar: wie mag mijn huisdier helpen
+    match /petperms/{owner} {
+      allow read: if isMember() || isAdmin();
+      allow create, update: if isMember() && request.auth.uid == owner
+        && request.resource.data.keys().hasOnly(['allow', 'updated'])
+        && request.resource.data.allow is list && request.resource.data.allow.size() <= 10;
+      allow delete: if isMember() && request.auth.uid == owner;
+    }
+
+    // Hulp van een vriend (voeren, spelen, wassen...) - alleen met toestemming van de eigenaar
+    match /pethelps/{id} {
+      allow read: if isAdmin()
+        || (isMember() && (resource.data.to == request.auth.uid || resource.data.from == request.auth.uid));
+      allow create: if isMember() && request.resource.data.from == request.auth.uid
+        && request.resource.data.to != request.auth.uid
+        && request.resource.data.keys().hasOnly(['to', 'toName', 'from', 'fromName', 'action', 'detail', 'created', 'applied'])
+        && request.resource.data.action in ['feed', 'play', 'wash', 'sleep', 'pet']
+        && request.resource.data.applied == false
+        && request.resource.data.detail is string && request.resource.data.detail.size() <= 30
+        && request.auth.uid in get(/databases/$(db)/documents/petperms/$(request.resource.data.to)).data.allow;
+      allow update: if isMember() && resource.data.to == request.auth.uid && resource.data.applied == false
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['applied'])
+        && request.resource.data.applied == true;
+      allow delete: if isAdmin() || (isMember() && resource.data.to == request.auth.uid);
+    }
+
+    // Evenement dat de admin instelt (bijv. dubbele munten)
+    match /petevent/{doc} {
+      allow read: if isMember() || isAdmin();
+      allow write: if isAdmin();
     }
 
     match /config/{doc} {
