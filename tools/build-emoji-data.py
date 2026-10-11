@@ -8,6 +8,12 @@ SETS = {
  '🍕 Eten': [('🍕','pizza'),('🍔','hamburger'),('🍟','friet'),('🌭','worstje'),('🍿','popcorn'),('🍩','donut'),('🍪','koekje'),('🍫','chocola'),('🍦','ijsje'),('🍎','appel'),('🍌','banaan'),('🍓','aardbei'),('🍉','meloen'),('🥕','wortel'),('🥑','avocado'),('🌮','taco'),('🍣','sushi'),('🧀','kaas'),('🥞','pannenkoek'),('☕','koffie'),('🍺','biertje'),('🧁','cupcake'),('🥨','krakeling'),('🍇','druiven'),('🍒','kersen'),('🍑','perzik'),('🥐','croissant'),('🥓','spek'),('🍳','spiegelei'),('🍰','taartje'),('🍭','lolly'),('🥝','kiwi'),('🍋','citroen'),('🥦','broccoli'),('🥔','aardappel'),('🍄','paddenstoel'),('🌽','maïs'),('🍍','ananas')],
  '🚗 Dingen': [('🚗','auto'),('🚀','raket'),('✈️','vliegtuig'),('🚲','fiets'),('⚽','voetbal'),('🏀','basketbal'),('🎮','spelcomputer'),('🎸','gitaar'),('📱','telefoon'),('💡','lamp'),('🔥','vuurtje'),('⭐','sterretje'),('🌈','regenboog'),('☀️','zonnetje'),('🌧️','regenwolk'),('⚡','bliksem'),('🎈','ballon'),('🎁','cadeautje'),('👑','kroontje'),('💎','diamant'),('🧲','magneet'),('🔔','bel'),('🌵','cactus'),('🌻','zonnebloem'),('🎃','pompoen'),('⛄','sneeuwpop'),('🎲','dobbelsteen'),('🧸','teddybeer'),('🔮','kristallen bol'),('🚁','helikopter'),('🚂','trein'),('🛸','ufo'),('🌙','maantje'),('🌍','aarde'),('🌊','golf'),('❄️','sneeuwvlok'),('🎄','kerstboom'),('🎷','saxofoon'),('🥁','trommel'),('📚','boeken'),('⏰','wekker'),('🔑','sleutel'),('💣','bom'),('🏆','beker'),('🧠','hersenen'),('👀','ogen'),('👅','tong'),('👍','duimpje'),('❤️','hartje'),('💔','gebroken hart'),('💯','honderd')],
 }
+# Extra emoji's uit tools/emoji-extra.json erbij (zelfde categorieën of nieuwe)
+extra_path = os.path.join(os.path.dirname(__file__), 'emoji-extra.json')
+if os.path.exists(extra_path):
+    for cat, items in json.load(open(extra_path)).items():
+        SETS.setdefault(cat, [])
+        SETS[cat] += [(e, n) for e, n in items]
 src = sys.argv[1]
 d = json.load(open(src))['data']
 def code(e): return '-'.join(f'{ord(c):x}' for c in e)
