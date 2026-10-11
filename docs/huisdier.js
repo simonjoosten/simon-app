@@ -635,6 +635,7 @@ const CSS = `
 .hd-plot{border-radius:14px;background:#d9c19a;border:2px solid #bda47c;padding:6px;text-align:center;min-height:104px;font-size:12px;color:#4d3b1e}
 .hd-plot .em{font-size:34px;line-height:1.2}.hd-plot button{width:100%;padding:5px 2px;margin-top:4px;font-size:12px}
 .hd-plot i{display:block;height:6px;border-radius:4px;background:rgba(0,0,0,.15);overflow:hidden;margin-top:4px}.hd-plot i b{display:block;height:100%;background:#58b368}
+.hd-modal[hidden],.hd-toast[hidden]{display:none!important}
 .hd-modal{position:fixed;inset:0;background:rgba(40,30,60,.45);z-index:50;display:flex;align-items:center;justify-content:center;padding:16px}
 .hd-modal>div{background:var(--card);color:var(--ink);border-radius:20px;padding:16px;max-width:420px;width:100%;max-height:82vh;overflow:auto;box-shadow:0 8px 30px rgba(0,0,0,.25);text-align:center}
 .hd-modal .hd-pet{width:140px;height:140px;margin:0 auto}
