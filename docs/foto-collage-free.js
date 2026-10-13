@@ -338,7 +338,8 @@ export function collageFreeView(ctx) {
   }
   const bitmaps = new Map(); // id -> {src, prev}
   function addBitmap(cv, id) { id = id || nid('i'); bitmaps.set(id, { src: cv, prev: scaledCanvas(cv, 1000) }); return id; }
-  function loadFile(f, side) {
+  async function loadFile(f, side) { const r = await loadFile0(f, side); if (r) return r; const alt = window.__fotoHeic ? await window.__fotoHeic(f) : null; return alt ? loadFile0(alt, side) : null; }
+  function loadFile0(f, side) {
     return new Promise((res) => {
       const url = URL.createObjectURL(f), im = new Image();
       const done = (v) => { try { URL.revokeObjectURL(url); } catch (e) { /* ok */ } res(v); };
@@ -724,7 +725,7 @@ export function collageFreeView(ctx) {
 
   /* ---------- foto's toevoegen ---------- */
   function pickFiles(multiple, cb) {
-    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = !!multiple; inp.style.display = 'none';
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,.heic,.heif'; inp.multiple = !!multiple; inp.style.display = 'none';
     inp.onchange = () => { const fs = [].slice.call(inp.files || []); if (fs.length && alive) cb(fs); };
     inp.click();
   }

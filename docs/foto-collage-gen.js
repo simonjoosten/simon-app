@@ -189,7 +189,8 @@ export function collageGenView(ctx) {
   const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); if (alive) fn(); }, ms); timers.add(t); return t; };
 
   /* ---------- foto's laden ---------- */
-  function loadFile(f) {
+  async function loadFile(f) { const r = await loadFile0(f); if (r) return r; const alt = window.__fotoHeic ? await window.__fotoHeic(f) : null; return alt ? loadFile0(alt) : null; }
+  function loadFile0(f) {
     return new Promise((res) => {
       const url = URL.createObjectURL(f), im = new Image();
       im.onload = () => {
@@ -228,7 +229,7 @@ export function collageGenView(ctx) {
   }
   const filled = () => { let c = 0; for (let i = 0; i < S.n; i++) if (S.photos[i]) c++; return c; };
   function pick(first, replace) {
-    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*'; inp.multiple = !replace;
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,.heic,.heif'; inp.multiple = !replace;
     inp.onchange = () => { addFiles(inp.files || [], first, replace); };
     inp.click();
   }

@@ -369,7 +369,7 @@ async function vraagAdminApp() { const m = await import('./vraag.js'); await m.v
 async function agendaApp() { const m = await import('./agenda.js'); await m.agendaView(appCtx()); }
 async function gewoontesApp() { const m = await import('./gewoontes.js'); await m.gewoontesView(appCtx()); }
 const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=1`); await m[`${id}View`](appCtx()); };
-async function fotoApp() { const m = await import('./foto.js?v=1'); m.fotoView(appCtx()); }
+async function fotoApp() { const m = await import('./foto.js?v=2'); m.fotoView(appCtx()); }
 async function huisdierApp() { const m = await import('./huisdier.js?v=3'); await m.huisdierView(appCtx()); }
 async function tijdApp() { const m = await import('./tijd.js'); m.tijdView(appCtx()); }
 async function rekenenApp() { const m = await import('./rekenen.js'); m.rekenenView(appCtx()); }

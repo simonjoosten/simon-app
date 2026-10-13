@@ -422,7 +422,8 @@ export function fotoEditView(ctx) {
   }
 
   /* ---------- foto laden ---------- */
-  function loadFile(file, maxSide) {
+  async function loadFile(file, maxSide) { try { return await loadFile0(file, maxSide); } catch (e) { const alt = window.__fotoHeic ? await window.__fotoHeic(file) : null; if (alt) return loadFile0(alt, maxSide); throw e; } }
+  function loadFile0(file, maxSide) {
     return new Promise((res, rej) => {
       const url = URL.createObjectURL(file); urls.add(url);
       const im = new Image();
@@ -469,7 +470,7 @@ export function fotoEditView(ctx) {
       <p class="fe-hint" style="font-size:.95rem">Snij bij, maak kleuren mooier, voeg filters, tekst en stickers toe.</p>
       <p><button class="fe-b pri" id="fe-pick" style="font-size:1.05rem;padding:.7rem 1.2rem">📷 Kies een foto</button></p>
       <p class="fe-hint">Je kunt een foto ook hierheen slepen of plakken (Ctrl/⌘+V).</p><p class="fe-hint" id="fe-smsg">${extra || ''}</p></div>${tipsHtml}
-      <input type="file" id="fe-file" accept="image/*" multiple hidden></div>`;
+      <input type="file" id="fe-file" accept="image/*,.heic,.heif" multiple hidden></div>`;
     fileIn = view.querySelector('#fe-file');
     fileIn.onchange = () => { const f = fileIn.files; if (f && f.length) openFiles(f); fileIn.value = ''; };
     view.querySelector('#fe-pick').onclick = () => fileIn.click();
@@ -488,7 +489,7 @@ export function fotoEditView(ctx) {
         <div class="fe-zoom"><button class="fe-b" data-top="zm" aria-label="Uitzoomen">−</button><button class="fe-b" data-top="zp" aria-label="Inzoomen">＋</button><button class="fe-b" data-top="zf" aria-label="Passend">⤢</button></div></div>
       <div class="fe-tools" id="fe-tools">${TOOLBAR.map((t) => `<button class="fe-b fe-t" data-tool="${t[0]}"><i>${t[1]}</i>${t[2]}</button>`).join('')}</div>
       <div class="fe-panel" id="fe-panel"></div>${tipsHtml}
-      <input type="file" id="fe-file" accept="image/*" multiple hidden><input type="file" id="fe-ov" accept="image/*" hidden></div>`;
+      <input type="file" id="fe-file" accept="image/*,.heic,.heif" multiple hidden><input type="file" id="fe-ov" accept="image/*,.heic,.heif" hidden></div>`;
     cv = view.querySelector('#fe-cv'); sctx = cv.getContext('2d'); panel = view.querySelector('#fe-panel'); msgEl = view.querySelector('#fe-msg');
     fileIn = view.querySelector('#fe-file'); ovIn = view.querySelector('#fe-ov');
     fileIn.onchange = () => { const f = fileIn.files; if (f && f.length) openFiles(f); fileIn.value = ''; };

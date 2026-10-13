@@ -2,10 +2,20 @@
 // Elk onderdeel is een eigen module die pas geladen wordt als je erop tikt. Foto's blijven op je eigen toestel.
 
 const TABS = [
-  ['edit', '🖼️ Bewerken', './foto-edit.js?v=1', 'fotoEditView'],
-  ['gen', '✨ Genereer', './foto-collage-gen.js?v=1', 'collageGenView'],
-  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=1', 'collageFreeView'],
+  ['edit', '🖼️ Bewerken', './foto-edit.js?v=2', 'fotoEditView'],
+  ['gen', '✨ Genereer', './foto-collage-gen.js?v=2', 'collageGenView'],
+  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=2', 'collageFreeView'],
 ];
+
+// HEIC-foto's (uit je fotobibliotheek) kan niet elke browser lezen (Zen/Firefox niet). Dan zetten we ze om naar jpg.
+window.__fotoHeic = async (f) => {
+  if (!/hei[cf]/i.test((f.type || '') + ' ' + (f.name || ''))) return null;
+  try {
+    if (!window.heic2any) await new Promise((ok, no) => { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/heic2any@0.0.4/dist/heic2any.min.js'; s.onload = ok; s.onerror = no; document.head.appendChild(s); });
+    const o = await window.heic2any({ blob: f, toType: 'image/jpeg', quality: 0.92 });
+    return Array.isArray(o) ? o[0] : o;
+  } catch (e) { console.error(e); return null; }
+};
 
 // ctx: { view, esc, uid, addCleanup }
 export function fotoView(ctx) {
