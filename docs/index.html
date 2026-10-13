@@ -392,7 +392,7 @@ async function weerApp() {
 
 /* ---------- Gamescroller ---------- */
 async function gameApp() {
-  const m = await import('./games/shell.js');
+  const m = await import('./games/shell.js?v=2');
   $('#view').innerHTML = '';
   await m.gamescroller({ db, me, esc, nice, close: homeView });
 }

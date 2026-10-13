@@ -1,0 +1,10 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Eén spel</title>
+<style>body{margin:0;background:#222}#h{position:relative;width:360px;height:640px;overflow:hidden;margin:0 auto;background:#fff}#s{position:absolute;top:4px;left:4px;z-index:9;color:#000;font:12px system-ui}</style>
+<div id="h"></div><div id="s"></div>
+<script type="module">
+window.__errs=[];addEventListener('error',e=>__errs.push(e.message));addEventListener('unhandledrejection',e=>__errs.push(String(e.reason&&e.reason.message||e.reason)));
+const id=new URLSearchParams(location.search).get('g');const g=(await import(`./mini/${id}.js`)).default;
+const host=document.getElementById('h');
+window.__inst=g.create(host,{w:360,h:640,score:n=>{document.getElementById('s').textContent='score '+n},end:n=>{window.__ended=n},load:()=>Promise.resolve(null),save:()=>{},clear:()=>{}});
+window.__ready=true;
+</script>

@@ -59,7 +59,7 @@ export async function gamescroller(c) {
 
   // ---- Registry laden ----
   let REG = { MINIS: [], CLIP_FILES: [] };
-  try { REG = await import('./registry.js'); } catch (e) { console.error(e); }
+  try { REG = await import('./registry.js?v=2'); } catch (e) { console.error(e); }
   const loadAll = async (fns) => (await Promise.all(fns.map((f) => f().then((m) => m.default || m).catch((e) => { console.error(e); return null; })))).filter(Boolean);
 
   // ---- Scores ----
