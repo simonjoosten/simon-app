@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="nl">
 <head>
-<meta charset="utf-8">
+<meta charset="utf-8"><meta http-equiv="Cache-Control" content="no-cache, must-revalidate">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>simon-app</title>
 <link rel="icon" href="logo.svg" type="image/svg+xml">
@@ -278,7 +278,7 @@ async function installerView() {
   $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><ul>${list.map((id) => { const on = me.apps.includes(id); return `
     <li>${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}</span>
     <button class="${on ? '' : 'pri'}" data-i="${id}">${on ? 'Verwijderen' : 'Installeren'}</button></li>`; }).join('')}</ul>
-    <small>App Installer en Notificaties zitten er altijd bij.</small></div>`;
+    <small>App Installer en Notificaties zitten er altijd bij.</small><br><small style="opacity:.5">Versie 13 okt · ${list.length} apps beschikbaar</small></div>`;
   document.querySelectorAll('[data-i]').forEach((b) => b.onclick = async () => {
     const id = b.dataset.i;
     me.apps = me.apps.includes(id) ? me.apps.filter((x) => x !== id) : [...me.apps, id];
