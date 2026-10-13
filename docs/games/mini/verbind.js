@@ -2,21 +2,43 @@
 // Let op: de pure logica (levelgenerator, solver, bord) wordt ook door tools/test-mini-verbind.mjs getest,
 // dus bovenin staat GEEN DOM-gebruik.
 
-const FIXED_LEVELS = 60;
-const PALETTE = ['#ef4444', '#3b82f6', '#22c55e', '#facc15', '#f97316', '#22d3ee', '#d946ef', '#fb7185', '#a3e635', '#8b5cf6', '#b45309', '#f1f5f9'];
+export const FIXED_LEVELS = 300;
+export const WORLD_SIZE = 30;
+const PALETTE = ['#ef4444', '#3b82f6', '#22c55e', '#facc15', '#f97316', '#22d3ee', '#d946ef', '#fb7185', '#a3e635', '#8b5cf6', '#b45309', '#f1f5f9', '#14b8a6', '#9ca3af', '#7dd3fc', '#e11d48'];
 const NOTES = [392, 440, 494, 523, 587, 659, 698, 784, 880];
+
+/* ---------- werelden: elk 30 levels met eigen titel + kleurthema ----------
+   segs: [vanaf j, t/m j, bordgrootte n, k begin, k eind] (j = positie in de wereld) */
+export const WORLDS = [
+  { name: 'Groene Weide', emoji: '🌿', bg: 'linear-gradient(160deg,#052e16,#14532d 60%,#166534)', cell: '#1f3a2c', back: 'rgba(2,20,10,.6)', segs: [[0, 7, 4, 3, 4], [8, 29, 5, 4, 5]] },
+  { name: 'Zandstrand', emoji: '🏖️', bg: 'linear-gradient(160deg,#422006,#78350f 60%,#92400e)', cell: '#4a3520', back: 'rgba(30,15,3,.6)', segs: [[0, 9, 5, 5, 6], [10, 29, 6, 6, 7]] },
+  { name: 'Bosmeer', emoji: '🌲', bg: 'linear-gradient(160deg,#042f2e,#134e4a 60%,#115e59)', cell: '#1c3d3b', back: 'rgba(1,20,20,.6)', segs: [[0, 14, 6, 7, 8], [15, 29, 7, 7, 8]] },
+  { name: 'Koraalrif', emoji: '🪸', bg: 'linear-gradient(160deg,#4a044e,#831843 60%,#9d174d)', cell: '#4a2142', back: 'rgba(30,2,25,.6)', segs: [[0, 29, 7, 8, 10]] },
+  { name: 'Woestijn', emoji: '🏜️', bg: 'linear-gradient(160deg,#431407,#7c2d12 60%,#b45309)', cell: '#4e2c1c', back: 'rgba(30,10,3,.6)', segs: [[0, 9, 7, 10, 10], [10, 29, 8, 9, 10]] },
+  { name: 'IJsland', emoji: '❄️', bg: 'linear-gradient(160deg,#082f49,#0c4a6e 60%,#0369a1)', cell: '#1e3a52', back: 'rgba(2,15,30,.6)', segs: [[0, 29, 8, 10, 11]] },
+  { name: 'Vulkaan', emoji: '🌋', bg: 'linear-gradient(160deg,#1c0a0a,#7f1d1d 60%,#991b1b)', cell: '#3b1f1f', back: 'rgba(20,3,3,.65)', segs: [[0, 9, 8, 12, 12], [10, 29, 9, 13, 14]] },
+  { name: 'Nachtstad', emoji: '🌃', bg: 'linear-gradient(160deg,#020617,#1e1b4b 60%,#3b0764)', cell: '#1e1b3a', back: 'rgba(2,2,20,.65)', segs: [[0, 29, 9, 14, 15]] },
+  { name: 'Ruimtestation', emoji: '🚀', bg: 'linear-gradient(160deg,#0f172a,#312e81 60%,#4c1d95)', cell: '#25264a', back: 'rgba(5,5,25,.65)', segs: [[0, 29, 9, 15, 16]] },
+  { name: 'Kosmos', emoji: '🌌', bg: 'linear-gradient(160deg,#000000,#3b0764 55%,#831843)', cell: '#2a1740', back: 'rgba(8,0,20,.7)', segs: [[0, 14, 9, 16, 16], [15, 29, 10, 16, 16]] },
+];
+const ENDLESS_THEME = { name: 'Eindeloos', emoji: '∞', bg: 'linear-gradient(160deg,#0b1020,#1e1b4b 60%,#312e81)', cell: '#1e293b', back: 'rgba(2,6,23,.55)' };
+
+export function worldOf(i) { return i >= FIXED_LEVELS ? -1 : Math.floor(i / WORLD_SIZE); }
+export function themeOf(i) { return i >= FIXED_LEVELS ? ENDLESS_THEME : WORLDS[worldOf(i)]; }
 
 /* ---------- level-parameters ---------- */
 export function levelParams(i) {
-  if (i >= FIXED_LEVELS) { const n = 8 + (i % 2); return { n, k: n === 8 ? 10 + (i % 3) : 12 }; }
-  if (i < 10) return { n: 5, k: 4 + Math.floor(i / 5) };
-  if (i < 24) return { n: 6, k: 6 + Math.floor((i - 10) / 7) };
-  if (i < 40) return { n: 7, k: 8 + Math.floor((i - 24) / 8) };
-  if (i < 54) return { n: 8, k: 10 + Math.floor((i - 40) / 7) };
-  return { n: 9, k: 12 };
+  if (i >= FIXED_LEVELS) { const m = i - FIXED_LEVELS, n = 9 + (m % 2); return { n, k: 14 + (m % 3) }; }
+  const w = Math.floor(i / WORLD_SIZE), j = i % WORLD_SIZE;
+  const seg = WORLDS[w].segs.find((s) => j >= s[0] && j <= s[1]);
+  const [from, to, n, k0, k1] = seg;
+  let k = Math.round(k0 + ((k1 - k0) * (j - from)) / Math.max(1, to - from));
+  if (j === 0 && w > 0) k -= 1;          // zachte start van een nieuwe wereld
+  else if (j % 10 === 9) k += 1;         // 'eindbaasje' elke 10 levels
+  return { n, k: Math.max(3, Math.min(PALETTE.length, k)) };
 }
 
-function mulberry32(a) {
+export function mulberry32(a) {
   return function () {
     a |= 0; a = (a + 0x6d2b79f5) | 0;
     let t = Math.imul(a ^ (a >>> 15), 1 | a);
@@ -138,7 +160,7 @@ function hamPath(n, rnd) {
   return p;
 }
 
-function candidate(n, k, rnd) {
+export function candidate(n, k, rnd) {
   const T = n * n, minL = n >= 6 ? 3 : 2;
   const p = hamPath(n, rnd);
   const lens = new Array(k).fill(minL);
@@ -152,16 +174,18 @@ function candidate(n, k, rnd) {
   return { n, ends: sol.map((s) => [s[0], s[s.length - 1]]), sol };
 }
 
-// Vooraf (offline) gezochte pogingnummers waarvoor het level bewezen EEN unieke oplossing heeft.
-const SEEDS = [39,  28,  6,  0,  2,  3,  3,  0,  8,  6,  16,  3,  13,  6,  63,  6,  6,  5,  8,  8,  6,  6,  13,  5,  24,  68,  200,  157,  23,  25,  45,  6,  31,  68,  12,  19,  37,  41,  13,  60,  476,  494,  2017,  424,  309,  231,  787,  132,  65,  43,  55,  153,  352,  207,  7103,  9476,  22370,  3365,  11914,  1978,  1693,  -1,  19,  21482,  49,  277,  115,  9114,  60,  7923,  487,  7274,  474,  1707,  123,  696,  563,  5543,  105,  28938,  122,  19026,  152,  12671,  349,  16547,  81,  12015,  401,  8552,  2030,  2032,  164,  10070,  297,  20549,  28,  18227,  146,  10763];
+// Vooraf (offline) gezochte pogingnummers: waarde = poging+1 (positief: bewezen EEN unieke oplossing, negatief: niet uniek maar wel oplosbaar door constructie).
+// Level N is hierdoor altijd hetzelfde en wordt lui (per level, 1 kandidaat) opgebouwd.
+const SEEDS = [5,3,8,5,3,11,3,4,11,12,5,20,16,13,59,62,54,28,5,4,7,10,19,10,6,14,11,9,16,9,13,1,12,15,12,12,9,4,10,5,70,34,86,92,115,124,75,37,57,19,20,25,11,54,36,17,16,56,21,27,7,13,7,35,38,4,24,8,7,9,3,6,9,13,4,1516,114,714,1546,264,1089,1767,208,11,131,329,484,482,71,26,829,192,395,274,346,31,142,107,149,47,78,40,281,109,89,362,58,174,91,19,181,49,37,8,29,43,96,14,70,21,41,37,29,1,73,8,86,5,57,39,2286,1466,4759,2161,1028,444,521,2457,695,951,1923,1635,2286,46,1318,63,1593,2121,4200,270,3374,1522,734,3624,947,3520,3099,3363,1555,580,4360,187,271,1477,1411,437,783,580,1427,753,1151,748,641,1098,594,137,902,699,195,84,89,128,372,203,54,428,286,85,467,17,4237,1680,4897,4306,166,1624,601,2363,2307,641,2759,811,5079,5197,1638,1726,2376,1345,1915,1643,983,743,1572,2710,1667,432,3864,978,1957,1106,1243,2631,2959,271,2799,2271,1028,887,418,785,325,1354,2444,3047,579,1686,67,2246,1476,297,3114,1952,548,976,138,1951,1606,3058,626,1621,47,326,402,1813,1214,201,1023,1098,59,215,908,476,482,150,342,815,1224,588,213,1212,1688,560,1201,486,201,1028,369,9,446,2530,973,963,176,324,514,-7,-24,-20,-17,119,-28,-28,-28,-30,-12,-16,-24,-28,-23,-12];
 
-function build(i, a) {
+export function build(i, a) {
   const P = levelParams(i);
   return candidate(P.n, P.k, mulberry32(i * 7919 + a * 104729 + 12345));
 }
 
 export function genLevel(i, opts = {}) {
-  if (!opts.search && SEEDS[i] >= 0) { const lv = build(i, SEEDS[i]); lv.unique = true; lv.attempts = SEEDS[i] + 1; return lv; }
+  const sd = SEEDS[i];
+  if (!opts.search && sd) { const a = Math.abs(sd) - 1; const lv = build(i, a); lv.unique = sd > 0; lv.attempts = a + 1; return lv; }
   const maxAttempts = opts.maxAttempts || 40, budget = opts.budget || 3000;
   let fallback = null;
   for (let a = 0; a < maxAttempts; a++) {
@@ -249,6 +273,33 @@ export function starsFor(K, moves, hintUsed) {
   return s;
 }
 
+/* ---------- voortgang (compact opgeslagen: 1 cijfer per level, <1KB) ---------- */
+const MAX_SAVED = 700; // 300 vaste + ruim 400 eindeloze levels
+export function packBests(bests) {
+  let b = '';
+  for (let i = 0; i < Math.min(bests.length, MAX_SAVED); i++) b += String(bests[i] || 0);
+  return b.replace(/0+$/, '');
+}
+// v1 (oude spel met 60 vaste levels + eindeloos vanaf index 60) migreert: sterren van level 1-60 blijven, eindeloze sterren vervallen.
+export function parseSave(s) {
+  const out = { level: 0, maxL: 0, hints: 3, bests: [] };
+  if (!s || typeof s !== 'object') return out;
+  const old = !(s.v >= 2);
+  let b = String(s.b || '').split('').slice(0, MAX_SAVED).map((x) => Math.max(0, Math.min(3, +x || 0)));
+  let m = Math.max(0, Math.min(MAX_SAVED, s.m | 0));
+  if (old) { b = b.slice(0, 60); m = Math.min(m, 60); }
+  out.bests = b; out.maxL = m;
+  out.hints = typeof s.h === 'number' ? Math.max(0, Math.min(6, s.h | 0)) : 3;
+  out.level = Math.max(0, Math.min(m, s.l | 0));
+  return out;
+}
+// eerstvolgende level na 'from' zonder sterren (alleen vaste levels); anders gewoon het volgende
+export function nextOpen(bests, from) {
+  for (let i = from + 1; i < FIXED_LEVELS; i++) if (!bests[i]) return i;
+  for (let i = 0; i <= from && i < FIXED_LEVELS; i++) if (!bests[i]) return i;
+  return Math.max(from + 1, FIXED_LEVELS);
+}
+
 /* ---------- het spel ---------- */
 export default {
   id: 'verbind',
@@ -266,17 +317,19 @@ export default {
     const css = (e, s) => { e.style.cssText = s; return e; };
     const root = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:100%;height:100%;background:linear-gradient(160deg,#0b1020,#1e1b4b 60%,#312e81);color:#fff;font-family:system-ui,sans-serif;display:flex;flex-direction:column;box-sizing:border-box;user-select:none;-webkit-user-select:none;overflow:hidden');
     const style = document.createElement('style');
-    style.textContent = '@keyframes vbpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}.vbbtn{border:0;border-radius:14px;color:#fff;font-size:15px;font-weight:700;padding:10px 12px;cursor:pointer;touch-action:manipulation;font-family:inherit;background:rgba(255,255,255,.12);transition:transform .1s,background .15s}.vbbtn:active{transform:scale(.94)}.vbbtn[disabled]{opacity:.35;cursor:default}';
+    style.textContent = '@keyframes vbpop{0%{transform:scale(.4);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}.vbbtn{border:0;border-radius:14px;color:#fff;font-size:15px;font-weight:700;padding:10px 10px;cursor:pointer;touch-action:manipulation;font-family:inherit;background:rgba(255,255,255,.12);transition:transform .1s,background .15s}.vbbtn:active{transform:scale(.94)}.vbbtn[disabled]{opacity:.35;cursor:default}';
     root.appendChild(style);
-    const header = css(document.createElement('div'), 'display:flex;align-items:center;justify-content:space-between;gap:6px;padding:10px 10px 4px;flex:none');
+    const header = css(document.createElement('div'), 'display:flex;align-items:center;justify-content:space-between;gap:5px;padding:8px 8px 4px;flex:none');
     const bPrev = css(document.createElement('button'), ''); bPrev.className = 'vbbtn'; bPrev.textContent = '◀';
     const bNext = css(document.createElement('button'), ''); bNext.className = 'vbbtn'; bNext.textContent = '▶';
     const titleBox = css(document.createElement('div'), 'text-align:center;flex:1;min-width:0');
-    const title = css(document.createElement('div'), 'font-size:19px;font-weight:800;white-space:nowrap');
+    const title = css(document.createElement('div'), 'font-size:18px;font-weight:800;white-space:nowrap');
+    const worldEl = css(document.createElement('div'), 'font-size:12px;font-weight:700;opacity:.9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px');
     const starsEl = css(document.createElement('div'), 'font-size:13px;opacity:.85;height:17px');
-    titleBox.append(title, starsEl);
+    titleBox.append(title, worldEl, starsEl);
+    const bMenu = css(document.createElement('button'), ''); bMenu.className = 'vbbtn'; bMenu.textContent = '🗺️'; bMenu.title = 'Levelkiezer';
     const bSound = css(document.createElement('button'), ''); bSound.className = 'vbbtn'; bSound.textContent = '🔊';
-    header.append(bPrev, titleBox, bNext, bSound);
+    header.append(bPrev, titleBox, bNext, bMenu, bSound);
     const status = css(document.createElement('div'), 'text-align:center;font-size:14px;min-height:20px;padding:0 12px;flex:none;opacity:.92');
     const area = css(document.createElement('div'), 'position:relative;flex:1;min-height:0');
     const canvas = css(document.createElement('canvas'), 'position:absolute;left:0;top:0;width:100%;height:100%;touch-action:none;display:block');
@@ -297,7 +350,18 @@ export default {
     cardBtns.append(bAgain, bGo);
     card.append(cardTitle, cardStars, cardInfo, cardBtns);
     overlay.appendChild(card);
-    root.append(header, status, area, footer, overlay);
+    const banner = css(document.createElement('div'), 'position:absolute;left:0;right:0;top:18%;text-align:center;pointer-events:none;opacity:0;transition:opacity .5s;z-index:3');
+    const bannerBox = css(document.createElement('div'), 'display:inline-block;background:rgba(15,23,42,.88);border:2px solid rgba(255,255,255,.25);border-radius:20px;padding:14px 26px;box-shadow:0 10px 40px rgba(0,0,0,.5)');
+    banner.appendChild(bannerBox);
+    const chooser = css(document.createElement('div'), 'position:absolute;left:0;top:0;width:100%;height:100%;display:none;flex-direction:column;background:rgba(2,6,23,.97);z-index:5');
+    const chHead = css(document.createElement('div'), 'display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 12px;flex:none');
+    const chTitle = css(document.createElement('div'), 'font-size:18px;font-weight:800');
+    const chOpen = css(document.createElement('button'), ''); chOpen.className = 'vbbtn'; chOpen.textContent = '⏭ Eerste open level';
+    const chClose = css(document.createElement('button'), ''); chClose.className = 'vbbtn'; chClose.textContent = '✕';
+    chHead.append(chTitle, chOpen, chClose);
+    const chBody = css(document.createElement('div'), 'flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 12px 18px');
+    chooser.append(chHead, chBody);
+    root.append(header, status, area, footer, overlay, banner, chooser);
     host.appendChild(root);
     const ctx = canvas.getContext('2d');
 
@@ -326,7 +390,7 @@ export default {
     /* spelstaat */
     let level = 0, maxL = 0, hints = 3;
     let bests = [];
-    let lv = null, board = null, moves = 0, hintUsed = false, won = false, wonAt = 0;
+    let th = themeOf(0), lv = null, board = null, moves = 0, hintUsed = false, won = false, wonAt = 0;
     let undoStack = [];
     const popAt = [];
     const cache = new Map();
@@ -336,14 +400,12 @@ export default {
     const score = () => bests.reduce((s, v) => s + (v || 0), 0);
     function persist() {
       if (!loaded) return;
-      let b = '';
-      for (let i = 0; i < Math.min(bests.length, 400); i++) b += String(bests[i] || 0);
-      try { api.save({ v: 1, l: level, m: maxL, b, h: hints }); } catch (e) { /* negeren */ }
+      try { api.save({ v: 2, l: level, m: maxL, b: packBests(bests), h: hints }); } catch (e) { /* negeren */ }
     }
     function getLevel(i) {
       if (!cache.has(i)) {
         if (cache.size > 6) cache.delete(cache.keys().next().value);
-        cache.set(i, genLevel(i));
+        cache.set(i, genLevel(i, i >= FIXED_LEVELS ? { stopAfter: Date.now() + 200 } : {}));
       }
       return cache.get(i);
     }
@@ -366,6 +428,8 @@ export default {
     function startLevel(i, keepUndo) {
       level = i;
       lv = getLevel(i);
+      th = themeOf(i);
+      root.style.background = th.bg;
       board = makeBoard(lv);
       moves = 0; hintUsed = false; won = false; undoStack = []; particles = particles.filter((p) => p.keep);
       popAt.length = 0;
@@ -375,15 +439,32 @@ export default {
       persist();
       later(layout, 120);
       later(() => { if (!cache.has(level + 1)) getLevel(level + 1); }, 400);
+      if (i < FIXED_LEVELS && i % WORLD_SIZE === 0 && !bests[i]) showBanner(`${th.emoji} Wereld ${worldOf(i) + 1}`, th.name);
+      else if (i === FIXED_LEVELS) showBanner('∞ Eindeloos', 'Alle werelden voltooid!');
+    }
+
+    let bannerT = 0;
+    function showBanner(a, b2) {
+      bannerBox.innerHTML = '';
+      const l1 = css(document.createElement('div'), 'font-size:13px;opacity:.8;letter-spacing:1px;text-transform:uppercase');
+      const l2 = css(document.createElement('div'), 'font-size:26px;font-weight:800');
+      l1.textContent = a; l2.textContent = b2;
+      bannerBox.append(l1, l2);
+      banner.style.transition = 'none'; banner.style.opacity = '1';
+      clearTimeout(bannerT);
+      bannerT = setTimeout(() => { banner.style.transition = 'opacity .6s'; banner.style.opacity = '0'; }, 1700);
+      timers.add(bannerT);
     }
 
     function updateUI() {
       const endless = level >= FIXED_LEVELS;
       title.textContent = endless ? `Eindeloos ∞ ${level - FIXED_LEVELS + 1}` : `Level ${level + 1}`;
+      worldEl.textContent = endless ? '∞ Eindeloze modus' : `${th.emoji} Wereld ${worldOf(level) + 1} · ${th.name} · ${(level % WORLD_SIZE) + 1}/${WORLD_SIZE}`;
       const best = bests[level] || 0;
       starsEl.textContent = `${board.N}×${board.N} · ` + (best ? '⭐'.repeat(best) + '☆'.repeat(3 - best) : '☆☆☆');
       bPrev.disabled = level <= 0;
       bNext.disabled = level >= maxL;
+      bMenu.disabled = false;
       bUndo.disabled = undoStack.length === 0 || won;
       bReset.disabled = won;
       bHint.disabled = won || hints <= 0;
@@ -480,8 +561,11 @@ export default {
       tone(1046, 0.4, 'sine', 0.05, 0.4);
       later(() => {
         cardTitle.textContent = ['', 'Gelukt!', 'Goed gedaan!', 'Perfect!'][stars];
+        const lastOfWorld = level < FIXED_LEVELS && level % WORLD_SIZE === WORLD_SIZE - 1;
         cardStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
-        cardInfo.textContent = `${moves} streken${hintUsed ? ' · hint gebruikt' : ''}${bonus}`;
+        cardInfo.textContent = `${moves} streken${hintUsed ? ' · hint gebruikt' : ''}${bonus}` + (lastOfWorld ? `\n${th.emoji} Wereld ${worldOf(level) + 1} voltooid: ${th.name}! ${worldStars(worldOf(level))}/${WORLD_SIZE * 3} ⭐` : '');
+        cardInfo.style.whiteSpace = 'pre-line';
+        bGo.textContent = level + 1 >= FIXED_LEVELS && level < FIXED_LEVELS ? '∞ Eindeloos ▶' : (lastOfWorld ? `${WORLDS[worldOf(level) + 1].emoji} Volgende wereld ▶` : 'Volgende ▶');
         card.style.animation = 'none'; void card.offsetWidth; card.style.animation = 'vbpop .4s ease-out both';
         overlay.style.display = 'flex';
       }, 650);
@@ -495,10 +579,58 @@ export default {
       }
     }
 
+    /* levelkiezer */
+    const worldStars = (w) => { let t = 0; for (let j = 0; j < WORLD_SIZE; j++) t += bests[w * WORLD_SIZE + j] || 0; return t; };
+    function openChooser() {
+      if (dragging) return;
+      chBody.innerHTML = '';
+      const total = bests.reduce((a, v) => a + (v || 0), 0);
+      chTitle.textContent = `Levels · ⭐ ${total}/${FIXED_LEVELS * 3}`;
+      WORLDS.forEach((w, wi) => {
+        const first = wi * WORLD_SIZE, locked = first > maxL;
+        const sec = css(document.createElement('div'), `margin-top:14px;opacity:${locked ? 0.4 : 1}`);
+        const h = css(document.createElement('div'), 'display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;font-weight:800');
+        const hl = document.createElement('span'); hl.textContent = `${w.emoji} ${wi + 1}. ${w.name}`;
+        const hr = css(document.createElement('span'), 'font-size:12px;font-weight:600;opacity:.8'); hr.textContent = locked ? '🔒' : `⭐ ${worldStars(wi)}/${WORLD_SIZE * 3}`;
+        h.append(hl, hr);
+        const grid = css(document.createElement('div'), 'display:grid;grid-template-columns:repeat(6,1fr);gap:6px;padding:8px;border-radius:14px;background:' + w.bg);
+        for (let j = 0; j < WORLD_SIZE; j++) {
+          const i = first + j, st = bests[i] || 0, lock = i > maxL;
+          const b = css(document.createElement('button'), `border:${i === level ? '2px solid #fff' : '2px solid transparent'};border-radius:10px;color:#fff;padding:5px 0 3px;font-family:inherit;font-weight:800;font-size:15px;line-height:1.1;cursor:${lock ? 'default' : 'pointer'};background:${st ? 'rgba(255,255,255,.22)' : 'rgba(0,0,0,.35)'};opacity:${lock ? 0.35 : 1};touch-action:manipulation`);
+          b.disabled = lock;
+          const num = document.createElement('div'); num.textContent = lock ? '🔒' : String(i + 1);
+          const stz = css(document.createElement('div'), 'font-size:9px;height:11px;letter-spacing:-1px'); stz.textContent = lock ? '' : (st ? '★'.repeat(st) + '☆'.repeat(3 - st) : '☆☆☆');
+          stz.style.color = st ? '#fde047' : 'rgba(255,255,255,.5)';
+          b.append(num, stz);
+          b.addEventListener('click', () => { closeChooser(); tone(520, 0.06); startLevel(i); });
+          grid.appendChild(b);
+        }
+        sec.append(h, grid);
+        chBody.appendChild(sec);
+      });
+      if (maxL >= FIXED_LEVELS) {
+        const e = css(document.createElement('button'), 'margin-top:14px;width:100%'); e.className = 'vbbtn'; e.textContent = '∞ Eindeloze modus';
+        e.addEventListener('click', () => { closeChooser(); startLevel(Math.max(FIXED_LEVELS, Math.min(maxL, level >= FIXED_LEVELS ? level : FIXED_LEVELS))); });
+        chBody.appendChild(e);
+      }
+      chooser.style.display = 'flex';
+      // scroll naar de huidige wereld
+      const wi = Math.max(0, worldOf(level));
+      later(() => { const el = chBody.children[wi]; if (el) chBody.scrollTop = Math.max(0, el.offsetTop - 8); }, 0);
+    }
+    function closeChooser() { chooser.style.display = 'none'; }
+
     /* knoppen */
     const click = (b, fn) => b.addEventListener('click', () => { audio(); if (board || b === bSound) fn(); });
     click(bPrev, () => { if (level > 0) { tone(440, 0.06); startLevel(level - 1); } });
     click(bNext, () => { if (level < maxL) { tone(520, 0.06); startLevel(level + 1); } });
+    click(bMenu, () => { tone(440, 0.05); openChooser(); });
+    chClose.addEventListener('click', closeChooser);
+    chOpen.addEventListener('click', () => {
+      closeChooser();
+      const n = Math.min(maxL, nextOpen(bests, -1));
+      tone(520, 0.06); startLevel(n);
+    });
     click(bSound, () => { muted = !muted; bSound.textContent = muted ? '🔇' : '🔊'; });
     function undo() {
       if (won || !undoStack.length || dragging) return;
@@ -530,12 +662,12 @@ export default {
       if (board.won()) onWin();
     }
     click(bUndo, undo); click(bReset, reset); click(bHint, useHint);
-    click(bGo, () => startLevel(level + 1));
+    click(bGo, () => startLevel(level < FIXED_LEVELS ? Math.min(level + 1, maxL) : level + 1));
     click(bAgain, () => startLevel(level));
     const onKey = (e) => {
       if (!board) return;
       const k = e.key.toLowerCase();
-      if (k === 'z') undo(); else if (k === 'r') reset(); else if (k === 'h') useHint();
+      if (k === 'escape') closeChooser(); else if (chooser.style.display === 'flex') return; else if (k === 'z') undo(); else if (k === 'r') reset(); else if (k === 'h') useHint();
       else if ((k === 'enter' || k === ' ') && won) startLevel(level + 1);
     };
     window.addEventListener('keydown', onKey);
@@ -570,13 +702,13 @@ export default {
     }
     function drawBoard(now) {
       const N = board.N, t = now / 1000;
-      ctx.fillStyle = 'rgba(2,6,23,.55)';
+      ctx.fillStyle = th.back;
       rr(ctx, bx - 5, by - 5, bs + 10, bs + 10, 16); ctx.fill();
       const gap = Math.max(1.5, cs * 0.04);
       for (let i = 0; i < board.T; i++) {
         const r = Math.floor(i / N), c = i % N;
         const x = bx + c * cs + gap / 2, y = by + r * cs + gap / 2;
-        ctx.fillStyle = '#1e293b';
+        ctx.fillStyle = th.cell;
         rr(ctx, x, y, cs - gap, cs - gap, cs * 0.16); ctx.fill();
         const o = board.owner[i];
         if (o >= 0) { ctx.globalAlpha = 0.2; ctx.fillStyle = PALETTE[o]; rr(ctx, x, y, cs - gap, cs - gap, cs * 0.16); ctx.fill(); ctx.globalAlpha = 1; }
@@ -633,13 +765,8 @@ export default {
     /* start: voortgang laden */
     Promise.resolve(api.load()).catch(() => null).then((s) => {
       if (dead) return;
-      let start = 0;
-      if (s && typeof s === 'object') {
-        maxL = Math.max(0, Math.min(400, s.m | 0));
-        hints = typeof s.h === 'number' ? Math.max(0, Math.min(6, s.h | 0)) : 3;
-        bests = String(s.b || '').split('').map((x) => Math.max(0, Math.min(3, +x || 0)));
-        start = Math.max(0, Math.min(maxL, s.l | 0));
-      }
+      const sv = parseSave(s), start = sv.level;
+      maxL = sv.maxL; hints = sv.hints; bests = sv.bests;
       loaded = true;
       startLevel(start);
     });

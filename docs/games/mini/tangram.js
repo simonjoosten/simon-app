@@ -1,8 +1,10 @@
-// Tangram: leg de 7 stukken precies in het silhouet.
+// Tangram: leg de stukken (2 t/m 7) precies in het silhouet. 300 vaste levels in 8 werelden + eindeloos.
 // Alle levels leven op een rooster (kleine driehoek = poot 1). Silhouetten worden altijd uit een echte
-// legging van de stukken opgebouwd (achteruit gegenereerd) en zijn dus bewezen oplosbaar.
+// legging van de stukken opgebouwd (achteruit gegenereerd, vaste seeds, lui per level + cache) of zijn
+// getekende figuren die de oplosser vindt. Dus bewezen oplosbaar en level N is altijd hetzelfde.
 
 const PI2 = Math.PI / 2;
+const FLIP_AT = 40; // vanaf hier kan het parallellogram gespiegeld in de lade liggen
 
 // ---------------------------------------------------------------- stukken
 const TYPES = {
@@ -112,26 +114,32 @@ function mulberry(seed) {
 }
 
 // ---------------------------------------------------------------- oplosser (exacte bedekking) voor getekende silhouetten
-function solveSil(sil, G = 8) {
+// opt.avail = max aantal per type, opt.k = exact aantal stukken, opt.nodes = knooplimiet. Zet solveSil.nodes.
+function solveSil(sil, G = 8, opt = {}) {
   const qs = [...sil].sort((a, b) => a - b);
   const by = new Map();
   for (const type of Object.keys(TYPES)) {
+    if (opt.avail && !opt.avail[type]) continue;
     for (const p of placements(type, G)) {
       if (!p.q.every((q) => sil.has(q))) continue;
       for (const q of p.q) { if (!by.has(q)) by.set(q, []); by.get(q).push(p); }
     }
   }
+  const lim = {};
+  for (const t of Object.keys(TYPES)) lim[t] = opt.avail ? (opt.avail[t] || 0) : TYPES[t].n;
   const used = { L: 0, M: 0, S: 0, Q: 0, P: 0 };
   const cov = new Set();
   const chosen = [];
   let nodes = 0;
+  const maxNodes = opt.nodes || 400000;
+  let area = 0;
   function dfs() {
-    if (++nodes > 400000) return false;
+    if (++nodes > maxNodes) return false;
     let first = -1;
     for (const q of qs) if (!cov.has(q)) { first = q; break; }
-    if (first < 0) return chosen.length === 7;
+    if (first < 0) return opt.k ? chosen.length === opt.k : true;
     for (const p of by.get(first) || []) {
-      if (used[p.type] >= TYPES[p.type].n) continue;
+      if (used[p.type] >= lim[p.type]) continue;
       if (p.q.some((q) => cov.has(q))) continue;
       used[p.type]++;
       p.q.forEach((q) => cov.add(q));
@@ -143,7 +151,9 @@ function solveSil(sil, G = 8) {
     }
     return false;
   }
-  return dfs() ? chosen.map((p) => ({ type: p.type, verts: p.verts, flip: p.flip, rot: p.rot })) : null;
+  const r = dfs();
+  solveSil.nodes = nodes;
+  return r ? chosen.map((p) => ({ type: p.type, verts: p.verts, flip: p.flip, rot: p.rot })) : null;
 }
 
 // '#' vol, 1 = linksboven-helft, 2 = rechtsboven, 3 = rechtsonder, 4 = linksonder, '.' leeg
@@ -158,17 +168,124 @@ function parseArt(rows) {
   return sil;
 }
 
-// ---------------------------------------------------------------- vaste figuren (alleen oplosbare; testscript bewijst dat)
-const NAMED = [
-  { name: 'Huis', art: ['.34.', '3##4', '####'] },
-  { name: 'Kerstboom', art: ['.34.', '3##4', '.##.', '.##.'] },
-  { name: 'Diamant', art: ['.34.', '####', '1##2'] },
-  { name: 'Trechter', art: ['2##1', '.##.', '.##.', '.21.'] },
-  { name: 'Trofee', art: ['#34#', '2##1', '.##.'] },
-  { name: 'Vliegtuig', art: ['..#..', '#####', '.2#1.'] },
-  { name: 'Ufo', art: ['...#...', '.3###4.', '..###..'] },
-  { name: 'Krab', art: ['..#.#..', '.#####.', '.1...2.'] },
+// handtekening van een silhouet, gelijk voor verschuiving, draaiing en spiegeling (om dubbele levels te vinden)
+function sigOf(sil) {
+  const pts = [];
+  for (const id of sil) {
+    const [i, j, k] = qdec(id);
+    pts.push(k === 0 ? [6 * i + 3, 6 * j + 1] : k === 1 ? [6 * i + 5, 6 * j + 3] : k === 2 ? [6 * i + 3, 6 * j + 5] : [6 * i + 1, 6 * j + 3]);
+  }
+  let best = null;
+  for (let f = 0; f < 2; f++) {
+    for (let r = 0; r < 4; r++) {
+      let m = pts.map((p) => {
+        let x = f ? -p[0] : p[0], y = p[1];
+        for (let t = 0; t < r; t++) { const nx = -y; y = x; x = nx; }
+        return [x, y];
+      });
+      const mx = Math.min(...m.map((p) => p[0])), my = Math.min(...m.map((p) => p[1]));
+      const key = m.map((p) => (p[0] - mx) * 1000 + (p[1] - my)).sort((a, b) => a - b).join(',');
+      if (best === null || key < best) best = key;
+    }
+  }
+  return best;
+}
+
+// ---------------------------------------------------------------- werelden
+// k(p) = aantal stukken op positie p binnen de wereld; bg = achtergrondverloop; sa/sb = kleuren van het silhouet
+const WORLDS = [
+  { name: 'Eerste Stappen', emoji: '🌱', n: 25, bg: ['#047857', '#064e3b', '#022c22'], sa: '#bbf7d0', sb: 'rgba(16,185,129,.38)', pre: 'Start', k: (p) => (p < 5 ? 2 : 3) },
+  { name: 'Bouwplaats', emoji: '🧱', n: 35, bg: ['#b45309', '#78350f', '#2a1205'], sa: '#fde68a', sb: 'rgba(245,158,11,.38)', pre: 'Blok', k: (p) => (p < 6 ? 3 : p >= 28 && p % 3 === 0 ? 5 : 4) },
+  { name: 'Woestijn', emoji: '🏜️', n: 40, bg: ['#c2410c', '#7c2d12', '#2b0f06'], sa: '#fed7aa', sb: 'rgba(249,115,22,.38)', pre: 'Duin', k: (p) => (p < 8 ? 4 : p >= 30 && p % 4 === 3 ? 6 : 5) },
+  { name: 'Oceaan', emoji: '🌊', n: 40, bg: ['#0369a1', '#0c4a6e', '#082f49'], sa: '#bae6fd', sb: 'rgba(14,165,233,.38)', pre: 'Golf', k: (p) => (p >= 30 || (p >= 10 && p % 3 === 2) ? 6 : 5) },
+  { name: 'IJsland', emoji: '❄️', n: 40, bg: ['#4f46e5', '#312e81', '#1e1b4b'], sa: '#e0e7ff', sb: 'rgba(129,140,248,.4)', pre: 'Ijs', k: (p) => (p < 10 ? (p % 3 === 0 ? 5 : 6) : p >= 30 && p % 3 === 0 ? 7 : 6) },
+  { name: 'Jungle', emoji: '🌴', n: 40, bg: ['#15803d', '#14532d', '#052e16'], sa: '#d9f99d', sb: 'rgba(132,204,22,.38)', pre: 'Liaan', k: (p) => (p < 8 ? 6 : p < 25 && p % 4 === 0 ? 6 : 7) },
+  { name: 'Vulkaan', emoji: '🌋', n: 45, bg: ['#b91c1c', '#7f1d1d', '#2c0a0a'], sa: '#fecaca', sb: 'rgba(239,68,68,.38)', pre: 'Lava', k: () => 7 },
+  { name: 'Sterrenstelsel', emoji: '🌌', n: 35, bg: ['#7e22ce', '#3b0764', '#0f0524'], sa: '#e9d5ff', sb: 'rgba(168,85,247,.4)', pre: 'Ster', hard: true, k: () => 7 },
 ];
+const ENDLESS = { name: 'Eindeloos', emoji: '♾️', n: 0, bg: ['#3730a3', '#1e1b4b', '#0f172a'], sa: '#c7d2fe', sb: 'rgba(99,102,241,.35)', pre: 'Eindeloos', k: () => 7 };
+let acc = 0;
+WORLDS.forEach((w, n) => { w.i = n; w.from = acc; acc += w.n; w.to = acc; });
+ENDLESS.i = WORLDS.length;
+const LEVELS_FIXED = acc;
+ENDLESS.from = LEVELS_FIXED;
+const worldOf = (idx) => {
+  if (idx >= LEVELS_FIXED) return ENDLESS;
+  for (const w of WORLDS) if (idx < w.to) return w;
+  return ENDLESS;
+};
+const pieceCount = (idx) => {
+  const w = worldOf(idx);
+  return w.k(idx - w.from);
+};
+// moeilijkheid 0..1 over het hele spel
+const diffOf = (idx) => Math.min(1, idx / (LEVELS_FIXED - 1));
+
+// ---------------------------------------------------------------- vaste figuren (alleen oplosbare; testscript bewijst dat)
+// w = wereld, k = aantal stukken (7 = alle stukken, oppervlak 8)
+const NAMED = [
+  { w: 0, name: 'Hoed', k: 2, art: ['.34.', '3##4'] },
+  { w: 0, name: 'Diamantje', k: 3, art: ['.34.', '.12.'] },
+  { w: 0, name: 'Trapje', k: 3, art: ['#.', '##'] },
+  { w: 1, name: 'Boom', k: 4, art: ['.34.', '.##.'] },
+  { w: 1, name: 'Vlieger', k: 4, art: ['.34.', '3##4', '.12.'] },
+  { w: 1, name: 'Dakje', k: 4, art: ['.34.', '####'] },
+  { w: 2, name: 'Vlag', k: 5, art: ['#34.', '#12.', '#...'] },
+  { w: 2, name: 'Sleutel', k: 5, art: ['###', '#..', '#..'] },
+  { w: 2, name: 'Trap', k: 5, art: ['#..', '##.', '###'] },
+  { w: 3, name: 'Pijlpunt', k: 5, art: ['.34.', '3##4', '.##.'] },
+  { w: 3, name: 'Rakketje', k: 5, art: ['.34.', '.##.', '3##4'] },
+  { w: 3, name: 'Fakkel', k: 6, art: ['.34.', '.##.', '.##.', '.12.'] },
+  { w: 3, name: 'Zeil', k: 6, art: ['#4.', '##4', '###'] },
+  { w: 4, name: 'Ster', k: 6, art: ['.34.', '####', '.12.'] },
+  { w: 4, name: 'Dolfijn', k: 6, art: ['..34', '.3##', '3##.', '#...'] },
+  { w: 4, name: 'Zwaan', k: 6, art: ['..34', '.##.', '###.', '.12.'] },
+  { w: 4, name: 'Boor', k: 6, art: ['.34.', '3##4', '.##.', '..#.'] },
+  { w: 5, name: 'Huis', k: 7, art: ['.34.', '3##4', '####'] },
+  { w: 5, name: 'Kerstboom', k: 7, art: ['.34.', '3##4', '.##.', '.##.'] },
+  { w: 5, name: 'Pyramide', k: 7, art: ['..#..', '.###.', '3###4'] },
+  { w: 5, name: 'Kroontje', k: 7, art: ['4.#.3', '#####', '..#..'] },
+  { w: 5, name: 'Robijn', k: 7, art: ['.3#4.', '3###4', '.2#1.'] },
+  { w: 5, name: 'Diamant', k: 7, art: ['.34.', '####', '1##2'] },
+  { w: 5, name: 'Trechter', k: 7, art: ['2##1', '.##.', '.##.', '.21.'] },
+  { w: 5, name: 'Beker', k: 7, art: ['4..3', '####', '.##.', '.21.'] },
+  { w: 6, name: 'Trofee', k: 7, art: ['#34#', '2##1', '.##.'] },
+  { w: 6, name: 'Vliegtuig', k: 7, art: ['..#..', '#####', '.2#1.'] },
+  { w: 6, name: 'Mijter', k: 7, art: ['.3#4.', '.###.', '.###.'] },
+  { w: 6, name: 'Schuit', k: 7, art: ['.4#3.', '#####', '1...2'] },
+  { w: 6, name: 'Vlinder', k: 7, art: ['.4.3.', '#####', '1.#.2'] },
+  { w: 6, name: 'Zandloper', k: 7, art: ['2##1', '.##.', '2##1'] },
+  { w: 6, name: 'Kelk', k: 7, art: ['2###1', '..#..', '.###.'] },
+  { w: 6, name: 'Ijshoorn', k: 7, art: ['3###4', '.###.', '..#..'] },
+  { w: 6, name: 'Hark', k: 7, art: ['.#.#.', '.#.#.', '3###4'] },
+  { w: 6, name: 'Paraplu', k: 7, art: ['#####', '1.#.2', '..#..'] },
+  { w: 6, name: 'Hart', k: 7, art: ['.3.4.', '#####', '.2#1.'] },
+  { w: 6, name: 'Poort', k: 7, art: ['####', '#..#', '#..#'] },
+  { w: 7, name: 'Ufo', k: 7, art: ['...#...', '.3###4.', '..###..'] },
+  { w: 7, name: 'Krab', k: 7, art: ['..#.#..', '.#####.', '.1...2.'] },
+  { w: 7, name: 'Kikker', k: 7, art: ['#.#', '###', '###'] },
+  { w: 7, name: 'Schaats', k: 7, art: ['..##', '####', '1#2.'] },
+  { w: 7, name: 'Bij', k: 7, art: ['34.34', '.####', '.1#2.'] },
+  { w: 7, name: 'Rups', k: 7, art: ['#.#.#', '#####'] },
+  { w: 7, name: 'Anker', k: 7, art: ['#...#', '#####', '..#..'] },
+  { w: 7, name: 'Pagode', k: 7, art: ['..#..', '.3#4.', '#####'] },
+  { w: 7, name: 'Kasteel', k: 7, art: ['4.#.3', '#####', '1...2'] },
+  { w: 7, name: 'Vleermuis', k: 7, art: ['24.31', '.#.#.', '3###4'] },
+  { w: 7, name: 'Uil', k: 7, art: ['.3.4.', '3###4', '2#.#1'] },
+  { w: 7, name: 'Eiffeltoren', k: 7, art: ['..#..', '43#43', '##.##'] },
+];
+
+const NAMED_AT = [];
+{
+  const cnt = {};
+  NAMED.forEach((nm) => { cnt[nm.w] = (cnt[nm.w] || 0) + 1; });
+  const seen = {};
+  NAMED.forEach((nm) => {
+    const w = WORLDS[nm.w];
+    seen[nm.w] = (seen[nm.w] || 0) + 1;
+    NAMED_AT.push(w.from + Math.floor(seen[nm.w] * w.n / (cnt[nm.w] + 1)));
+  });
+}
 
 // ---------------------------------------------------------------- generator
 function holes(qset) {
@@ -192,11 +309,13 @@ function holes(qset) {
   return seen.size + qset.size !== total;
 }
 
-function genShape(k, rng, idx) {
+// d = moeilijkheid 0..1: vroeg compacte, simpele vormen; laat langgerekte, grillige vormen
+function genShape(k, rng, d) {
   const G = 6;
-  let best = null, bestScore = -1e9;
-  const tries = k <= 3 ? 3 : 5;
-  for (let cand = 0, att = 0; cand < tries && att < 600; att++) {
+  const tc = 0.93 - 0.6 * Math.pow(d, 0.85) + (rng() - 0.5) * 0.14;
+  let best = null, bestScore = 1e9;
+  const tries = k <= 3 ? 6 : 8;
+  for (let cand = 0, att = 0; cand < tries && att < 900; att++) {
     // kies stukken
     const pool = POOL.slice();
     const types = [];
@@ -232,11 +351,10 @@ function genShape(k, rng, idx) {
     for (const p of sol) for (const v of p.verts) { x0 = Math.min(x0, v[0]); x1 = Math.max(x1, v[0]); y0 = Math.min(y0, v[1]); y1 = Math.max(y1, v[1]); }
     const area = occ.size / 4;
     const compact = area / ((x1 - x0) * (y1 - y0));
-    // vroeg: compacte, simpele vormen; laat: langgerekte, grillige vormen
-    const want = idx < 20 ? compact : idx < 44 ? 0.1 * (rng() - 0.5) : -compact;
     cand++;
-    if (want > bestScore) {
-      bestScore = want;
+    const sc = Math.abs(compact - tc);
+    if (sc < bestScore) {
+      bestScore = sc;
       best = sol.map((p) => ({ type: p.type, verts: p.verts.map((v) => [v[0] - x0, v[1] - y0]), flip: p.flip, rot: p.rot }));
     }
   }
@@ -244,17 +362,10 @@ function genShape(k, rng, idx) {
 }
 
 // ---------------------------------------------------------------- levels
-const LEVELS_FIXED = 60;
-function pieceCount(idx) {
-  if (idx < 4) return 2;
-  if (idx < 10) return 3;
-  if (idx < 20) return 4;
-  if (idx < 32) return 5;
-  if (idx < 44) return 6;
-  return 7;
-}
-const NAMED_AT = [45, 47, 49, 51, 53, 55, 57, 59];
+// SALT: voor de zeldzame gevallen waar twee levels toevallig dezelfde vorm kregen (testscript controleert dit)
+const SALT = { 1: 2, 2: 1, 3: 1, 4: 4, 10: 1, 24: 1, 28: 1, 30: 2, 34: 1, 47: 1, 59: 1, 63: 1, 97: 1 };
 const named_cache = {};
+const level_cache = new Map();
 function finishLevel(idx, name, sol) {
   let x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9;
   for (const p of sol) for (const v of p.verts) { x0 = Math.min(x0, v[0]); x1 = Math.max(x1, v[0]); y0 = Math.min(y0, v[1]); y1 = Math.max(y1, v[1]); }
@@ -267,22 +378,57 @@ function finishLevel(idx, name, sol) {
   return { idx, name, sol: out, sil, w: x1 - x0, h: y1 - y0, k: out.length };
 }
 function makeLevel(idx) {
+  if (level_cache.has(idx)) return level_cache.get(idx);
+  const lv = buildLevel(idx);
+  if (level_cache.size > 400) level_cache.clear();
+  level_cache.set(idx, lv);
+  return lv;
+}
+function buildLevel(idx) {
   const ni = NAMED_AT.indexOf(idx);
-  if (ni >= 0 && NAMED[ni]) {
+  if (ni >= 0) {
     const nm = NAMED[ni];
-    if (!named_cache[ni]) named_cache[ni] = solveSil(parseArt(nm.art), 8);
+    if (!named_cache[ni]) named_cache[ni] = solveSil(parseArt(nm.art), 8, { k: nm.k });
     if (named_cache[ni]) return finishLevel(idx, nm.name, named_cache[ni]);
   }
-  const k = idx >= LEVELS_FIXED ? 7 : pieceCount(idx);
+  const w = worldOf(idx);
+  const k = pieceCount(idx);
+  const d = diffOf(idx);
+  const salt = SALT[idx] || 0;
+  const name = idx >= LEVELS_FIXED ? 'Eindeloos ' + (idx - LEVELS_FIXED + 1) : w.pre + ' ' + (idx - w.from + 1);
   for (let t = 0; t < 50; t++) {
-    const rng = mulberry(idx * 7919 + 13 + t * 104729);
-    const sol = genShape(k, rng, Math.min(idx, 59));
-    if (sol) return finishLevel(idx, idx >= LEVELS_FIXED ? 'Eindeloos ' + (idx - LEVELS_FIXED + 1) : 'Vorm ' + (idx + 1), sol);
+    const rng = mulberry(idx * 7919 + 13 + t * 104729 + salt * 1299709);
+    const sol = genShape(k, rng, d);
+    if (sol) return finishLevel(idx, name, sol);
   }
   throw new Error('level ' + idx + ' kon niet gemaakt worden');
 }
 
-export const _core = { TYPES, NAMED, NAMED_AT, makeLevel, solveSil, parseArt, quartersOf, qdec, qid, pieceCount, LEVELS_FIXED, holes };
+// sterren compact opslaan: 2 levels per teken (hex), 300 levels = 150 tekens
+function packStars(arr) {
+  let s = '';
+  for (let i = 0; i < LEVELS_FIXED; i += 2) s += ((arr[i] | 0) * 4 + (arr[i + 1] | 0)).toString(16);
+  return s;
+}
+function unpackStars(str) {
+  const arr = new Array(LEVELS_FIXED).fill(0);
+  const s = String(str || '');
+  for (let i = 0; i < s.length && i * 2 < LEVELS_FIXED; i++) {
+    const v = parseInt(s[i], 16);
+    if (!(v >= 0 && v < 16)) continue;
+    arr[i * 2] = v >> 2;
+    if (i * 2 + 1 < LEVELS_FIXED) arr[i * 2 + 1] = v & 3;
+  }
+  return arr;
+}
+// oude saves (v1): een cijfer per level
+function unpackOld(str) {
+  const arr = new Array(LEVELS_FIXED).fill(0);
+  String(str || '').split('').slice(0, LEVELS_FIXED).forEach((c, i) => { arr[i] = Math.max(0, Math.min(3, parseInt(c, 10) || 0)); });
+  return arr;
+}
+
+export const _core = { TYPES, NAMED, NAMED_AT, WORLDS, ENDLESS, worldOf, makeLevel, solveSil, parseArt, quartersOf, qdec, qid, pieceCount, LEVELS_FIXED, holes, sigOf, SALT, packStars, unpackStars, unpackOld, diffOf, genShape, mulberry, finishLevel, clearCache: () => level_cache.clear() };
 
 // ---------------------------------------------------------------- het spel
 export default {
@@ -311,7 +457,7 @@ export default {
     nextB.textContent = '▶';
     nextB.style.cssText = BTN + 'width:44px;height:44px;font-size:16px;flex:none';
     const titleBox = document.createElement('div');
-    titleBox.style.cssText = 'flex:1;text-align:center;line-height:1.15;min-width:0';
+    titleBox.style.cssText = 'flex:1;text-align:center;line-height:1.15;min-width:0;cursor:pointer';
     const titleEl = document.createElement('div');
     titleEl.style.cssText = 'font-size:17px;font-weight:800';
     const subEl = document.createElement('div');
@@ -339,7 +485,14 @@ export default {
     const cardNext = document.createElement('button');
     cardNext.textContent = 'Volgende ▶';
     cardNext.style.cssText = 'border:0;border-radius:14px;background:#7c3aed;color:#fff;font-size:17px;font-weight:800;padding:12px 22px;min-height:46px;cursor:pointer;touch-action:manipulation;font-family:inherit';
-    card.append(cardTitle, cardStars, cardNext);
+    const cardSub = document.createElement('div');
+    cardSub.style.cssText = 'font-size:13px;font-weight:600;opacity:.8;margin:-4px 0 6px;max-width:240px';
+    const cardJump = document.createElement('button');
+    cardJump.style.cssText = 'display:none;margin:8px auto 0;border:0;border-radius:12px;background:rgba(66,32,6,.14);color:#422006;font-size:13px;font-weight:700;padding:8px 14px;min-height:38px;cursor:pointer;touch-action:manipulation;font-family:inherit';
+    const cardList = document.createElement('button');
+    cardList.textContent = '☷ Levelkeuze';
+    cardList.style.cssText = 'display:block;margin:6px auto 0;border:0;border-radius:12px;background:rgba(66,32,6,.14);color:#422006;font-size:13px;font-weight:700;padding:8px 14px;min-height:38px;cursor:pointer;touch-action:manipulation;font-family:inherit';
+    card.append(cardTitle, cardSub, cardStars, cardNext, cardJump, cardList);
     stage.appendChild(card);
 
     // knoppen onder
@@ -394,7 +547,8 @@ export default {
     // ---------------------------------------------------------- staat
     let st = { lv: 0, stars: new Array(LEVELS_FIXED).fill(0), es: 0, ec: 0, hints: 5 };
     let loaded = false;
-    let lvl = null, idx = 0;
+    let lvl = null, idx = 0, world = WORLDS[0];
+    let picker = null;
     let pieces = [], occ = new Set();
     let cw = 360, ch = 500, dpr = 1, s = 40, ox = 0, oy = 0, silH = 200, trayY = 220, trayH = 200;
     let sel = null, drag = null, ghost = null;
@@ -408,11 +562,16 @@ export default {
       for (let i = 0; i < LEVELS_FIXED; i++) if (!st.stars[i]) return i;
       return LEVELS_FIXED + st.ec;
     };
+    // eerstvolgende level na `from` dat nog geen sterren heeft (anders het eerste onvoltooide)
+    const nextOpen = (from) => {
+      for (let i = from + 1; i < LEVELS_FIXED; i++) if (!st.stars[i]) return i;
+      return reach();
+    };
     const total = () => st.stars.reduce((a, b) => a + b, 0) + st.es;
     function persist() {
       try {
         if (!loaded) return;
-        api.save({ v: 1, lv: idx, st: st.stars.join(''), es: st.es, ec: st.ec, h: st.hints });
+        api.save({ v: 2, lv: idx, p: packStars(st.stars), es: st.es, ec: st.ec, h: st.hints });
       } catch (e) { /* ok */ }
     }
     const rotOf = (pc) => ((Math.round(pc.angG / PI2) % 4) + 4) % 4;
@@ -518,6 +677,9 @@ export default {
     function startLevel(i, keepToast) {
       idx = Math.max(0, i);
       try { lvl = makeLevel(idx); } catch (e) { idx = 0; lvl = makeLevel(0); }
+      world = worldOf(idx);
+      root.style.background = `linear-gradient(165deg,${world.bg[0]} 0%,${world.bg[1]} 55%,${world.bg[2]} 100%)`;
+      closePicker();
       locked = false; drag = null; sel = null; ghost = null; ptrs.clear();
       undo = []; hintsUsed = 0; drops = 0; hintSlot = hintPiece = hintBad = null; hintUntil = 0; parts = []; winFlash = 0;
       card.style.opacity = '0'; card.style.transform = 'translate(-50%,-50%) scale(.6)'; card.style.pointerEvents = 'none';
@@ -527,9 +689,9 @@ export default {
       pieces = lvl.sol.map((sl, n) => {
         const T = TYPES[sl.type];
         used[sl.type] = (used[sl.type] || 0) + 1;
-        const rot = idx < 8 ? sl.rot : (sl.rot + Math.floor(rng() * 4)) % 4;
+        const rot = idx < 10 ? sl.rot : (sl.rot + Math.floor(rng() * 4)) % 4;
         let flip = sl.flip;
-        if (sl.type === 'P' && idx >= 20 && rng() < 0.5) flip = 1 - flip;
+        if (sl.type === 'P' && idx >= FLIP_AT && rng() < 0.5) flip = 1 - flip;
         return {
           id: n, type: sl.type, color: T.cols[used[sl.type] - 1],
           x: 0, y: 0, gx: 0, gy: 0, ang: rot * PI2, angG: rot * PI2, fx: flip ? -1 : 1, flipG: flip,
@@ -542,12 +704,13 @@ export default {
       trayLayout();
       updateHead();
       if (idx < 2 && !keepToast) say('Sleep de stukken in de schaduw. Tik op een stuk om te draaien.', 3600);
-      else if (idx === 12 && !keepToast) say('Het parallellogram kun je spiegelen met ⇋', 3000);
+      else if (idx === FLIP_AT && !keepToast) say('Het parallellogram kan nu ook gespiegeld zijn: gebruik ⇋', 3400);
+      else if (idx === world.from && !keepToast && idx < LEVELS_FIXED) say(`${world.emoji} Wereld ${world.i + 1}: ${world.name}${world.hard ? ' (zonder schaduwhulp)' : ''}`, 3000);
       kick();
     }
     function updateHead() {
-      titleEl.textContent = idx < LEVELS_FIXED ? `Level ${idx + 1} / ${LEVELS_FIXED}` : `Level ${idx + 1} ∞`;
-      subEl.textContent = `${lvl.name} · ${lvl.k} stukken`;
+      titleEl.textContent = (idx < LEVELS_FIXED ? `Level ${idx + 1} / ${LEVELS_FIXED}` : `Level ${idx + 1} ∞`) + ' ▾';
+      subEl.textContent = `${world.emoji} ${world.name} · ${lvl.name} · ${lvl.k} stukken`;
       starEl.textContent = '⭐ ' + total();
       prevB.disabled = idx <= 0;
       prevB.style.opacity = idx <= 0 ? '.35' : '1';
@@ -662,7 +825,7 @@ export default {
       const [wx, wy] = toW(cx, cy);
       pc.x = pc.gx = wx + drag.ox;
       pc.y = pc.gy = wy + drag.oy;
-      ghost = trySnap(pc);
+      ghost = world.hard ? null : trySnap(pc);
       kick();
     };
     const onUp = (e) => {
@@ -816,18 +979,92 @@ export default {
     flipB.addEventListener('click', doFlip);
     prevB.addEventListener('click', () => { if (idx > 0) { startLevel(idx - 1); persist(); } });
     nextB.addEventListener('click', () => { if (idx < reach()) { startLevel(idx + 1); persist(); } });
-    cardNext.addEventListener('click', () => { startLevel(idx + 1); persist(); });
+    cardNext.addEventListener('click', () => { startLevel(Math.min(idx + 1, reach())); persist(); });
+    cardJump.addEventListener('click', () => { startLevel(Math.min(nextOpen(idx), reach())); persist(); });
+    cardList.addEventListener('click', () => openPicker());
+    titleBox.addEventListener('click', () => { if (picker) closePicker(); else openPicker(); });
     const onKey = (e) => {
       const k = e.key;
       if (k === 'r' || k === 'R') doRotate(e.shiftKey ? -1 : 1);
       else if (k === 'f' || k === 'F') doFlip();
       else if (k === 'z' || k === 'Z') doUndo();
       else if (k === 'h' || k === 'H') doHint();
-      else if ((k === 'Enter' || k === 'n' || k === 'N') && locked && card.style.opacity === '1') { startLevel(idx + 1); persist(); }
+      else if ((k === 'Enter' || k === 'n' || k === 'N') && locked && card.style.opacity === '1') { startLevel(Math.min(idx + 1, reach())); persist(); }
+      else if ((k === 'l' || k === 'L') && !locked) { if (picker) closePicker(); else openPicker(); }
+      else if (k === 'Escape' && picker) closePicker();
       else return;
       e.preventDefault();
     };
     window.addEventListener('keydown', onKey);
+
+    // ---------------------------------------------------------- levelkiezer (werelden met sterren)
+    function closePicker() {
+      if (!picker) return;
+      try { picker.remove(); } catch (e) { /* ok */ }
+      picker = null;
+    }
+    function openPicker() {
+      if (dead) return;
+      closePicker();
+      const r = reach();
+      const ov = document.createElement('div');
+      ov.style.cssText = 'position:absolute;left:0;top:0;width:100%;height:100%;background:rgba(8,8,24,.94);z-index:20;display:flex;flex-direction:column;box-sizing:border-box';
+      const top = document.createElement('div');
+      top.style.cssText = 'display:flex;align-items:center;gap:8px;padding:10px 12px 6px;flex:none';
+      const ttl = document.createElement('div');
+      ttl.style.cssText = 'flex:1;font-size:18px;font-weight:800';
+      ttl.textContent = `Kies een level · ⭐ ${total()} / ${LEVELS_FIXED * 3}`;
+      const close = document.createElement('button');
+      close.textContent = '✕';
+      close.style.cssText = BTN + 'width:44px;height:44px;font-size:18px;flex:none';
+      close.addEventListener('click', closePicker);
+      top.append(ttl, close);
+      const sc = document.createElement('div');
+      sc.style.cssText = 'flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 12px 14px';
+      let curTop = 0;
+      for (const w of WORLDS) {
+        const wh = document.createElement('div');
+        let got = 0, done = 0;
+        for (let i = w.from; i < w.to; i++) { got += st.stars[i]; if (st.stars[i]) done++; }
+        wh.style.cssText = `margin:14px 0 6px;padding:8px 12px;border-radius:14px;background:linear-gradient(90deg,${w.bg[0]},${w.bg[1]});font-weight:800;font-size:15px;display:flex;justify-content:space-between;gap:8px;align-items:center`;
+        const l1 = document.createElement('span');
+        l1.textContent = `${w.emoji} ${w.i + 1}. ${w.name}`;
+        const l2 = document.createElement('span');
+        l2.style.cssText = 'font-size:12px;font-weight:700;opacity:.85;white-space:nowrap';
+        l2.textContent = `${done}/${w.n} · ⭐ ${got}/${w.n * 3}${w.hard ? ' · zonder hulp' : ''}`;
+        wh.append(l1, l2);
+        sc.appendChild(wh);
+        if (idx >= w.from && idx < w.to) curTop = sc.children.length - 1;
+        const grid = document.createElement('div');
+        grid.style.cssText = 'display:grid;grid-template-columns:repeat(5,1fr);gap:6px';
+        for (let i = w.from; i < w.to; i++) {
+          const b = document.createElement('button');
+          const open = i <= r;
+          const stars = st.stars[i];
+          b.innerHTML = `<span style="font-size:15px;font-weight:800">${i + 1}</span><br><span style="font-size:10px;letter-spacing:-1px">${open ? (stars ? '⭐'.repeat(stars) : '·') : '🔒'}</span>`;
+          b.style.cssText = BTN + `min-height:46px;padding:2px;line-height:1.15;${i === idx ? 'outline:3px solid #fde047;' : ''}${stars === 3 ? 'background:rgba(250,204,21,.28);' : stars ? 'background:rgba(255,255,255,.22);' : ''}${open ? '' : 'opacity:.35;'}`;
+          b.disabled = !open;
+          if (open) b.addEventListener('click', () => { startLevel(i); persist(); });
+          grid.appendChild(b);
+        }
+        sc.appendChild(grid);
+      }
+      const eb = document.createElement('button');
+      eb.textContent = r >= LEVELS_FIXED ? `♾️ Eindeloos (nu level ${LEVELS_FIXED + st.ec + 1})` : '♾️ Eindeloos (haal eerst alle 300 levels)';
+      eb.style.cssText = BTN + 'width:100%;min-height:48px;margin-top:16px;' + (r >= LEVELS_FIXED ? '' : 'opacity:.35;');
+      eb.disabled = r < LEVELS_FIXED;
+      if (r >= LEVELS_FIXED) eb.addEventListener('click', () => { startLevel(LEVELS_FIXED + st.ec); persist(); });
+      sc.appendChild(eb);
+      // spring naar eerstvolgende onvoltooide level
+      const go = document.createElement('button');
+      go.textContent = r < LEVELS_FIXED ? `▶ Verder met level ${r + 1}` : '▶ Verder';
+      go.style.cssText = BTN + 'margin:0 12px 10px;min-height:46px;background:#7c3aed;flex:none';
+      go.addEventListener('click', () => { startLevel(r); persist(); });
+      ov.append(top, sc, go);
+      root.appendChild(ov);
+      picker = ov;
+      try { sc.scrollTop = Math.max(0, curTop * 150 - 20); } catch (e) { /* ok */ }
+    }
 
     // ---------------------------------------------------------- winnen
     function burst(x, y, n, col) {
@@ -866,6 +1103,14 @@ export default {
       }, 350);
       cardTitle.textContent = ['', 'Goed zo!', 'Mooi gelegd!', 'Perfect!'][stars];
       cardStars.textContent = '⭐'.repeat(stars) + '☆'.repeat(3 - stars);
+      const wEnd = idx < LEVELS_FIXED && idx === world.to - 1;
+      if (idx === LEVELS_FIXED - 1) cardSub.textContent = `🏆 Alle ${LEVELS_FIXED} levels gehaald! Eindeloos wacht.`;
+      else if (wEnd) cardSub.textContent = `${world.emoji} Wereld ${world.i + 1} voltooid: ${world.name}!`;
+      else cardSub.textContent = `${world.emoji} ${world.name}`;
+      const nxt = Math.min(idx + 1, reach());
+      const open = nextOpen(idx);
+      cardNext.textContent = nxt >= LEVELS_FIXED ? 'Eindeloos ▶' : (nxt === world.to ? `${WORLDS[world.i + 1].emoji} Volgende wereld ▶` : 'Volgende ▶');
+      if (open !== nxt && open < LEVELS_FIXED) { cardJump.style.display = 'block'; cardJump.textContent = `⏭ Eerste onvoltooide: level ${open + 1}`; } else cardJump.style.display = 'none';
       later(() => {
         card.style.opacity = '1';
         card.style.transform = 'translate(-50%,-50%) scale(1)';
@@ -946,10 +1191,10 @@ export default {
       ctx.save();
       ctx.shadowColor = 'rgba(0,0,0,.5)';
       ctx.shadowBlur = 14;
-      ctx.fillStyle = '#c7d2fe';
+      ctx.fillStyle = world.sa;
       ctx.fill(sp);
       ctx.restore();
-      ctx.fillStyle = 'rgba(99,102,241,.35)';
+      ctx.fillStyle = world.sb;
       ctx.fill(sp);
       // hint-slot
       const now = performance.now();
@@ -1058,10 +1303,9 @@ export default {
     api.load().then((saved) => {
       if (dead) return;
       loaded = true;
-      if (saved && saved.v === 1) {
-        const arr = String(saved.st || '').split('').map((c) => Math.max(0, Math.min(3, parseInt(c, 10) || 0)));
-        while (arr.length < LEVELS_FIXED) arr.push(0);
-        st.stars = arr.slice(0, LEVELS_FIXED);
+      if (saved && (saved.v === 1 || saved.v === 2)) {
+        // v1: een cijfer per level (oude saves met 60 sterren migreren vanzelf); v2: 2 levels per hex-teken
+        st.stars = saved.v === 1 ? unpackOld(saved.st) : unpackStars(saved.p);
         st.es = Math.max(0, saved.es | 0);
         st.ec = Math.max(0, saved.ec | 0);
         st.hints = Math.max(0, Math.min(9, saved.h == null ? 5 : saved.h | 0));

@@ -373,7 +373,7 @@ async function vraagApp() { const m = await import('./vraag.js'); await m.vraagV
 async function vraagAdminApp() { const m = await import('./vraag.js'); await m.vraagView({ ...appCtx(), adminOnly: true }); }
 async function agendaApp() { const m = await import('./agenda.js'); await m.agendaView(appCtx()); }
 async function gewoontesApp() { const m = await import('./gewoontes.js'); await m.gewoontesView(appCtx()); }
-const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=1'); await m.puzzelView(appCtx(), id); };
+const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=2'); await m.puzzelView(appCtx(), id); };
 const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=1`); await m[`${id}View`](appCtx()); };
 async function fotoApp() { const m = await import('./foto.js?v=2'); m.fotoView(appCtx()); }
 async function huisdierApp() { const m = await import('./huisdier.js?v=3'); await m.huisdierView(appCtx()); }

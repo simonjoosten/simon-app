@@ -13,7 +13,7 @@ export async function puzzelView(ctx, id) {
   const ref = doc(db, 'gamesaves', `${id}__${uid}`);
 
   let g;
-  try { g = (await import(`./games/mini/${id}.js?v=1`)).default; }
+  try { g = (await import(`./games/mini/${id}.js?v=2`)).default; }
   catch (e) { console.error(e); view.innerHTML = '<div class="box err">Dit spel kon niet laden. Ververs de pagina en probeer het opnieuw.</div>'; return; }
   if (!alive) return;
 
