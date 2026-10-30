@@ -1,0 +1,602 @@
+[
+ {
+  "id": "tafel-2",
+  "name": "Tafel van 2",
+  "emoji": "2️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 2: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 127
+ },
+ {
+  "id": "tafel-3",
+  "name": "Tafel van 3",
+  "emoji": "3️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 3: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 120
+ },
+ {
+  "id": "tafel-4",
+  "name": "Tafel van 4",
+  "emoji": "4️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 4: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 128
+ },
+ {
+  "id": "tafel-5",
+  "name": "Tafel van 5",
+  "emoji": "5️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 5: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 120
+ },
+ {
+  "id": "tafel-6",
+  "name": "Tafel van 6",
+  "emoji": "6️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 6: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 127
+ },
+ {
+  "id": "tafel-7",
+  "name": "Tafel van 7",
+  "emoji": "7️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 7: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 120
+ },
+ {
+  "id": "tafel-8",
+  "name": "Tafel van 8",
+  "emoji": "8️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 8: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 128
+ },
+ {
+  "id": "tafel-9",
+  "name": "Tafel van 9",
+  "emoji": "9️⃣",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 9: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 120
+ },
+ {
+  "id": "tafel-10",
+  "name": "Tafel van 10",
+  "emoji": "🔟",
+  "group": "Rekenen",
+  "desc": "Alles over de tafel van 10: keer, delen, ontbrekend getal en verhaaltjes.",
+  "n": 128
+ },
+ {
+  "id": "tafels-gemengd",
+  "name": "Alle tafels door elkaar",
+  "emoji": "✖️",
+  "group": "Rekenen",
+  "desc": "De tafels van 2 tot en met 10 door elkaar: keer, delen en verhaaltjes.",
+  "n": 296
+ },
+ {
+  "id": "delen-tafels",
+  "name": "Delen met de tafels",
+  "emoji": "➗",
+  "group": "Rekenen",
+  "desc": "Delen, delen met rest en eerlijk verdelen: je tafels andersom.",
+  "n": 288
+ },
+ {
+  "id": "optellen-20",
+  "name": "Optellen tot 20",
+  "emoji": "➕",
+  "group": "Rekenen",
+  "desc": "Plussommen tot 20: dubbelen, tot 10 aanvullen en over de tien heen.",
+  "n": 211
+ },
+ {
+  "id": "aftrekken-20",
+  "name": "Aftrekken tot 20",
+  "emoji": "➖",
+  "group": "Rekenen",
+  "desc": "Minsommen tot 20: terugtellen, naar de tien en verschil.",
+  "n": 198
+ },
+ {
+  "id": "optellen-aftrekken-100",
+  "name": "Optellen en aftrekken tot 100",
+  "emoji": "💯",
+  "group": "Rekenen",
+  "desc": "Tientallen, rekenen met een brug en splitsen: plus en min tot 100.",
+  "n": 280
+ },
+ {
+  "id": "rekenen-1000",
+  "name": "Rekenen tot 1000",
+  "emoji": "🔢",
+  "group": "Rekenen",
+  "desc": "Honderdtallen, optellen en aftrekken tot 1000, plaatswaarde en afronden.",
+  "n": 308
+ },
+ {
+  "id": "geld-rekenen",
+  "name": "Rekenen met geld",
+  "emoji": "💶",
+  "group": "Rekenen",
+  "desc": "Euro en cent: munten, prijzen, optellen en wisselgeld.",
+  "n": 185
+ },
+ {
+  "id": "klokkijken",
+  "name": "Klokkijken",
+  "emoji": "🕒",
+  "group": "Rekenen",
+  "desc": "Hele uren, halve uren, kwartieren, digitaal, 24-uurs en tijdsduur.",
+  "n": 248
+ },
+ {
+  "id": "breuken",
+  "name": "Breuken",
+  "emoji": "🍕",
+  "group": "Rekenen",
+  "desc": "Helft, kwart, driekwart, gelijkwaardige breuken, optellen en delen van hoeveelheden.",
+  "n": 209
+ },
+ {
+  "id": "procenten",
+  "name": "Procenten",
+  "emoji": "％",
+  "group": "Rekenen",
+  "desc": "Procent van een hoeveelheid, korting, breuken en procenten.",
+  "n": 177
+ },
+ {
+  "id": "meten",
+  "name": "Meten en eenheden",
+  "emoji": "📏",
+  "group": "Rekenen",
+  "desc": "Lengte, gewicht, inhoud en tijd: eenheden omrekenen en kiezen.",
+  "n": 193
+ },
+ {
+  "id": "meetkunde",
+  "name": "Meetkunde: vormen",
+  "emoji": "🔷",
+  "group": "Rekenen",
+  "desc": "Vormen, hoeken, omtrek en oppervlakte, ruimtelijke figuren.",
+  "n": 203
+ },
+ {
+  "id": "getallenrijen",
+  "name": "Getallenrijen",
+  "emoji": "🔗",
+  "group": "Rekenen",
+  "desc": "Wat komt er daarna? Ontdek het patroon in rijen getallen.",
+  "n": 158
+ },
+ {
+  "id": "verhaaltjessommen",
+  "name": "Verhaaltjessommen",
+  "emoji": "📖",
+  "group": "Rekenen",
+  "desc": "Korte rekenverhaaltjes: erbij, eraf, keer, delen en twee stappen.",
+  "n": 216
+ },
+ {
+  "id": "schatten",
+  "name": "Schatten en afronden",
+  "emoji": "🎯",
+  "group": "Rekenen",
+  "desc": "Afronden en slim schatten: ongeveer hoeveel is het?",
+  "n": 170
+ },
+ {
+  "id": "negatieve-getallen",
+  "name": "Negatieve getallen",
+  "emoji": "🌡️",
+  "group": "Rekenen",
+  "desc": "Onder nul: temperatuur, getallenlijn, optellen en aftrekken met min.",
+  "n": 157
+ },
+ {
+  "id": "machten-wortels",
+  "name": "Machten en wortels",
+  "emoji": "√",
+  "group": "Rekenen",
+  "desc": "Kwadraten, derde machten, machten van 2 en 10, en wortels.",
+  "n": 144
+ },
+ {
+  "id": "hoofdsteden-europa",
+  "name": "Hoofdsteden van Europa",
+  "emoji": "🏰",
+  "group": "Wereld",
+  "desc": "Van Reykjavik tot Athene: de hoofdsteden van Europese landen.",
+  "n": 264
+ },
+ {
+  "id": "hoofdsteden-azie",
+  "name": "Hoofdsteden van Azië",
+  "emoji": "🏯",
+  "group": "Wereld",
+  "desc": "Tokio, Peking, New Delhi en meer: de hoofdsteden van Aziatische landen.",
+  "n": 226
+ },
+ {
+  "id": "hoofdsteden-afrika",
+  "name": "Hoofdsteden van Afrika",
+  "emoji": "🦁",
+  "group": "Wereld",
+  "desc": "Caïro, Nairobi, Rabat en meer: hoofdsteden van Afrikaanse landen.",
+  "n": 228
+ },
+ {
+  "id": "hoofdsteden-amerika",
+  "name": "Hoofdsteden van Amerika",
+  "emoji": "🗽",
+  "group": "Wereld",
+  "desc": "Noord-, Midden- en Zuid-Amerika: waar ligt welke hoofdstad?",
+  "n": 163
+ },
+ {
+  "id": "vlaggen",
+  "name": "Vlaggen van de wereld",
+  "emoji": "🏁",
+  "group": "Wereld",
+  "desc": "Herken vlaggen van landen over de hele wereld.",
+  "n": 388
+ },
+ {
+  "id": "landen-werelddeel",
+  "name": "Landen en werelddelen",
+  "emoji": "🌍",
+  "group": "Wereld",
+  "desc": "In welk werelddeel ligt welk land?",
+  "n": 344
+ },
+ {
+  "id": "nl-provincies",
+  "name": "Nederlandse provincies",
+  "emoji": "🇳🇱",
+  "group": "Wereld",
+  "desc": "De twaalf provincies en hun hoofdsteden, ligging en weetjes.",
+  "n": 101
+ },
+ {
+  "id": "nl-steden",
+  "name": "Nederlandse steden en plekken",
+  "emoji": "🏙️",
+  "group": "Wereld",
+  "desc": "In welke provincie ligt welke stad? En waar vind je bekende plekken?",
+  "n": 311
+ },
+ {
+  "id": "rivieren-bergen-zeeen",
+  "name": "Rivieren, bergen en zeeën",
+  "emoji": "🏔️",
+  "group": "Wereld",
+  "desc": "Bekende rivieren, bergen, oceanen en zeeën van de wereld.",
+  "n": 173
+ },
+ {
+  "id": "bekende-plekken",
+  "name": "Beroemde plekken in de wereld",
+  "emoji": "🗼",
+  "group": "Wereld",
+  "desc": "Eiffeltoren, Colosseum, Taj Mahal: in welk land staan ze?",
+  "n": 138
+ },
+ {
+  "id": "werelddelen",
+  "name": "Werelddelen en dieren",
+  "emoji": "🗺️",
+  "group": "Wereld",
+  "desc": "Werelddelen, kompas, polen en welk dier waar leeft.",
+  "n": 89
+ },
+ {
+  "id": "talen-wereld",
+  "name": "Talen van de wereld",
+  "emoji": "🗣️",
+  "group": "Wereld",
+  "desc": "Welke taal spreek je waar? Van Frans tot Japans.",
+  "n": 171
+ },
+ {
+  "id": "valuta-wereld",
+  "name": "Geld van de wereld",
+  "emoji": "💱",
+  "group": "Wereld",
+  "desc": "Welke munt hoort bij welk land? Euro, dollar, yen en meer.",
+  "n": 165
+ },
+ {
+  "id": "tijdzones",
+  "name": "Tijdzones en tijd in de wereld",
+  "emoji": "🕰️",
+  "group": "Wereld",
+  "desc": "Waarom is het ergens anders later of vroeger? Reken tijdverschillen uit.",
+  "n": 102
+ },
+ {
+  "id": "dieren-geluiden",
+  "name": "Dieren en hun geluiden",
+  "emoji": "🐮",
+  "group": "Natuur",
+  "desc": "Welk dier loeit, blaat, hinnikt of kraait? Dierengeluiden.",
+  "n": 205
+ },
+ {
+  "id": "dieren-klassen",
+  "name": "Soorten dieren",
+  "emoji": "🐾",
+  "group": "Natuur",
+  "desc": "Zoogdier, vogel, reptiel, amfibie, vis of insect? En kenmerken van dieren.",
+  "n": 300
+ },
+ {
+  "id": "dieren-jongen",
+  "name": "Jongen, mannetjes en groepen",
+  "emoji": "🐣",
+  "group": "Natuur",
+  "desc": "Hoe heet het jong van een dier? En het mannetje, en een groep dieren?",
+  "n": 247
+ },
+ {
+  "id": "dieren-eten",
+  "name": "Wat eten dieren?",
+  "emoji": "🍖",
+  "group": "Natuur",
+  "desc": "Planteneters, vleeseters, alleseters en het lievelingseten van dieren.",
+  "n": 213
+ },
+ {
+  "id": "dieren-leefgebied",
+  "name": "Waar leven dieren?",
+  "emoji": "🏞️",
+  "group": "Natuur",
+  "desc": "Poolgebied, woestijn, regenwoud, savanne of zee: waar woont welk dier?",
+  "n": 148
+ },
+ {
+  "id": "planten-bomen",
+  "name": "Planten, bloemen en bomen",
+  "emoji": "🌳",
+  "group": "Natuur",
+  "desc": "Bomen, bloemen, fruit en hoe een plant groeit.",
+  "n": 175
+ },
+ {
+  "id": "weer",
+  "name": "Weer en seizoenen",
+  "emoji": "🌦️",
+  "group": "Natuur",
+  "desc": "Wolken, regen, onweer, seizoenen en de kringloop van het water.",
+  "n": 146
+ },
+ {
+  "id": "ruimte-planeten",
+  "name": "Ruimte en planeten",
+  "emoji": "🪐",
+  "group": "Natuur",
+  "desc": "Zon, maan, planeten, sterren en ruimtevaart.",
+  "n": 107
+ },
+ {
+  "id": "aarde",
+  "name": "De aarde",
+  "emoji": "🌋",
+  "group": "Natuur",
+  "desc": "Lagen van de aarde, vulkanen, gesteenten, water en het milieu.",
+  "n": 91
+ },
+ {
+  "id": "dinosaurussen",
+  "name": "Dinosaurussen",
+  "emoji": "🦖",
+  "group": "Natuur",
+  "desc": "T-rex, Triceratops en andere reuzen uit lang vervlogen tijden.",
+  "n": 109
+ },
+ {
+  "id": "oceaan",
+  "name": "Oceaan en zeedieren",
+  "emoji": "🐠",
+  "group": "Natuur",
+  "desc": "Walvissen, haaien, koraalrif en alles wat in zee leeft.",
+  "n": 90
+ },
+ {
+  "id": "insecten",
+  "name": "Insecten en kriebelbeestjes",
+  "emoji": "🐝",
+  "group": "Natuur",
+  "desc": "Bijen, mieren, vlinders en andere kleine beestjes.",
+  "n": 128
+ },
+ {
+  "id": "energie",
+  "name": "Energie en stroom",
+  "emoji": "⚡",
+  "group": "Natuur",
+  "desc": "Zon, wind, water, stroom en energie besparen.",
+  "n": 85
+ },
+ {
+  "id": "materialen",
+  "name": "Materialen en eigenschappen",
+  "emoji": "🧱",
+  "group": "Natuur",
+  "desc": "Hout, glas, metaal, plastic: waar is het van gemaakt en wat kan het?",
+  "n": 147
+ },
+ {
+  "id": "mens-lichaam",
+  "name": "Mijn lichaam",
+  "emoji": "🧍",
+  "group": "Mens",
+  "desc": "Lichaamsdelen, tanden, huid en hoe je lijf werkt.",
+  "n": 103
+ },
+ {
+  "id": "mens-botten-organen",
+  "name": "Botten en organen",
+  "emoji": "🦴",
+  "group": "Mens",
+  "desc": "Het skelet en wat de organen in je lichaam doen.",
+  "n": 133
+ },
+ {
+  "id": "mens-zintuigen",
+  "name": "Zintuigen",
+  "emoji": "👀",
+  "group": "Mens",
+  "desc": "Zien, horen, ruiken, proeven en voelen: hoe werken je zintuigen?",
+  "n": 136
+ },
+ {
+  "id": "mens-gezond-eten",
+  "name": "Gezond eten",
+  "emoji": "🥦",
+  "group": "Mens",
+  "desc": "Groente, fruit, de Schijf van Vijf en slimme keuzes.",
+  "n": 186
+ },
+ {
+  "id": "mens-sport-gezondheid",
+  "name": "Bewegen en gezond blijven",
+  "emoji": "🏃",
+  "group": "Mens",
+  "desc": "Sporten, slapen, hygiëne en eerste hulp.",
+  "n": 81
+ },
+ {
+  "id": "nl-tijdlijn",
+  "name": "Nederlandse geschiedenis",
+  "emoji": "🏰",
+  "group": "Geschiedenis",
+  "desc": "Jaartallen en gebeurtenissen uit de Nederlandse geschiedenis, en op volgorde zetten.",
+  "n": 153
+ },
+ {
+  "id": "wereldgeschiedenis",
+  "name": "Wereldgeschiedenis",
+  "emoji": "🌐",
+  "group": "Geschiedenis",
+  "desc": "Belangrijke gebeurtenissen en personen uit de wereldgeschiedenis.",
+  "n": 162
+ },
+ {
+  "id": "uitvinders",
+  "name": "Uitvinders en uitvindingen",
+  "emoji": "💡",
+  "group": "Geschiedenis",
+  "desc": "Wie vond de telefoon, gloeilamp of boekdrukkunst uit?",
+  "n": 110
+ },
+ {
+  "id": "oude-egypte",
+  "name": "Het oude Egypte",
+  "emoji": "🔺",
+  "group": "Geschiedenis",
+  "desc": "Farao's, piramides, mummies en hiërogliefen.",
+  "n": 122
+ },
+ {
+  "id": "romeinen",
+  "name": "De Romeinen",
+  "emoji": "🏛️",
+  "group": "Geschiedenis",
+  "desc": "Legioenen, gladiatoren, Romeinse cijfers en het leven in Rome.",
+  "n": 156
+ },
+ {
+  "id": "ridders",
+  "name": "Ridders en kastelen",
+  "emoji": "🏰",
+  "group": "Geschiedenis",
+  "desc": "Middeleeuwse ridders, kastelen, toernooien en het leven van toen.",
+  "n": 103
+ },
+ {
+  "id": "computers-basis",
+  "name": "Computers: de basis",
+  "emoji": "💻",
+  "group": "Technologie",
+  "desc": "Onderdelen, geheugen, bestanden, sneltoetsen en binaire getallen.",
+  "n": 222
+ },
+ {
+  "id": "internet-veilig",
+  "name": "Veilig op internet",
+  "emoji": "🛡️",
+  "group": "Technologie",
+  "desc": "Wachtwoorden, phishing, privacy, pesten en verstandig online gedrag.",
+  "n": 86
+ },
+ {
+  "id": "programmeren",
+  "name": "Programmeren: begrippen",
+  "emoji": "👩‍💻",
+  "group": "Technologie",
+  "desc": "Algoritmes, lussen, variabelen, voorwaarden en bugs.",
+  "n": 146
+ },
+ {
+  "id": "logica-puzzels",
+  "name": "Logica en puzzels",
+  "emoji": "🧩",
+  "group": "Technologie",
+  "desc": "Patronen, vreemde eend, redeneren en slimme raadsels.",
+  "n": 116
+ },
+ {
+  "id": "muziekinstrumenten",
+  "name": "Muziek en instrumenten",
+  "emoji": "🎻",
+  "group": "Creatief",
+  "desc": "Instrumenten, orkest, noten, tel-lengtes en beroemde componisten.",
+  "n": 157
+ },
+ {
+  "id": "kleuren-mengen",
+  "name": "Kleuren mengen",
+  "emoji": "🎨",
+  "group": "Creatief",
+  "desc": "Primaire en secundaire kleuren, mengen met wit en zwart en warme en koude kleuren.",
+  "n": 129
+ },
+ {
+  "id": "kunst",
+  "name": "Kunst en kunstenaars",
+  "emoji": "🖼️",
+  "group": "Creatief",
+  "desc": "Beroemde schilders, schilderijen, technieken en musea.",
+  "n": 168
+ },
+ {
+  "id": "films-boeken",
+  "name": "Boeken en films voor kids",
+  "emoji": "📚",
+  "group": "Creatief",
+  "desc": "Sprookjes, bekende kinderboeken, schrijvers en films.",
+  "n": 170
+ },
+ {
+  "id": "sport-regels",
+  "name": "Sport en spelregels",
+  "emoji": "⚽",
+  "group": "Creatief",
+  "desc": "Voetbal, hockey, zwemmen en meer: aantallen, regels en feiten.",
+  "n": 122
+ },
+ {
+  "id": "verkeersregels",
+  "name": "Verkeersregels en borden",
+  "emoji": "🚦",
+  "group": "Creatief",
+  "desc": "Stoplichten, voorrang, bordenkennis en veilig fietsen en lopen.",
+  "n": 83
+ }
+]

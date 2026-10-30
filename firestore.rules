@@ -113,6 +113,18 @@ service cloud.firestore {
       allow delete: if isMember() && resource.data.uid == request.auth.uid;
     }
 
+    // ---------- Learn: uitdagingen (asynchrone duels) ----------
+    match /learnduels/{id} {
+      allow read: if isMember();
+      allow create: if isMember()
+        && request.resource.data.from == request.auth.uid
+        && request.resource.data.keys().hasOnly(['from', 'fromName', 'to', 'kitName', 'game', 'seed', 'level', 'qs', 'scores', 'created', 'updated'])
+        && request.resource.data.qs is string && request.resource.data.qs.size() <= 12000;
+      allow update: if isMember()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['scores', 'updated']);
+      allow delete: if isMember() && resource.data.from == request.auth.uid;
+    }
+
     // ---------- Klusjes ----------
     match /chores/{id} {
       allow read: if isAdmin() || (isMember() && (resource.data.to == 'all' || resource.data.to == request.auth.uid));

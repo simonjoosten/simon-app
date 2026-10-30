@@ -1,0 +1,103 @@
+// ---- gedeelde hulpjes (per bestand ingebouwd, geen externe imports) ----
+const $ = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function css(txt) { const s = document.createElement('style'); s.textContent = txt; document.head.appendChild(s); return s; }
+function lifecycle() {
+  const L = { timers: new Set(), raf: 0, offs: [], dead: false };
+  L.after = (f, ms) => { const t = setTimeout(() => { L.timers.delete(t); if (!L.dead) f(); }, ms); L.timers.add(t); return t; };
+  L.every = (f, ms) => { const t = setInterval(() => { if (!L.dead) f(); }, ms); L.timers.add(t); return t; };
+  L.on = (el, ev, fn, o) => { el.addEventListener(ev, fn, o); L.offs.push(() => el.removeEventListener(ev, fn, o)); };
+  L.kill = () => { L.dead = true; L.timers.forEach(t => { clearTimeout(t); clearInterval(t); }); L.timers.clear(); if (L.raf && typeof cancelAnimationFrame === 'function') cancelAnimationFrame(L.raf); L.raf = 0; L.offs.forEach(f => { try { f(); } catch (e) {} }); L.offs = []; };
+  return L;
+}
+function baseCss(P) {
+  return `.${P}-root{position:relative;width:100%;overflow:hidden;color:var(--ink);font:inherit;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;flex-direction:column;background:var(--card);border-radius:14px;box-sizing:border-box}
+.${P}-root *{box-sizing:border-box}
+.${P}-hud{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:center;padding:6px 8px;font-weight:700;font-size:14px}
+.${P}-chip{background:rgba(127,127,127,.16);border-radius:999px;padding:2px 10px;white-space:nowrap}
+.${P}-ov{position:absolute;top:0;left:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(10,12,30,.74);z-index:20;padding:10px;overflow:auto}
+.${P}-qbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:12px;width:min(100%,520px);max-height:100%;overflow:auto}
+.${P}-card{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:16px;width:min(100%,460px);max-height:100%;overflow:auto;text-align:center}
+.${P}-card h2{margin:0 0 6px;font-size:22px}.${P}-card p{margin:6px 0;opacity:.85}
+.${P}-big{font-size:54px;line-height:1.1}
+.${P}-btn{border:0;border-radius:12px;padding:10px 16px;font:inherit;font-weight:800;background:var(--accent);color:#fff;cursor:pointer;min-height:44px;box-shadow:0 2px 0 rgba(0,0,0,.25);margin:4px}
+.${P}-btn.alt{background:rgba(127,127,127,.22);color:var(--ink)}
+.${P}-btn:disabled{opacity:.45;cursor:default}
+.${P}-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:stretch}
+.${P}-shopi{border:1px solid var(--line);border-radius:14px;padding:8px;background:rgba(127,127,127,.08);flex:1 1 120px;min-width:110px;max-width:170px;text-align:center}
+.${P}-shopi b{display:block}.${P}-shopi small{display:block;opacity:.75;min-height:2.4em}
+@keyframes ${P}pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
+.${P}-pop{animation:${P}pop .35s ease-out}`;
+}
+function mkOv(root, P) {
+  const el = $('div', P + '-ov'); root.appendChild(el);
+  return { el, shown: false, show(n) { el.textContent = ''; if (n) el.appendChild(n); el.style.display = 'flex'; this.shown = true; }, hide() { el.style.display = 'none'; el.textContent = ''; this.shown = false; } };
+}
+function card(P, o) { // intro/info-kaart: {emoji,title,text,btn,onBtn,extra}
+  const c = $('div', P + '-card ' + P + '-pop');
+  if (o.emoji) c.appendChild($('div', P + '-big', o.emoji));
+  if (o.title) c.appendChild($('h2', '', o.title));
+  if (o.text) c.appendChild($('p', '', o.text));
+  if (o.extra) c.appendChild(o.extra);
+  if (o.btn) { const b = $('button', P + '-btn', o.btn); b.onclick = o.onBtn; c.appendChild(b); }
+  return c;
+}
+function makeAsker(env, ov, P, L) {
+  let cur = null;
+  return {
+    async ask(q, o) {
+      const box = $('div', P + '-qbox'); ov.show(box);
+      let h = null;
+      try { h = env.ask(box, q, Object.assign({ compact: true, feedback: true, autoNext: 1200 }, o || {})); } catch (e) { h = null; }
+      if (!h) { ov.hide(); return { ok: false, ms: 0 }; }
+      cur = h; let r = null;
+      try { r = await h.promise; } catch (e) { r = null; }
+      cur = null; r = r || { ok: false, ms: 0 };
+      if (L.dead) return r;
+      ov.hide();
+      try { env.report({ q, ok: !!r.ok, ms: r.ms || 0 }); } catch (e) {}
+      return r;
+    },
+    cancel() { try { cur && cur.cancel && cur.cancel(); } catch (e) {} }
+  };
+}
+const FALLBACK_Q = [
+  { t: 'tf', q: '2 + 2 = 4', a: true, d: 1 }, { t: 'mc', q: 'Hoeveel is 3 + 4?', a: '7', o: ['6', '7', '8', '9'], d: 1 },
+  { t: 'mc', q: 'Welke kleur heeft gras?', a: 'groen', o: ['rood', 'groen', 'blauw', 'geel'], d: 1 }, { t: 'num', q: 'Hoeveel is 5 x 2?', a: 10, d: 1 }
+];
+function qsupply(env) {
+  let buf = [], i = 0;
+  return (hard) => {
+    if (!buf.length) {
+      try { buf = (env.pick(8, hard ? { hard } : {}) || []).slice(); } catch (e) { buf = []; }
+      if (!buf.length) buf = FALLBACK_Q.slice(i++ % 2).concat(FALLBACK_Q.slice(0, i % 2));
+    }
+    return buf.shift();
+  };
+}
+function mkStats() {
+  const S = { correct: 0, wrong: 0, streak: 0, best: 0, mark(ok) { if (ok) { S.correct++; S.streak++; if (S.streak > S.best) S.best = S.streak; } else { S.wrong++; S.streak = 0; } return S; } };
+  return S;
+}
+function fit(cv, w, h) {
+  const d = Math.min(2, (typeof devicePixelRatio === 'number' && devicePixelRatio) || 1);
+  cv.width = Math.max(1, Math.round(w * d)); cv.height = Math.max(1, Math.round(h * d));
+  cv.style.width = w + 'px'; cv.style.height = h + 'px';
+  const c = cv.getContext('2d'); c.setTransform(d, 0, 0, d, 0, 0); return c;
+}
+function loop(L, host, fn) {
+  let last = 0;
+  const f = (ts) => {
+    if (L.dead) return;
+    if (host.isConnected === false) { L.raf = 0; last = 0; L.after(() => { L.raf = requestAnimationFrame(f); }, 400); return; }
+    const dt = Math.min(0.05, last ? (ts - last) / 1000 : 0.016); last = ts;
+    try { fn(dt, ts); } catch (e) { if (typeof console !== 'undefined') console.error(e); }
+    L.raf = requestAnimationFrame(f);
+  };
+  L.raf = requestAnimationFrame(f);
+}
+function dims(host, env) { return { W: clamp(host.clientWidth || env.w || 380, 280, 760), H: clamp(env.h || host.clientHeight || 600, 420, 1100) }; }
+function rrect(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
+const fmtN = (n) => String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+function snd(env, n) { try { env.snd && env.snd.play(n); } catch (e) {} }
+// ---- einde hulpjes ----
