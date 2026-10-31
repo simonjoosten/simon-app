@@ -201,7 +201,7 @@ const tiny = { qs: [{ t: 'tf', q: 'Water is nat', a: true }, { t: 'mc', q: '1+1'
   ok(POS.length === 8, 'escape: posities');
   const sm = await smoke(mod, { seconds: 2500, extra: (host) => {
     const dg = findAll(host, e => e.className.includes('les-dg')); if (dg.length < 4) return;
-    const digits = dg.slice(0, 3).map(e => e.textContent); if (!(digits.every(d => /\d/.test(d)) && dg[3].textContent === '🗝')) return;
+    const digits = dg.slice(0, 3).map(e => e.textContent); if (!(digits.every(d => /\d/.test(d)) && /(^| )on( |$)/.test(dg[3].className))) return;
     const door = findAll(host, e => e.className.includes('les-door'))[0]; if (!door) return; door.click();
     const bs = findAll(host, e => e.tagName === 'BUTTON' && visible(e)); for (const d of digits) { const b = bs.find(x => x.textContent === d && x.className.includes('alt')); if (b) b.click(); } const okb = bs.find(x => x.textContent === 'OK'); if (okb) okb.click(); } });
   console.log('   escape smoke ended=' + sm.ended); ok(sm.ended && sm.end.win, 'escape: UI-run ontsnapt niet');

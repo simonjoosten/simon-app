@@ -272,7 +272,7 @@ const QS = [
   { t: 'mc', q: 'Hoeveel is 3 × 4?', a: '12', o: ['12', '7', '14', '9'] }, { t: 'type', q: 'Hoofdstad van Frankrijk?', a: 'Parijs' }, { t: 'tf', q: 'De zon is een ster.', a: true },
   { t: 'num', q: '5 + 6 = ?', a: 11 }, { t: 'mc', q: 'Wat is groen?', e: '🐸', a: 'kikker', o: ['kikker', 'banaan', 'zon', 'maan'] }, { t: 'type', q: 'dog', a: 'hond' },
 ];
-async function smoke(mod, { acc = 0.8, level = 2, maxSec = 900, fx = {} } = {}) {
+async function smoke(mod, { acc = 0.8, level = 2, maxSec = 900, fx = {}, startText = 'Tik om te beginnen' } = {}) {
   const fk = installFake(); const headBefore = DOC.head.children.length;
   const host = new FEl('div'); DOC.body.appendChild(host);
   const rand = mul(77); const pending = []; let ends = [], reports = 0, asks = 0, qi = 0;
@@ -284,7 +284,7 @@ async function smoke(mod, { acc = 0.8, level = 2, maxSec = 900, fx = {} } = {}) 
   let game, err = null;
   try {
     game = mod.default.create(host, env);
-    const start = findAll(host, e => e.tagName === 'BUTTON' && e.text().includes('Tik om te beginnen'))[0]; ok(start, 'startknop aanwezig'); start.click();
+    const start = findAll(host, e => e.tagName === 'BUTTON' && e.text().includes(startText))[0]; ok(start, 'startknop aanwezig'); start.click();
     const r = mul(1234);
     for (let step = 0; step < maxSec * 10 && !ends.length; step++) {
       await fk.advance(100);
@@ -294,7 +294,7 @@ async function smoke(mod, { acc = 0.8, level = 2, maxSec = 900, fx = {} } = {}) 
         // generieke keuzes van de speler
         const pick = pred => findAll(host, pred);
         for (const e of pick(e => /mo-card/.test(e.className)).slice(-1)) e.click();
-        for (const e of pick(e => /(^| )(rg-btn|ru-btn|me-btn|bo-btn)( |$)/.test(e.className) && !e.text().includes('Tik om te beginnen'))) e.click();
+        for (const e of pick(e => /(^| )(rg-btn|ru-btn|me-btn|bo-btn)( |$)/.test(e.className) && !/Tik om te beginnen|Eindeloos/.test(e.text()))) e.click();
         for (const e of pick(e => /bo-p/.test(e.className) && /pick/.test(e.className))) { e.click(); break; }
         for (const e of pick(e => /(^| )me-card( |$)/.test(e.className)).filter(() => r() < 0.3).slice(0, 2)) e.click();
         for (const e of pick(e => /pz-c( |$)/.test(e.className)).filter(() => r() < 0.2)) e.click();
@@ -319,6 +319,42 @@ for (const [id, mod] of [['pizza', P], ['monster', M], ['regen', R], ['memory', 
     const r = await smoke(mod, { acc: 0.8 }); info(id, 'score', r.score, 'win', r.win, '-', r.summary);
   });
   await t(`${id}: rooktest met weinig goede antwoorden en andere moeilijkheid`, async () => { await smoke(mod, { acc: 0.3, level: 3 }); });
+}
+
+/* ---------- 5. nieuwe inhoud (fase 2): toppings, modi, nieuwe meteoren/wapens ---------- */
+await t('pizza: 12 toppings met premium, spitsuur is korter en drukker', () => {
+  eq(P.TOPPINGS.length, 12); ok(P.TOPPINGS.slice(8).every(x => x.val > 1), 'nieuwe toppings zijn premium'); ok(P.TOPPINGS.every(x => x.icon && x.emoji));
+  const m = P.createPizza({ level: 2, rand: mul(5), rush: true }); eq(m.S.day, P.PIZZA_RUSH); ok(m.target === P.PIZZA_RUSH_TARGET[2]);
+  const n = P.createPizza({ level: 2, rand: mul(5) }); eq(n.S.day, P.PIZZA_DAY);
+  const m2 = P.createPizza({ level: 2, rand: mul(9) }); m2.S.up.menu = 3; const seen = new Set(); for (let i = 0; i < 80; i++) { m2.S.spawnIn = 0; m2.S.custs = []; m2.S.served = 1; m2.tick(0.1); for (const c of m2.S.custs) c.want.forEach(w => seen.add(w)); }
+  ok(P.TOPPINGS.slice(8).some(x => seen.has(x.id)), 'premium toppings komen voor bij een groot menu'); ok(seen.size > 8, 'meer dan de oorspronkelijke 8 soorten');
+  const m3 = P.createPizza({ level: 2, rand: mul(9) }); m3.tick(0.5); ok(m3.S.custs[0].want.every(w => P.TOPPINGS.slice(0, 8).some(x => x.id === w)), 'zonder menu-upgrade alleen de basis');
+});
+await t('pizza: spitsuur is haalbaar (bot 70%)', () => {
+  let wins = 0; for (let s = 1; s <= 20; s++) { const r = mul(s), m = P.createPizza({ level: 2, rand: r, rush: true }); let next = 4;
+    while (!m.done()) { m.tick(0.1); next -= 0.1; for (const id of ['oven', 'tables', 'scooter', 'helper', 'patience', 'menu', 'sign']) m.buy(id); if (next <= 0) { const c = m.urgent(); if (c) { m.answer(c.id, r() < 0.7); next = 4 * (0.8 + 0.4 * r()); } else next = 0.3; } }
+    if (m.S.earned >= m.target) wins++; }
+  ok(wins >= 8, 'spitsuur te moeilijk: ' + wins + '/20');
+});
+await t('monster: 18 monsters + baas, 8 wapens, 6 harnassen; arena eindigt na 3x flauwvallen', () => {
+  eq(M.MONSTERS.filter(x => !x.boss).length, 18); ok(M.MONSTERS.every(x => x.emoji && x.hp > 0)); eq(M.WEAPONS.length, 9); eq(M.ARMORS.length, 7); ok(M.WEAPONS.every((w, i) => i === 0 || w.atk > M.WEAPONS[i - 1].atk && w.cost > M.WEAPONS[i - 1].cost), 'wapens worden steeds beter');
+  const m = M.createMonster({ level: 2, rand: mul(3), endless: true }); m.S.lv = 9; ok(!m.options().some(o => o.boss), 'geen baas in arena');
+  const f = m.start(M.MONSTERS[0]); const hp0 = f.max; m.S.defeated = 20; const f2 = m.start(M.MONSTERS[0]); ok(f2.max > hp0 * 1.5, 'arena-monsters groeien mee'); ok(f2.extra >= 3);
+  for (let i = 0; i < 3; i++) { m.start(M.MONSTERS[3]); m.S.hp = 1; m.tick(100); } eq(m.S.fainted, 3); ok(m.done(), 'arena klaar na 3x flauwvallen');
+  const n = M.createMonster({ level: 2, rand: mul(3) }); n.S.fainted = 5; ok(!n.done(), 'gewone modus niet');
+});
+await t('regen: soorten meteoren, power-ups, noodbom en eindeloos', () => {
+  eq(Object.keys(R.METEORS).length, 5); eq(R.ITEM_KINDS.length, 5);
+  const m = R.createRain({ level: 2, rand: mul(21) }); m.S.wave = 4; const types = new Set(); for (let i = 0; i < 120; i++) { m.S.meteors = []; m.S.spawned = 0; m.S.spawnIn = 0; m.tick(0.01); m.S.meteors.forEach(x => types.add(x.type)); }
+  ok(types.size >= 4, 'meerdere soorten bij golf 4: ' + [...types]);
+  const g = R.createRain({ rand: mul(2) }); g.S.meteors.push({ id: 90, kind: 'rock', type: 'groot', hp: 2, x: .5, x0: .5, y: .3, v: 0, size: 1, spin: 0 }); g.S.sel = 90; let ev = g.answer(true); ok(ev[0].type === 'dent' && g.rocks().length === 1, '1e goede antwoord deukt'); ev = g.answer(true); ok(ev[0].type === 'kill' && g.rocks().length === 0, '2e doodt');
+  const k = R.createRain({ rand: mul(2) }); k.S.meteors.push({ id: 91, kind: 'rock', type: 'ijs', hp: 1, x: .5, x0: .5, y: .3, v: 0, size: 1, spin: 0 }); k.S.sel = 91; k.answer(true); ok(k.S.freeze >= 3, 'ijsbol bevriest');
+  const b = R.createRain({ rand: mul(3) }); b.S.coins = 500; ok(b.buy('nuke')); eq(b.S.nukes, 1); b.S.meteors.push({ id: 92, kind: 'rock', type: 'rots', hp: 1, x: .3, x0: .3, y: .2, v: 0, size: 1, spin: 0 }, { id: 93, kind: 'rock', type: 'rots', hp: 1, x: .6, x0: .6, y: .2, v: 0, size: 1, spin: 0 }); eq(b.nuke(), 2); eq(b.S.nukes, 0); eq(b.rocks().length, 0); eq(b.nuke(), 0);
+  const it = R.createRain({ rand: mul(4) }); it.S.items.push({ id: 80, kind: 'gold', x: .5, y: .2, life: 5 }, { id: 81, kind: 'shield', x: .5, y: .2, life: 5 }); const c0 = it.S.coins, s0 = it.S.shield; it.collect(80); it.collect(81); ok(it.S.coins > c0 && it.S.shield === s0 + 1);
+  const e = R.createRain({ rand: mul(5), endless: true }); e.S.wave = 6; e.S.spawned = e.S.total; e.S.meteors = []; const ev6 = e.tick(0.1); ok(ev6.some(x => x.type === 'wave-clear'), 'eindeloos gaat na golf 6 door'); eq(e.S.phase, 'shop');
+});
+for (const [mod, txt, nm] of [[P, 'Spitsuur', 'pizza spitsuur'], [M, 'Arena', 'monster arena'], [R, 'Eindeloos', 'regen eindeloos']]) {
+  await t(`${nm}: rooktest van de nieuwe modus`, async () => { const r = await smoke(mod, { acc: 0.7, startText: txt, maxSec: 1200 }); info(nm, r.score, r.summary); });
 }
 await t('rooktest: vroeg destroy (voor het begin en midden in het spel) laat niets achter', async () => {
   for (const mod of [P, M, R, G, U, B]) {

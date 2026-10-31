@@ -2,10 +2,17 @@
 // Elk onderdeel is een eigen module die pas geladen wordt als je erop tikt. Foto's blijven op je eigen toestel.
 
 const TABS = [
-  ['edit', '🖼️ Bewerken', './foto-edit.js?v=2', 'fotoEditView'],
-  ['gen', '✨ Genereer', './foto-collage-gen.js?v=2', 'collageGenView'],
-  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=2', 'collageFreeView'],
+  ['edit', '🖼️ Bewerken', './foto-edit.js?v=3', 'fotoEditView'],
+  ['gen', '✨ Genereer', './foto-collage-gen.js?v=3', 'collageGenView'],
+  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=3', 'collageFreeView'],
 ];
+
+// Op telefoon/tablet alleen image/* vragen: dan biedt iOS/Android 'Fotobibliotheek' en 'Foto maken' aan i.p.v. alleen de bestandenlijst.
+window.__fotoAccept = () => {
+  const ua = navigator.userAgent || '';
+  const touch = /iPhone|iPad|iPod|Android/i.test(ua) || (/Macintosh/.test(ua) && (navigator.maxTouchPoints || 0) > 1);
+  return touch ? 'image/*' : 'image/*,.heic,.heif';
+};
 
 // HEIC-foto's (uit je fotobibliotheek) kan niet elke browser lezen (Zen/Firefox niet). Dan zetten we ze om naar jpg.
 window.__fotoHeic = async (f) => {

@@ -229,7 +229,7 @@ export function collageGenView(ctx) {
   }
   const filled = () => { let c = 0; for (let i = 0; i < S.n; i++) if (S.photos[i]) c++; return c; };
   function pick(first, replace) {
-    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,.heic,.heif'; inp.multiple = !replace;
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = window.__fotoAccept ? window.__fotoAccept() : 'image/*,.heic,.heif'; inp.multiple = !replace;
     inp.onchange = () => { addFiles(inp.files || [], first, replace); };
     inp.click();
   }

@@ -139,7 +139,7 @@ const { newState, serialize, parseSave, derive, rates, offlineGain, Game, DISHES
 
 /* =================== 1. PURE LOGICA =================== */
 await t('inhoud: 40+ gerechten, 8 steden, 30+ missies, genoeg prestaties en decoratie', () => {
-  ok(DISHES.length >= 40, `gerechten ${DISHES.length}`); eq(CITIES.length, 8); ok(MISSIONS.length >= 30); ok(ACH.length >= 60, `prestaties ${ACH.length}`); ok(DECOR.length >= 20);
+  ok(DISHES.length >= 40, `gerechten ${DISHES.length}`); ok(CITIES.length >= 12); ok(MISSIONS.length >= 30); ok(ACH.length >= 60, `prestaties ${ACH.length}`); ok(DECOR.length >= 20);
   eq(new Set(DISHES.map((d) => d.id)).size, DISHES.length, 'unieke gerecht-id\'s');
   for (const d of DISHES) { for (const [id] of d.ing) ok(A.ING[id], `ingrediënt ${id} bestaat (${d.id})`); ok(d.price > 0 && d.cook > 0); }
   eq(DISH.bro.ing.length, 0, 'het broodje van het huis heeft geen ingrediënten (nooit vastlopen)');
@@ -361,6 +361,42 @@ await t('balans: franchise is haalbaar rond 1 tot 3 uur en maakt de volgende ron
   const gain = A.prestigeGain(S); ok(gain >= 2 && Number.isFinite(gain), `lepels bij eerste franchise: ${gain}`);
   const S2 = newState(0, { badges: gain, spent: 0, perks: {}, life: S.life, look: S.look, decor: [], placed: {}, mdone: {}, ach: {}, daily: S.daily, tut: 99, set: S.set, auto: S.auto });
   ok(rates(S2, 'active').coins > rates(newState(0), 'active').coins * 1.15, 'bonus werkt direct');
+});
+
+/* =================== 2b. FASE 2: NIEUWE INHOUD =================== */
+await t('nieuwe inhoud: aantallen, samenhang en iconen', async () => {
+  ok(DISHES.length >= 47 + 20 && CITIES.length >= 12 && UPG.length >= 14 && DECOR.length >= 24 + 14 && MISSIONS.length >= 38 && Object.keys(STAFF).length >= 7 && A.EVENTS.length >= 11, 'genoeg nieuwe dingen');
+  for (const d of DISHES) for (const [id, q] of d.ing) { ok(A.ING[id], 'ingrediënt bestaat ' + id); ok(q >= 1); }
+  eq(new Set(DECOR.map((d) => d.id)).size, DECOR.length, 'unieke decor-id\'s'); eq(new Set(UPG.map((d) => d.id)).size, UPG.length);
+  const ICONS = (await import('../docs/gfx/icons.js')).ICONS; const known = new Set(Object.values(ICONS).map((e) => e.replace(/\uFE0F/g, '')));
+  const newIds = ['kof', 'mai', 'app', 'koe', 'sma', 'cup', 'apf', 'wat', 'lol', 'fis', 'wor', 'ban', 'fon', 'esc', 'krb', 'dru', 'bdt', 'gei'];
+  for (const id of newIds) ok(known.has(DISH[id].e.replace(/\uFE0F/g, '')), 'icoon voor ' + id);
+  for (const id of ['zon', 'dgn', 'rak', 'gtr', 'rob', 'tro', 'wol', 'vli', 'hel', 'tul', 'bij', 'ten', 'win', 'tre']) ok(known.has(A.DECM[id].e.replace(/\uFE0F/g, '')), 'icoon voor decor ' + id);
+  for (let i = 1; i < CITIES.length; i++) ok(CITIES[i].w > CITIES[i - 1].w && CITIES[i].st >= CITIES[i - 1].st && CITIES[i].cost > CITIES[i - 1].cost, 'steden worden duurder en rijker');
+  for (const d of DISHES) ok(A.ingAvgCost(d, derive(newState(0), null)) < A.dishPrice(d, 1) * 0.9 + 1, 'gerecht ' + d.id + ' is winstgevend');
+});
+await t('nieuwe upgrades en personeel werken door in derive', () => {
+  const S = newState(0), D0 = derive(S, null);
+  S.up.rdr = 4; S.up.snd = 4; S.up.lux = 4; S.up.tip = 4; S.up.kor = 4; S.up.nac = 4; S.staff.mrk = 5; S.staff.chf = 5; const D1 = derive(S, null);
+  ok(D1.arrival > D0.arrival && D1.cookSpeed > D0.cookSpeed && D1.priceMul > D0.priceMul && D1.tip > D0.tip && D1.disc > D0.disc && D1.offEff > D0.offEff);
+  const P = parseSave(serialize(S)); eq(P.up.rdr, 4); eq(P.staff.mrk, 5);
+});
+await t('dagelijkse beloning dag 1 is bescheiden (ongeveer 10% van een gewoon eerste uur)', () => {
+  const S = newState(0), r = rates(S, 'active'); const d1 = A.dailyReward(S, 1), d7 = A.dailyReward(S, 7);
+  ok(d1 >= 60 && d1 < r.coins * 3600 * 0.1 * 0.5, 'dag 1: ' + d1); ok(d7 > d1 && d7 < d1 * 4, 'dag 7 is meer maar niet absurd: ' + d7);
+});
+await t('uiterlijk (skin) en intro-markeringen worden bewaard en gerepareerd', () => {
+  const S = newState(0); eq(S.set.skin, 'stad'); S.set.skin = 'winter'; S.set.seen = ['intro', 'star3'];
+  const P = parseSave(serialize(S)); eq(P.set.skin, 'winter'); eq(P.set.seen.length, 2);
+  const o = JSON.parse(serialize(S)); o.st = { snd: 1, mus: 1, skin: 'bestaatniet', seen: 'kapot' }; const Q = parseSave(JSON.stringify(o)); eq(Q.set.skin, 'stad'); ok(Array.isArray(Q.set.seen));
+  const old = JSON.parse(serialize(S)); old.st = { snd: 0, mus: 1 }; const R = parseSave(JSON.stringify(old)); eq(R.set.skin, 'stad'); eq(R.set.snd, 0);
+  eq(Object.keys(A.WORLD_SKINS).length, 4);
+});
+await t('tekenen met alle uiterlijken, nieuwe steden en kwaliteitsstanden zonder fouten', () => {
+  const calls = []; const ctx = new Proxy(function () {}, { get: (tg, pr) => (pr === 'createLinearGradient' || pr === 'createRadialGradient' ? () => ({ addColorStop() {} }) : pr === 'measureText' ? () => ({ width: 10 }) : () => { calls.push(pr); }), set: () => true });
+  for (const skin of Object.keys(A.WORLD_SKINS)) for (const c of CITIES) { const sk = A.drawSky(ctx, 21, 3, skin); A.drawSkyline(ctx, c.id, c.pal, sk.night, 2, skin); A.drawGround(ctx, sk.night, skin); A.drawWorldFx(ctx, skin, 4, sk.night, 2); A.drawWorldFx(ctx, skin, 4, 0, 0); }
+  for (const id of ['wol', 'vli', 'hel', 'lic']) A.drawSkyDecor(ctx, id, 3, 0.5);
+  ok(calls.length > 100);
 });
 
 /* =================== 3. DE VIEW IN EEN NEP-DOM =================== */

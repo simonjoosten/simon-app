@@ -1,6 +1,24 @@
 // Learn Spel – winkel, uiterlijk, prestaties en pure hub-logica (beloning, opslag, samenvoegen).
 // Hulpbestand van games.js. Pure functies zijn geëxporteerd voor tests (tools/test-learn-hub.mjs).
 import { Profile, esc, fmt } from './core.js?v=1';
+import { icon, has as hasIcon } from '../gfx/art.js?v=1';
+import { ICONS } from '../gfx/icons.js?v=1';
+import { WORLDS, Themes } from '../gfx/themes.js?v=1';
+
+/* ---------- 3D-iconen helpers (emoji blijft fallback) ---------- */
+const nrm = (e) => String(e == null ? '' : e).replace(/\uFE0F/g, '');
+const REV = new Map();
+for (const [n, e] of Object.entries(ICONS)) if (!REV.has(nrm(e))) REV.set(nrm(e), n);
+export const iconFor = (e) => REV.get(nrm(e)) || null;
+// icoon op naam
+export function ic(name, size = 28, cls = '') { try { return icon(name, { size, cls, alt: '' }); } catch { return esc(ICONS[name] || ''); } }
+// icoon voor een emoji (3D als er een bestaat, anders de emoji zelf)
+export function emo(e, size = 28) {
+  const n = iconFor(e);
+  if (n) { try { return icon(n, { size, alt: e }); } catch { /* emoji */ } }
+  return `<span class="lsp-emo" style="font-size:${Math.round(size * 0.82)}px;line-height:${size}px">${esc(e)}</span>`;
+}
+export { hasIcon };
 
 export const LV_NAMES = ['', 'Makkelijk', 'Normaal', 'Moeilijk'];
 export const LV_MULT = [0, 0.8, 1, 1.3];
@@ -42,49 +60,84 @@ export const BGS = [
   ['rainbow', 'Regenboog', 400, 12, 'linear-gradient(135deg,#ef4444,#f59e0b,#22c55e,#3b82f6,#8b5cf6)'],
 ];
 export const KINDS = { av: AVATARS, hat: HATS, bg: BGS };
+/* ---------- uitbreiding (fase 2): extra uiterlijk, effecten-sets en titels ---------- */
+export const EXTRA_AV = [['🐟', 'Visje', 70, 1], ['🐴', 'Paard', 90, 1], ['🐄', 'Koe', 90, 1], ['🐖', 'Varken', 90, 2], ['🐔', 'Kip', 100, 2], ['🐑', 'Schaap', 100, 2], ['🦆', 'Eend', 110, 3], ['🦀', 'Krab', 120, 3], ['🐋', 'Walvis', 160, 5], ['🐉', 'Draakje', 260, 7], ['🧚', 'Fee', 280, 8]];
+export const EXTRA_HAT = [['🎈', 'Ballon', 70, 1], ['🍩', 'Donut', 80, 1], ['🍦', 'IJsje', 80, 1], ['🍀', 'Klavertje', 90, 2], ['🎤', 'Microfoon', 100, 2], ['🏹', 'Boog', 110, 3], ['🔮', 'Kristal', 120, 3], ['🎂', 'Taart', 120, 3], ['🛡️', 'Schild', 130, 4], ['⚡', 'Bliksem', 140, 4], ['🚀', 'Raket', 160, 4], ['🧚', 'Fee', 200, 6], ['🦄', 'Eenhoorn', 240, 7], ['🐉', 'Draakje', 320, 9]];
+// achtergronden uit de werelden: id 'w-<wereld>'
+export const EXTRA_BG = WORLDS.map((w, i) => ['w-' + w.id, w.name, 50 + (i % 6) * 20, 1 + Math.floor(i / 3), `linear-gradient(160deg,${w.bg.join(',')})`]);
+// effecten-sets: confetti-iconen na een goed resultaat + gloed rond je avatar: [id, naam, prijs, vanaf level, iconen, kleur]
+export const FX_SETS = [
+  ['conf', 'Confetti', 0, 1, ['star', 'gift', 'balloon'], '#6366f1'], ['goud', 'Gouden regen', 60, 1, ['coin', 'gem', 'star'], '#f59e0b'], ['snoep', 'Snoepfeest', 80, 2, ['candy', 'lollipop', 'cupcake'], '#ec4899'],
+  ['vuur', 'Vuurwerk', 110, 3, ['flame', 'bolt', 'star'], '#ef4444'], ['bloem', 'Bloemenpracht', 120, 4, ['flower', 'butterfly', 'clover'], '#22c55e'], ['zee', 'Zeeregen', 140, 5, ['fish', 'shell', 'whale'], '#0ea5e9'],
+  ['ruimte', 'Sterrenstof', 180, 6, ['rocket', 'planet', 'comet'], '#8b5cf6'], ['feest', 'Feestparade', 240, 8, ['trophy', 'crown', 'medal'], '#eab308'],
+];
+export const TITLES = [
+  ['', 'Geen titel', 0, 1], ['nieuw', 'Nieuweling', 0, 1], ['slim', 'Slimmerik', 40, 1], ['reken', 'Rekenaar', 60, 2], ['taal', 'Taalheld', 60, 2], ['quiz', 'Quizkoning', 90, 3],
+  ['reeks', 'Reeksmeester', 110, 4], ['schat', 'Schatzoeker', 130, 5], ['reiz', 'Wereldreiziger', 150, 6], ['brein', 'Superbrein', 220, 8], ['held', 'Leerheld', 300, 10], ['legend', 'Legende', 500, 15],
+];
+export const TITLE_NAME = Object.fromEntries(TITLES.map((t) => [t[0], t[1]]));
+export const EXTRA = { av: EXTRA_AV, hat: EXTRA_HAT, bg: EXTRA_BG };
+export const EXTRA_COUNT = EXTRA_AV.length + EXTRA_HAT.length + EXTRA_BG.length + FX_SETS.length - 1 + TITLES.length - 2;
+export const KIND_ICON = { up: 'bolt', av: 'fox', hat: 'crown', bg: 'rainbow', fx: 'gift', title: 'medal' };
+export const fxSet = (id) => FX_SETS.find((x) => x[0] === id) || FX_SETS[0];
 const CK = { av: 'avatar', hat: 'hat', bg: 'bg' };
 // Als core.js een eigen uiterlijk-catalogus heeft (Profile.COSMETICS), gebruiken we die zodat Study en Spel hetzelfde zien.
 // Anders valt de hub terug op de eigen catalogus hierboven. Item = [id, naam, prijs, vanaf-level].
 function coreCos(kind) { try { return Profile.COSMETICS && Profile.COSMETICS[CK[kind]]; } catch { return null; } }
-export function catalog(kind) {
+function baseCatalog(kind) {
   const c = coreCos(kind);
   if (!c) return KINDS[kind] || [];
   const mine = new Map((KINDS[kind] || []).map((x) => [x[0], x[1]]));
   return c.map((x) => [x.id, mine.get(x.id) || (x.name && x.name !== x.id ? x.name : (kind === 'hat' && !x.id ? 'Geen hoed' : (kind === 'av' ? '' : x.name || x.id))), x.cost | 0, 1]);
 }
+export function catalog(kind) {
+  if (kind === 'fx') return FX_SETS.map((x) => x.slice(0, 4));
+  if (kind === 'title') return TITLES;
+  const base = baseCatalog(kind), ids = new Set(base.map((x) => x[0]));
+  return [...base, ...(EXTRA[kind] || []).filter((x) => !ids.has(x[0])).map((x) => x.slice(0, 4))];
+}
+// extra-item = niet in de core-catalogus (eigendom staat dan in de hub-opslag, betalen met Profile.spend)
+function isExtraItem(kind, id) { const c = coreCos(kind); return !c || !c.some((x) => x.id === id); }
 const catItem = (kind, id) => catalog(kind).find((x) => x[0] === id);
 function isOwned(kind, id, price, d) {
   if (price === 0) return true;
-  try { if (coreCos(kind) && Profile.owns) return !!Profile.owns(CK[kind], id); } catch {}
-  return d.own[kind].includes(id);
+  try { if (coreCos(kind) && !isExtraItem(kind, id) && Profile.owns) return !!Profile.owns(CK[kind], id); } catch {}
+  return (d.own[kind] || []).includes(id);
 }
 
 export function bgCss(id) {
+  if (typeof id === 'string' && id.startsWith('w-')) { const w = WORLDS.find((x) => 'w-' + x.id === id); if (w) return `linear-gradient(160deg,${w.bg.join(',')})`; }
   try { if (coreCos('bg') && Profile.bgCss && coreCos('bg').some((x) => x.id === id)) return Profile.bgCss(id); } catch {}
   const b = BGS.find((x) => x[0] === id);
   if (b) return b[4];
   if (typeof id === 'string' && /^(#|linear|radial|rgb|hsl)/.test(id)) return id;
   return BGS[0][4];
 }
-export function avatarHTML(av, size = 56) {
+export function avatarHTML(av, size = 56, ring = '') {
   av = av || {};
-  const s = size, fs = Math.round(s * 0.58), hs = Math.round(s * 0.34);
-  return `<span class="lsp-av" style="width:${s}px;height:${s}px;background:${bgCss(av.bg)}"><span class="lsp-av-e" style="font-size:${fs}px">${esc(av.emoji || '🙂')}</span>${av.hat ? `<span class="lsp-av-h" style="font-size:${hs}px;top:${-Math.round(hs * 0.45)}px">${esc(av.hat)}</span>` : ''}</span>`;
+  const s = size, fs = Math.round(s * 0.62), hs = Math.round(s * 0.42);
+  const rg = ring ? `;box-shadow:0 0 0 3px ${esc(ring)},0 0 ${Math.round(s * 0.3)}px ${esc(ring)}99` : '';
+  return `<span class="lsp-av" style="width:${s}px;height:${s}px;background:${bgCss(av.bg)}${rg}"><span class="lsp-av-e" style="font-size:${fs}px">${emo(av.emoji || '🙂', fs)}</span>${av.hat ? `<span class="lsp-av-h" style="font-size:${hs}px;top:${-Math.round(hs * 0.5)}px">${emo(av.hat, hs)}</span>` : ''}</span>`;
 }
 
 /* ---------- hub-opslag (eigen deel naast Profile) ---------- */
 export function defaultHub() {
   return {
-    v: 1, t: 0, own: { av: [], hat: [], bg: [] }, best: {}, played: {}, last: [], fav: [], kits: {},
+    v: 1, t: 0, own: { av: [], hat: [], bg: [], fx: [], title: [] }, eq: { fx: 'conf', title: '' }, wp: {}, wl: [], intro: 1, best: {}, played: {}, last: [], fav: [], kits: {},
     lastKit: '', level: 2, types: [], ach: {},
     stats: { games: 0, wins: 0, correct: 0, wrong: 0, answers: 0, bestStreak: 0, perfect: 0, hard: 0, hardWins: 0, duels: 0, duelWins: 0, coinsEarned: 0, claimed: 0, upBuys: 0 },
   };
 }
+const WP_MAX = 6;
 export function normHub(x) {
   const d = defaultHub();
   if (!x || typeof x !== 'object') return d;
   for (const k of ['own', 'best', 'played', 'kits', 'ach', 'stats']) if (x[k] && typeof x[k] === 'object') Object.assign(d[k], x[k]);
-  for (const k of ['av', 'hat', 'bg']) if (!Array.isArray(d.own[k])) d.own[k] = [];
+  for (const k of ['av', 'hat', 'bg', 'fx', 'title']) if (!Array.isArray(d.own[k])) d.own[k] = [];
+  if (x.eq && typeof x.eq === 'object') for (const k of ['fx', 'title']) if (typeof x.eq[k] === 'string') d.eq[k] = x.eq[k].slice(0, 12);
+  if (x.wp && typeof x.wp === 'object') for (const g of Object.keys(x.wp).slice(0, 30)) if (Array.isArray(x.wp[g])) d.wp[g] = x.wp[g].filter((v) => typeof v === 'string').slice(0, WP_MAX);
+  if (Array.isArray(x.wl)) d.wl = [...new Set(x.wl.filter((v) => typeof v === 'string'))].slice(0, 40);
+  if (x.intro === 0) d.intro = 0;
   for (const k of ['last', 'fav', 'types']) if (Array.isArray(x[k])) d[k] = x[k].filter((v) => typeof v === 'string').slice(0, 40);
   if (typeof x.lastKit === 'string') d.lastKit = x.lastKit;
   if ([1, 2, 3].includes(x.level)) d.level = x.level;
@@ -97,7 +150,10 @@ export function mergeHub(a, b) {
   const newer = a.t >= b.t ? a : b, older = newer === a ? b : a;
   const o = defaultHub();
   o.t = Math.max(a.t, b.t);
-  for (const k of ['av', 'hat', 'bg']) o.own[k] = [...new Set([...a.own[k], ...b.own[k]])];
+  for (const k of ['av', 'hat', 'bg', 'fx', 'title']) o.own[k] = [...new Set([...a.own[k], ...b.own[k]])];
+  o.eq = { ...newer.eq }; o.intro = newer.intro;
+  for (const g of new Set([...Object.keys(a.wp), ...Object.keys(b.wp)])) o.wp[g] = [...new Set([...(a.wp[g] || []), ...(b.wp[g] || [])])].slice(0, WP_MAX);
+  o.wl = [...new Set([...a.wl, ...b.wl])];
   for (const id of new Set([...Object.keys(a.best), ...Object.keys(b.best)])) {
     const x = a.best[id], y = b.best[id];
     o.best[id] = !x ? y : !y ? x : (x.score >= y.score ? x : y);
@@ -137,6 +193,20 @@ export function displayAnswer(q) {
   }
 }
 
+// Houd bij in welke werelden elk spel gespeeld is (compact: max WP_MAX per spel).
+export function noteWorld(d, game, world) {
+  if (!game || !world) return;
+  const l = d.wp[game] || (d.wp[game] = []);
+  if (!l.includes(world) && l.length < WP_MAX) l.push(world);
+  if (!d.wl.includes(world)) d.wl.push(world);
+}
+// Cloud-versie van de hub, binnen de limiet (20000 tekens per gamesave): schrapt stap voor stap het minst belangrijke.
+export function hubForCloud(d, max = 17500) {
+  let c = d, s = JSON.stringify(c);
+  const steps = [(x) => ({ ...x, kits: {} }), (x) => ({ ...x, wp: Object.fromEntries(Object.entries(x.wp).map(([g, l]) => [g, l.slice(0, 3)])) }), (x) => ({ ...x, best: Object.fromEntries(Object.entries(x.best).map(([g, b]) => [g, { score: b.score, level: b.level, t: b.t }])) }), (x) => ({ ...x, played: {}, fav: [], last: [] })];
+  for (const f of steps) { if (s.length <= max) break; c = f(c); s = JSON.stringify(c); }
+  return s;
+}
 // Verwerk een spelresultaat in de hub-data. Geeft { newRecord, prevBest } terug.
 export function applyResult(d, r, now = Date.now()) {
   const s = d.stats;
@@ -147,6 +217,7 @@ export function applyResult(d, r, now = Date.now()) {
   if (r.level === 3) { s.hard++; if (r.win === true) s.hardWins++; }
   if (r.coins) s.coinsEarned += r.coins;
   d.played[r.game] = (d.played[r.game] || 0) + 1;
+  if (r.world) noteWorld(d, r.game, r.world);
   if (r.kitId && !String(r.kitId).startsWith('duel-')) d.kits[r.kitId] = 1;
   d.last = [r.game, ...d.last.filter((x) => x !== r.game)].slice(0, 6);
   const prev = d.best[r.game];
@@ -199,6 +270,15 @@ export const HUB_ACH = [
   A('h-m5000', '💰', 'Rijk', 'Verdien 5000 munten met spellen.', 100, (s) => [s.stats.coinsEarned, 5000]),
   A('h-o5', '👗', 'Modebewust', 'Bezit 5 uiterlijk-items.', 30, (s) => [s.owned, 5]),
   A('h-o15', '🎭', 'Verkleedkist', 'Bezit 15 uiterlijk-items.', 100, (s) => [s.owned, 15]),
+  A('h-wr3', '🌈', 'Drie werelden', 'Speel in 3 verschillende werelden.', 20, (s) => [s.worlds, 3]),
+  A('h-wr9', '🧭', 'Wereldburger', 'Speel in 9 verschillende werelden.', 80, (s) => [s.worlds, 9]),
+  A('h-wr18', '🌍', 'Alle werelden', 'Speel in alle 18 werelden.', 300, (s) => [s.worlds, 18]),
+  A('h-wg1', '🎭', 'Een spel, drie werelden', 'Speel één spel in 3 verschillende werelden.', 40, (s) => [s.wg1, 1]),
+  A('h-wg3', '🎪', 'Drie spellen, drie werelden', 'Speel 3 spellen elk in 3 werelden.', 120, (s) => [s.wg1, 3]),
+  A('h-wg9', '🎠', 'Negen spellen, drie werelden', 'Speel 9 spellen elk in 3 werelden.', 250, (s) => [s.wg1, 9]),
+  A('h-wg18', '👑', 'Wereldkampioen', 'Speel alle 18 spellen elk in 3 werelden.', 600, (s) => [s.wg1, 18]),
+  A('h-o30', '🛍️', 'Winkelfan', 'Bezit 30 uiterlijk-items.', 150, (s) => [s.owned, 30]),
+  A('h-o60', '🏬', 'Winkelkoning', 'Bezit 60 uiterlijk-items.', 300, (s) => [s.owned, 60]),
   A('h-q1', '📅', 'Opdracht klaar', 'Haal een dagopdracht op.', 10, (s) => [s.stats.claimed, 1]),
   A('h-q10', '🗓️', 'Dagelijkse held', 'Haal 10 dagopdrachten op.', 80, (s) => [s.stats.claimed, 10]),
 ];
@@ -206,7 +286,8 @@ export function hubSnapshot(d, extra = {}) {
   const own = d.own;
   return {
     stats: d.stats, distinct: Object.keys(d.played).filter((k) => d.played[k] > 0 && !k.startsWith('_')).length,
-    kitCount: Object.keys(d.kits).length, owned: own.av.length + own.hat.length + own.bg.length,
+    kitCount: Object.keys(d.kits).length, owned: own.av.length + own.hat.length + own.bg.length + own.fx.length + own.title.length,
+    worlds: d.wl.length, wg1: Object.keys(d.wp).filter((g) => d.wp[g].length >= 3).length,
     level: extra.level || 1, upLevels: extra.upLevels || 0,
   };
 }
@@ -247,11 +328,14 @@ export function upLevelsTotal() {
   return n;
 }
 
+export function titleOf(d) { return d && d.eq && d.eq.title ? (TITLE_NAME[d.eq.title] || '') : ''; }
+export function ringOf(d) { return d && d.eq ? fxSet(d.eq.fx)[5] : ''; }
 export function shopHTML(api) {
   const p = Profile.get(), d = api.store.d, tab = api.S.shopTab || 'up';
-  const tabs = [['up', '⚡ Upgrades'], ['av', '🦊 Avatars'], ['hat', '🎩 Hoeden'], ['bg', '🎨 Achtergronden']];
-  let h = `<div class="lsp-card2 lsp-preview">${avatarHTML(p.avatar, 84)}<div style="flex:1;min-width:0"><b>Je naam</b><input class="lsp-search" data-inp="pname" maxlength="20" value="${esc(p.name || '')}" placeholder="Jouw naam" style="width:100%;margin:4px 0"><small>🪙 ${fmt(p.coins || 0)} munten</small></div></div>`;
-  h += `<div class="lsp-chips">${tabs.map(([k, l]) => `<button class="lsp-chip${tab === k ? ' on' : ''}" data-act="shop-tab" data-v="${k}">${l}</button>`).join('')}</div>`;
+  const tabs = [['up', 'Upgrades'], ['av', 'Avatars'], ['hat', 'Hoeden'], ['bg', 'Achtergronden'], ['fx', 'Effecten'], ['title', 'Titels']];
+  const ttl = titleOf(d);
+  let h = `<div class="lsp-card2 lsp-preview">${avatarHTML(p.avatar, 96, ringOf(d))}<div style="flex:1;min-width:0"><b>Je naam</b><input class="lsp-search" data-inp="pname" maxlength="20" value="${esc(p.name || '')}" placeholder="Jouw naam" style="width:100%;margin:4px 0"><small>${ttl ? ic('medal', 18) + ' ' + esc(ttl) + ' · ' : ''}${ic('coin', 20)} <b>${fmt(p.coins || 0)}</b> munten</small></div></div>`;
+  h += `<div class="lsp-chips big">${tabs.map(([k, l]) => `<button class="lsp-chip${tab === k ? ' on' : ''}" data-act="shop-tab" data-v="${k}">${ic(KIND_ICON[k], 24)}<span>${l}</span></button>`).join('')}</div>`;
   if (tab === 'up') {
     const ups = Profile.UPGRADES || [];
     let fxAll = ''; try { fxAll = fxText(Profile.effects()); } catch {}
@@ -261,9 +345,9 @@ export function shopHTML(api) {
     for (const u of ups) {
       const lv = (p.up && p.up[u.id]) || 0, i = upgradeInfo(u, lv), can = !i.maxed && (p.coins || 0) >= i.cost;
       const pips = Array.from({ length: Math.min(u.max, 12) }, (_, k) => `<i class="${k < lv ? 'on' : ''}"></i>`).join('');
-      h += `<div class="lsp-up"><div class="lsp-up-e">${esc(u.emoji)}</div><div class="lsp-up-m"><b>${esc(u.name)}</b> <small>Lv ${lv}/${u.max}</small><div class="lsp-pips">${pips}</div><small>${esc(u.desc)}</small>
-        ${i.next ? `<small class="lsp-nx">${i.cur ? `Nu: ${esc(i.cur)} → ` : 'Straks: '}${esc(i.next)}</small>` : (i.maxed ? '<small class="lsp-nx">Maximaal! 🎉</small>' : '')}</div>
-        <button class="lsp-buy" data-act="buy-up" data-id="${esc(u.id)}" ${can ? '' : 'disabled'}>${i.maxed ? 'MAX' : `🪙 ${fmt(i.cost)}`}</button></div>`;
+      h += `<div class="lsp-up"><div class="lsp-up-e">${emo(u.emoji, 52)}</div><div class="lsp-up-m"><b>${esc(u.name)}</b> <small style="display:inline">Lv ${lv}/${u.max}</small><div class="lsp-pips">${pips}</div><small>${esc(u.desc)}</small>
+        ${i.next ? `<small class="lsp-nx">${i.cur ? `Nu: ${esc(i.cur)} → ` : 'Straks: '}${esc(i.next)}</small>` : (i.maxed ? '<small class="lsp-nx">Maximaal!</small>' : '')}</div>
+        <button class="lsp-buy" data-act="buy-up" data-id="${esc(u.id)}" ${can ? '' : 'disabled'}>${i.maxed ? 'MAX' : `${ic('coin', 22)} ${fmt(i.cost)}`}</button></div>`;
     }
     h += '</div>';
   } else {
@@ -271,9 +355,12 @@ export function shopHTML(api) {
     h += '<div class="lsp-cosgrid">';
     for (const it of list) {
       const [id, name, price, lv] = it, owned = isOwned(tab, id, price, d), locked = !owned && lvl < lv;
-      const eq = tab === 'av' ? av.emoji === id : tab === 'hat' ? (av.hat || '') === id : av.bg === id;
-      const prev = tab === 'av' ? avatarHTML({ ...av, emoji: id }, 48) : tab === 'hat' ? avatarHTML({ ...av, hat: id }, 48) : avatarHTML({ ...av, bg: id }, 48);
-      h += `<button class="lsp-cos${eq ? ' eq' : ''}${locked ? ' lock' : ''}" data-act="${owned ? 'equip' : 'buy-cos'}" data-k="${tab}" data-id="${esc(id)}" ${locked ? 'disabled' : ''}>${prev}<span class="n">${esc(name) || '&nbsp;'}</span><span class="p">${eq ? '✔ Aan' : owned ? 'Gebruik' : locked ? `🔒 Level ${lv}` : `🪙 ${price}`}</span></button>`;
+      const eq = tab === 'av' ? av.emoji === id : tab === 'hat' ? (av.hat || '') === id : tab === 'bg' ? av.bg === id : (d.eq[tab] || '') === id;
+      let prev;
+      if (tab === 'fx') { const f = fxSet(id); prev = `<span class="lsp-fxprev" style="--fc:${f[5]}">${f[4].map((n) => ic(n, 30)).join('')}</span>`; }
+      else if (tab === 'title') prev = `<span class="lsp-ttlprev">${ic('medal', 40)}</span>`;
+      else prev = tab === 'av' ? avatarHTML({ ...av, emoji: id }, 64) : tab === 'hat' ? avatarHTML({ ...av, hat: id }, 64) : avatarHTML({ ...av, bg: id }, 64);
+      h += `<button class="lsp-cos${eq ? ' eq' : ''}${locked ? ' lock' : ''}" data-act="${owned ? 'equip' : 'buy-cos'}" data-k="${tab}" data-id="${esc(id)}" ${locked ? 'disabled' : ''}>${prev}<span class="n">${esc(name) || '&nbsp;'}</span><span class="p">${eq ? '✔ Aan' : owned ? 'Gebruik' : locked ? `${ic('lock', 18)} Level ${lv}` : `${ic('coin', 18)} ${price}`}</span></button>`;
     }
     h += '</div>';
   }
@@ -288,7 +375,7 @@ export function shopAct(act, data, api) {
     const u = (Profile.UPGRADES || []).find((x) => x.id === data.id); if (!u) return true;
     const before = (p.up && p.up[u.id]) || 0;
     let ok = false; try { ok = Profile.buyUpgrade(u.id); } catch {}
-    if (ok) { d.stats.upBuys++; api.snd('munt'); api.toast(`${u.emoji} ${u.name} → level ${before + 1}`); api.afterChange(); }
+    if (ok) { d.stats.upBuys++; api.snd('munt'); api.toast(`${u.name} → level ${before + 1}`); api.afterChange(); }
     else { api.snd('fout'); api.toast('Niet genoeg munten.'); }
     api.rerender(); return true;
   }
@@ -298,15 +385,17 @@ export function shopAct(act, data, api) {
     if (isOwned(data.k, it[0], it[2], d)) return true;
     if (lvl < it[3]) { api.toast(`Dit krijg je op level ${it[3]}.`); return true; }
     let ok = false;
-    try { ok = (coreCos(data.k) && Profile.buyCosmetic) ? Profile.buyCosmetic(CK[data.k], it[0]) : Profile.spend(it[2]); } catch {}
+    try { ok = (coreCos(data.k) && !isExtraItem(data.k, it[0]) && Profile.buyCosmetic) ? Profile.buyCosmetic(CK[data.k], it[0]) : Profile.spend(it[2]); } catch {}
     if (!ok) { api.snd('fout'); api.toast('Niet genoeg munten.'); return true; }
+    if (!d.own[data.k]) d.own[data.k] = [];
     if (!d.own[data.k].includes(it[0])) d.own[data.k].push(it[0]);
-    api.snd('munt'); equip(data.k, it[0], p); api.toast(`${it[1] || 'Nieuw'} gekocht en aangedaan!`); api.afterChange(); api.rerender(); return true;
+    api.snd('munt'); equip(data.k, it[0], p, d); api.toast(`${it[1] || 'Nieuw'} gekocht en aangedaan!`); api.afterChange(); api.rerender(); return true;
   }
-  if (act === 'equip') { equip(data.k, data.id, p); api.snd('klik'); api.rerender(); return true; }
+  if (act === 'equip') { equip(data.k, data.id, p, d); api.store.save(); api.snd('klik'); api.rerender(); return true; }
   return false;
 }
-function equip(kind, id, p) {
+function equip(kind, id, p, d) {
+  if (kind === 'fx' || kind === 'title') { if (d) d.eq[kind] = id; return; }
   const av = { emoji: '🙂', hat: '', bg: 'sky', ...(p.avatar || {}) };
   if (kind === 'av') av.emoji = id; else if (kind === 'hat') av.hat = id; else av.bg = id;
   try { Profile.setAvatar(av); } catch {}
@@ -321,11 +410,11 @@ export function achHTML(api) {
     ...HUB_ACH.map((a) => { const p = achProgress(d, a, extra); return { emoji: a.emoji, name: a.name, desc: a.desc, done: !!d.ach[a.id], p, reward: a.reward }; }),
   ];
   const done = rows.filter((r) => r.done).length;
-  let h = `<div class="lsp-card2"><b>🎖️ Prestaties</b><small>${done} van ${rows.length} behaald</small><div class="lsp-xp"><i style="width:${Math.round(100 * done / Math.max(1, rows.length))}%"></i></div></div><div class="lsp-list">`;
+  let h = `<div class="lsp-card2 lsp-achhead">${ic('trophy', 64)}<div style="flex:1;min-width:0"><b>Prestaties</b><small>${done} van ${rows.length} behaald</small><div class="lsp-xp"><i style="width:${Math.round(100 * done / Math.max(1, rows.length))}%"></i></div></div></div><div class="lsp-list">`;
   rows.sort((a, b) => (b.done ? 1 : 0) - (a.done ? 1 : 0));
   for (const r of rows) {
     const pct = r.p ? Math.min(100, Math.round(100 * r.p[0] / r.p[1])) : (r.done ? 100 : 0);
-    h += `<div class="lsp-ach${r.done ? ' done' : ''}"><div class="lsp-ach-e">${esc(r.emoji || '🏅')}</div><div class="lsp-ach-m"><b>${esc(r.name)}</b><small>${esc(r.desc)}</small>${r.done ? '' : r.p ? `<div class="lsp-xp s"><i style="width:${pct}%"></i></div><small>${fmt(Math.min(r.p[0], r.p[1]))} / ${fmt(r.p[1])}${r.reward ? ` · beloning 🪙 ${r.reward}` : ''}</small>` : ''}</div>${r.done ? '<span class="lsp-ok">✔</span>' : ''}</div>`;
+    h += `<div class="lsp-ach${r.done ? ' done' : ''}"><div class="lsp-ach-e">${r.done ? emo(r.emoji || '🏅', 48) : `<span class="dim">${emo(r.emoji || '🏅', 48)}</span>`}</div><div class="lsp-ach-m"><b>${esc(r.name)}</b><small>${esc(r.desc)}</small>${r.done ? '' : r.p ? `<div class="lsp-xp s"><i style="width:${pct}%"></i></div><small>${fmt(Math.min(r.p[0], r.p[1]))} / ${fmt(r.p[1])}${r.reward ? ` · beloning ${ic('coin', 16)} ${r.reward}` : ''}</small>` : ''}</div>${r.done ? ic('medal', 34) : ''}</div>`;
   }
   return h + '</div>';
 }
@@ -473,4 +562,90 @@ export const CSS = `
 @keyframes lspPulse{50%{transform:scale(1.06)}}
 @keyframes lspFall{to{transform:translateY(110vh) rotate(540deg);opacity:.8}}
 @media(prefers-reduced-motion:reduce){.lsp *{animation:none!important;transition:none!important}}
+/* ---- fase 2: groter, royaler, met 3D-iconen ---- */
+.lsp{font-size:calc(16px*var(--gfx-font,1));max-width:880px}
+.lsp img.gfx-icon{vertical-align:middle;flex:none;filter:drop-shadow(0 2px 3px rgba(0,0,0,.25))}
+.lsp .lsp-emo{display:inline-block;text-align:center}
+.lsp-head{padding:14px;gap:14px;border-radius:22px;background:linear-gradient(135deg,var(--card),rgba(99,102,241,.12))}
+.lsp-name{font-size:calc(19px*var(--gfx-font,1))}
+.lsp-ttl{display:flex;align-items:center;gap:4px;font-size:12.5px;font-weight:700;opacity:.8}
+.lsp-coins{display:flex;align-items:center;gap:6px;font-size:calc(18px*var(--gfx-font,1));padding:8px 14px 8px 8px}
+.lsp-gear{flex:none;width:calc(48px*var(--gfx-scale,1));height:calc(48px*var(--gfx-scale,1));border:1px solid var(--line);background:var(--card);border-radius:14px;font-size:24px;line-height:1}
+.lsp-xp{height:12px}
+.lsp-nav button{display:flex;align-items:center;gap:6px;padding:10px 16px;font-size:calc(15px*var(--gfx-font,1));min-height:calc(46px*var(--gfx-scale,1))}
+.lsp-card2{border-radius:20px;padding:14px 16px}
+.lsp-sectitle{display:flex;align-items:center;gap:10px;font-size:calc(18px*var(--gfx-font,1))!important}
+.lsp-btn{min-height:calc(46px*var(--gfx-scale,1));border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.lsp-chip{min-height:calc(40px*var(--gfx-scale,1));padding:8px 14px;font-size:calc(14px*var(--gfx-font,1));display:inline-flex;align-items:center;gap:6px}
+.lsp-chips.big .lsp-chip{padding:8px 14px 8px 10px;font-weight:700}
+.lsp-q{gap:12px;padding:10px 0}
+.lsp-q-i{flex:none;width:46px;height:46px;border-radius:14px;background:linear-gradient(135deg,rgba(250,204,21,.35),rgba(245,158,11,.2));display:flex;align-items:center;justify-content:center}
+.lsp-claim{display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:14px;min-height:46px}
+.lsp-kitbtn{padding:14px 16px;border-radius:18px}
+.lsp-kitbtn .e{font-size:32px}
+/* spelkaarten */
+.lsp-grid{grid-template-columns:repeat(2,1fr);gap:calc(12px*var(--gfx-scale,1))}
+@media(min-width:620px){.lsp-grid{grid-template-columns:repeat(3,1fr)}}
+.lsp-gc{border-radius:24px;padding:calc(14px*var(--gfx-scale,1));min-height:calc(224px*var(--gfx-scale,1));gap:4px;background:radial-gradient(circle at 78% 18%,rgba(255,255,255,.34),transparent 55%),linear-gradient(155deg,var(--c),rgba(0,0,0,.42) 200%),var(--c);box-shadow:0 5px 14px rgba(0,0,0,.22)}
+.lsp-gc-ic{display:flex;justify-content:center;align-items:center;height:calc(96px*var(--gfx-scale,1));margin:2px 0 0;position:relative}
+.lsp-gc-ic img.gfx-icon,.lsp-gc-ic .gfx-emoji{filter:drop-shadow(0 6px 5px rgba(0,0,0,.35))}
+.lsp-gc-deco{position:absolute;right:-4px;bottom:-4px;opacity:.9}
+.lsp-gc-deco img.gfx-icon{filter:drop-shadow(0 2px 2px rgba(0,0,0,.3))}
+.lsp-gc b{font-size:calc(17px*var(--gfx-font,1));text-shadow:0 1px 2px rgba(0,0,0,.25)}
+.lsp-gc small{font-size:calc(12.5px*var(--gfx-font,1));line-height:1.3}
+.lsp-wchip{display:inline-flex;align-items:center;gap:4px;align-self:flex-start;border:0;background:rgba(0,0,0,.28);color:#fff!important;border-radius:99px;padding:3px 10px 3px 4px;font-size:11.5px;font-weight:800;min-height:28px;margin-top:2px}
+.lsp-gc-f{display:flex;align-items:center;gap:4px;flex-wrap:wrap}
+.lsp-tags i{font-size:11px}
+.lsp-fav{font-size:24px;padding:6px 8px;right:4px;top:2px;z-index:2;text-shadow:0 1px 3px rgba(0,0,0,.4)}
+.lsp-rc{padding:10px 14px;border-radius:18px;font-size:calc(14px*var(--gfx-font,1))}
+.lsp.q1 .lsp-gc-ic img.gfx-icon,.lsp.q2 .lsp-gc-ic img.gfx-icon{animation:lspFloat 3.2s ease-in-out infinite}
+.lsp.q2 .lsp-gc::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.22) 50%,transparent 60%);transform:translateX(-120%);animation:lspShine 5s ease-in-out infinite;pointer-events:none}
+.lsp.q2 .lsp-gc{box-shadow:0 10px 24px rgba(0,0,0,.3),0 0 18px color-mix(in srgb,var(--c) 45%,transparent)}
+.lsp.q1 .lsp-gc{box-shadow:0 8px 18px rgba(0,0,0,.26)}
+.lsp.rm *{animation:none!important;transition:none!important}
+@keyframes lspFloat{50%{transform:translateY(-6px) rotate(2deg)}}
+@keyframes lspShine{0%,60%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+/* winkel, prestaties */
+.lsp-up,.lsp-ach{border-radius:20px;padding:12px 14px;gap:14px}
+.lsp-up-e,.lsp-ach-e{width:60px;height:60px;border-radius:18px;background:linear-gradient(135deg,rgba(99,102,241,.18),rgba(236,72,153,.14));display:flex;align-items:center;justify-content:center}
+.lsp-ach-e .dim{opacity:.4;filter:grayscale(.7);display:inline-flex}
+.lsp-buy{display:inline-flex;align-items:center;gap:4px;border-radius:14px;padding:12px;min-width:92px;min-height:48px;justify-content:center}
+.lsp-achhead{display:flex;align-items:center;gap:14px}
+.lsp-cosgrid{grid-template-columns:repeat(3,1fr);gap:10px}
+@media(min-width:620px){.lsp-cosgrid{grid-template-columns:repeat(4,1fr)}}
+.lsp-cos{border-radius:18px;padding:12px 4px;gap:6px}
+.lsp-cos .p{display:inline-flex;align-items:center;gap:3px;font-weight:700}
+.lsp-cos.eq{box-shadow:0 0 0 2px var(--accent) inset}
+.lsp-fxprev{display:inline-flex;align-items:center;justify-content:center;min-height:64px;padding:0 8px;border-radius:16px;background:radial-gradient(circle,color-mix(in srgb,var(--fc) 30%,transparent),transparent 75%)}
+.lsp-ttlprev{display:inline-flex;min-height:64px;align-items:center}
+.lsp-preview{padding:16px}
+/* resultaat */
+.lsp-hero{position:relative;height:calc(220px*var(--gfx-scale,1));border-radius:24px;overflow:hidden;display:flex;align-items:center;justify-content:center;background:linear-gradient(160deg,var(--rc,#6366f1),rgba(0,0,0,.4) 220%);margin:0 0 10px;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.lsp-hero .lsp-big{display:flex;align-items:center;justify-content:center}
+.lsp-hero img.gfx-icon{filter:drop-shadow(0 8px 8px rgba(0,0,0,.4))}
+.lsp-score{font-size:calc(52px*var(--gfx-font,1))}
+.lsp-rew{gap:12px}
+.lsp-rew>div{display:flex;align-items:center;gap:8px;border-radius:18px;padding:10px 20px;font-size:calc(20px*var(--gfx-font,1))}
+.lsp-lvup,.lsp-new{display:flex;align-items:center;gap:10px;border-radius:16px;padding:10px 14px}
+.lsp-ribbon{display:inline-flex;align-items:center;gap:6px;font-size:calc(16px*var(--gfx-font,1));padding:6px 16px}
+.lsp-stat b{font-size:calc(22px*var(--gfx-font,1))}
+.lsp-rank .e{width:44px;display:flex;justify-content:center}
+.lsp-cf{display:flex}
+.lsp-scene{position:fixed;inset:0;z-index:90;background:#000}
+/* wereld-kiezer */
+.lsp-wsheet{position:relative}
+.lsp-wrow{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.lsp-wrow::-webkit-scrollbar{display:none}
+.lsp-wp{flex:none;width:calc(104px*var(--gfx-scale,1));border:3px solid transparent;border-radius:18px;padding:0;background:none;text-align:center;font-weight:700;font-size:12.5px;color:var(--ink)!important}
+.lsp-wp .pv{position:relative;display:block;height:calc(78px*var(--gfx-scale,1));border-radius:15px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25)}
+.lsp-wp .pv i{position:absolute;left:0;right:0;bottom:0;height:24%}
+.lsp-wp .pv .d{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%)}
+.lsp-wp .pv .e{position:absolute;left:5px;top:3px;font-size:14px}
+.lsp-wp>span.t{display:block;padding:5px 0 3px}
+.lsp-wp.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
+.lsp-wp.on .t{color:var(--accent)}
+.lsp-tog{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;border:1px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;margin-top:8px;font-weight:700;min-height:48px}
+.lsp-tog i{width:46px;height:26px;border-radius:99px;background:rgba(127,127,127,.4);position:relative;flex:none}
+.lsp-tog i::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:transform .15s}
+.lsp-tog.on i{background:var(--accent)}.lsp-tog.on i::after{transform:translateX(20px)}
 `;

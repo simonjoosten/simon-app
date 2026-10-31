@@ -725,7 +725,7 @@ export function collageFreeView(ctx) {
 
   /* ---------- foto's toevoegen ---------- */
   function pickFiles(multiple, cb) {
-    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'image/*,.heic,.heif'; inp.multiple = !!multiple; inp.style.display = 'none';
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = window.__fotoAccept ? window.__fotoAccept() : 'image/*,.heic,.heif'; inp.multiple = !!multiple; inp.style.display = 'none';
     inp.onchange = () => { const fs = [].slice.call(inp.files || []); if (fs.length && alive) cb(fs); };
     inp.click();
   }

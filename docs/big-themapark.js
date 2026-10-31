@@ -3,6 +3,8 @@
 // Opslag: local-first (localStorage), cloud (gamesaves/big-themapark__<uid>) max. 1x per 60 s en bij sluiten.
 // Alles in dit bestand is zelfstandig. De pure spellogica (bovenste helft) werkt ook zonder browser (zie tools/test-big-themapark.mjs).
 
+import * as BG from './big-gfx.js?v=1';
+
 /* =====================================================================
    1. CONSTANTEN EN HULPFUNCTIES
    ===================================================================== */
@@ -78,12 +80,42 @@ def('bloemperk', { k: 'decor', n: 'Bloemperk', e: '🌸', w: 2, h: 2, c: 160, rp
 def('standbeeld', { k: 'decor', n: 'Clownbeeld', e: '🤡', w: 1, h: 1, c: 320, rp: 450, bty: 4, d: 'Het park heeft een mascotte.' });
 def('tent', { k: 'decor', n: 'Feesttent', e: '🎪', w: 2, h: 2, c: 900, rp: 900, bty: 8, d: 'Vlaggetjes en feest.' });
 
-export const CATS = [
-  ['rides', '🎢', 'Attracties', ['theekopjes', 'draaimolen', 'kinderboerderij', 'botsauto', 'spookhuis', 'reuzenrad', 'piratenschip', 'waterglijbaan', 'achtbaan', 'valtoren', 'draakentrein']],
-  ['food', '🍦', 'Eten & drinken', ['ijskraam', 'drinkkraam', 'patat', 'popcorn', 'pizza', 'restaurant', 'souvenir']],
+// ---- uitbreiding (fase 2): 10 attracties, 8 kraampjes/winkels, 8 decoratiestukken. Alleen achteraan toevoegen (ORDER = save-index).
+def('minitrein', { k: 'ride', n: 'Minitrein', e: '🚆', w: 3, h: 2, c: 460, rp: 40, cap: 8, dur: 12, thr: 2, pr: 3.5, col: '#3a86ff', d: 'Tsjoek-tsjoek rond het park.' });
+def('ballonvaart', { k: 'ride', n: 'Ballonvaart', e: '🎈', w: 2, h: 2, c: 1700, rp: 220, cap: 8, dur: 18, thr: 3, pr: 9, col: '#ff7b9c', d: 'Zachtjes omhoog in een luchtballon.' });
+def('sprookjeskasteel', { k: 'ride', n: 'Sprookjeskasteel', e: '🏰', w: 3, h: 3, c: 3800, rp: 600, cap: 14, dur: 14, thr: 3.5, pr: 10, col: '#c8b6ff', d: 'Een boottocht langs ridders en prinsessen.' });
+def('ruimtereis', { k: 'ride', n: 'Ruimtereis', e: '🚀', w: 3, h: 3, c: 7000, rp: 1300, cap: 12, dur: 14, thr: 7.5, pr: 16, col: '#5e60ce', d: 'Raketstart naar de sterren!' });
+def('diepzeereis', { k: 'ride', n: 'Diepzeereis', e: '🛥️', w: 3, h: 3, c: 12000, rp: 2500, cap: 14, dur: 15, thr: 4, pr: 20, col: '#0077b6', d: 'Duik met een onderzeeër tussen de vissen.' });
+def('helikoptertour', { k: 'ride', n: 'Helikoptertour', e: '🚁', w: 2, h: 2, c: 20000, rp: 4600, cap: 10, dur: 16, thr: 6, pr: 40, col: '#ef476f', d: 'Vlieg over je eigen park.' });
+def('ufodraaier', { k: 'ride', n: 'Ufo-draaier', e: '🛸', w: 3, h: 3, c: 42000, rp: 9500, cap: 16, dur: 14, thr: 8.5, pr: 45, col: '#7209b7', d: 'Wordt meegezogen door een ufo!' });
+def('dinosafari', { k: 'ride', n: 'Dinosafari', e: '🦖', w: 4, h: 3, c: 75000, rp: 18000, cap: 22, dur: 28, thr: 6, pr: 60, col: '#55a630', d: 'Rij langs echte (nou ja) dinosaurussen.' });
+def('vulkaanglijbaan', { k: 'ride', n: 'Vulkaanglijbaan', e: '🌋', w: 3, h: 3, c: 150000, rp: 36000, cap: 20, dur: 18, thr: 9, pr: 110, col: '#d62828', d: 'Glij door de krater naar beneden!' });
+def('vliegtuigjes', { k: 'ride', n: 'Zweefvliegers', e: '✈️', w: 3, h: 3, c: 260000, rp: 60000, cap: 30, dur: 20, thr: 7.5, pr: 120, col: '#00b4d8', d: 'Zweef hoog boven het park.' });
+def('hotdog', { k: 'food', n: 'Hotdogkraam', e: '🌭', w: 1, h: 1, c: 130, rp: 25, pr: 3.5, hun: 0.45, thi: -0.1, hap: 0.05, col: '#ffb4a2', d: 'Worstje in een broodje.' });
+def('donut', { k: 'food', n: 'Donutkraam', e: '🍩', w: 1, h: 1, c: 220, rp: 70, pr: 3.5, hun: 0.3, thi: -0.05, hap: 0.08, col: '#ffafcc', d: 'Zoet en roze met spikkels.' });
+def('koffie', { k: 'food', n: 'Koffiekar', e: '☕', w: 1, h: 1, c: 150, rp: 50, pr: 3, hun: 0.1, thi: 0.45, hap: 0.05, col: '#a47148', d: 'Voor de ouders. Of de tieners.' });
+def('burger', { k: 'food', n: 'Burgertent', e: '🍔', w: 2, h: 1, c: 560, rp: 260, pr: 7, hun: 0.8, thi: -0.08, hap: 0.08, col: '#e09f3e', d: 'Dubbele burger, dubbel blij.' });
+def('taart', { k: 'food', n: 'Taartenkraam', e: '🎂', w: 1, h: 1, c: 900, rp: 640, pr: 9, hun: 0.5, thi: -0.05, hap: 0.14, col: '#f7a8c4', d: 'Een stukje feest op een bordje.' });
+def('snoepwinkel', { k: 'shop', n: 'Snoepwinkel', e: '🍬', w: 2, h: 1, c: 1500, rp: 900, pr: 12, hun: 0, thi: 0, hap: 0.25, col: '#f15bb5', d: 'Potten vol snoep en lolly\'s.' });
+def('fotohokje', { k: 'shop', n: 'Fotohokje', e: '📷', w: 1, h: 1, c: 600, rp: 380, pr: 6, hun: 0, thi: 0, hap: 0.18, col: '#8d99ae', d: 'Pret-foto\'s om te bewaren.' });
+def('speelgoed', { k: 'shop', n: 'Speelgoedwinkel', e: '🧩', w: 2, h: 1, c: 2800, rp: 1500, pr: 15, hun: 0, thi: 0, hap: 0.22, col: '#4361ee', d: 'Puzzels, poppen en bouwblokken.' });
+def('palm', { k: 'decor', n: 'Palmboom', e: '🌴', w: 1, h: 1, c: 28, rp: 30, bty: 1.3, d: 'Voor een tropisch gevoel.' });
+def('den', { k: 'decor', n: 'Dennenboom', e: '🌲', w: 1, h: 1, c: 22, rp: 30, bty: 1.1, d: 'Altijd groen.' });
+def('zonnebloemen', { k: 'decor', n: 'Zonnebloemen', e: '🌻', w: 1, h: 1, c: 16, rp: 40, bty: 1, d: 'Kijken altijd naar de zon.' });
+def('brug', { k: 'decor', n: 'Houten brug', e: '🌉', w: 1, h: 1, c: 300, rp: 200, bty: 3, d: 'Over het beekje heen.' });
+def('windmolen', { k: 'decor', n: 'Windmolen', e: '🌬️', w: 2, h: 2, c: 700, rp: 600, bty: 7, d: 'Draait zachtjes in de wind.' });
+def('vuurtoren', { k: 'decor', n: 'Vuurtoren', e: '🗼', w: 1, h: 1, c: 1200, rp: 1200, bty: 8, d: 'Straalt \'s nachts over het park.' });
+def('drakenbeeld', { k: 'decor', n: 'Drakenbeeld', e: '🐉', w: 1, h: 1, c: 1800, rp: 1500, bty: 10, d: 'Gelukkig is hij van steen.' });
+def('regenboog', { k: 'decor', n: 'Regenboog', e: '🌈', w: 2, h: 1, c: 2500, rp: 2000, bty: 12, d: 'Altijd een beetje zon na regen.' });
+
+const CAT_RAW = [
+  ['rides', '🎢', 'Attracties', ['theekopjes', 'draaimolen', 'kinderboerderij', 'botsauto', 'spookhuis', 'reuzenrad', 'piratenschip', 'waterglijbaan', 'achtbaan', 'valtoren', 'draakentrein',
+    'minitrein', 'ballonvaart', 'sprookjeskasteel', 'ruimtereis', 'diepzeereis', 'helikoptertour', 'ufodraaier', 'dinosafari', 'vulkaanglijbaan', 'vliegtuigjes']],
+  ['food', '🍦', 'Eten & drinken', ['ijskraam', 'drinkkraam', 'patat', 'popcorn', 'pizza', 'restaurant', 'souvenir', 'hotdog', 'donut', 'koffie', 'burger', 'taart', 'snoepwinkel', 'fotohokje', 'speelgoed']],
   ['fac', '🚻', 'Voorzieningen', ['toilet', 'bankje', 'prullenbak', 'lab']],
-  ['deco', '🌳', 'Decoratie', ['boom', 'struik', 'bloemen', 'vijver', 'lantaarn', 'bloemperk', 'fontein', 'standbeeld', 'tent']],
+  ['deco', '🌳', 'Decoratie', ['boom', 'struik', 'bloemen', 'vijver', 'lantaarn', 'bloemperk', 'fontein', 'standbeeld', 'tent', 'palm', 'den', 'zonnebloemen', 'brug', 'windmolen', 'vuurtoren', 'drakenbeeld', 'regenboog']],
 ];
+export const CATS = CAT_RAW.map((c) => [c[0], c[1], c[2], c[3].slice().sort((a, b) => DEFS[a].c - DEFS[b].c)]);
 export const ROAD_COST = 5;
 
 // Onderzoek-voordelen (meerdere niveaus)
@@ -95,6 +127,9 @@ export const PERKS = {
   landmeter: { n: 'Landmeter', e: '📐', max: 3, base: 600, mul: 3, d: 'Uitbreiding 20% goedkoper' },
   reclame: { n: 'Reclamebureau', e: '📣', max: 3, base: 500, mul: 3, d: 'Campagnes duren 50% langer' },
   bouwtech: { n: 'Bouwtechniek', e: '🏗️', max: 3, base: 800, mul: 3.4, d: 'Bouwkosten 5% lager' },
+  vip: { n: 'VIP-pas', e: '👑', max: 4, base: 1500, mul: 3.8, d: '+6% inkomen per niveau' },
+  inkoop: { n: 'Slimme inkoop', e: '🧲', max: 3, base: 1200, mul: 3.6, d: 'Alle bouwkosten 4% lager' },
+  glans: { n: 'Glitterpark', e: '🌟', max: 3, base: 2000, mul: 4, d: 'Decoratie telt 20% zwaarder voor de sterren' },
 };
 export const perkCost = (id, lvl) => Math.round(PERKS[id].base * Math.pow(PERKS[id].mul, lvl));
 
@@ -140,6 +175,7 @@ const rideCount = (G) => G.parks.reduce((s, P) => s + P.objs.filter((o) => DEFS[
 const objCount = (G, kinds) => G.parks.reduce((s, P) => s + P.objs.filter((o) => kinds.includes(DEFS[o.t].k)).length, 0);
 const hasObj = (G, t) => G.parks.some((P) => P.objs.some((o) => o.t === t));
 const bestStars = (G) => Math.max(...G.parks.map((P) => P.rs || 0));
+const foodTypes = (G) => new Set(G.parks.flatMap((P) => P.objs.filter((o) => ['food', 'shop'].includes(DEFS[o.t].k)).map((o) => o.t))).size;
 const roadsBuilt = (G) => G.parks.reduce((s, P) => { let c = 0; for (let i = 0; i < P.roads.length; i++) c += P.roads[i]; return s + c; }, 0);
 
 // doelen (per franchise-ronde). prog -> [huidig, doel]
@@ -175,6 +211,17 @@ export const GOALS = [
   { id: 'g29', t: 'Verdien in totaal €5 miljoen', prog: (G) => [G.earnedRun, 5e6], rw: { m: 800, s: 900, rp: 4000 } },
   { id: 'g30', t: 'Open het derde park', prog: (G) => [G.parks.length, 3], rw: { m: 800, s: 600, rp: 3000 } },
   { id: 'g31', t: 'Verdien in totaal €50 miljoen', prog: (G) => [G.earnedRun, 5e7], rw: { m: 800, s: 1200, rp: 20000 } },
+  // fase 2: alleen achteraan toevoegen (de index staat in de save)
+  { id: 'g32', t: 'Bouw een Minitrein', prog: (G) => [hasObj(G, 'minitrein') ? 1 : 0, 1], rw: { m: 500, s: 90, rp: 60 } },
+  { id: 'g33', t: 'Zet 20 stukjes decoratie neer', prog: (G) => [objCount(G, ['decor']), 20], rw: { m: 600, s: 100, rp: 60 } },
+  { id: 'g34', t: 'Bouw een Ruimtereis', prog: (G) => [hasObj(G, 'ruimtereis') ? 1 : 0, 1], rw: { m: 800, s: 200, rp: 600 } },
+  { id: 'g35', t: 'Bouw 5 soorten eten of winkels', prog: (G) => [foodTypes(G), 5], rw: { m: 800, s: 300, rp: 400 } },
+  { id: 'g36', t: 'Bouw 15 attracties', prog: (G) => [rideCount(G), 15], rw: { m: 800, s: 600, rp: 1500 } },
+  { id: 'g37', t: 'Bouw een Ufo-draaier', prog: (G) => [hasObj(G, 'ufodraaier') ? 1 : 0, 1], rw: { m: 800, s: 700, rp: 6000 } },
+  { id: 'g38', t: 'Ontvang 10.000 bezoekers', prog: (G) => [G.st.visitors, 10000], rw: { m: 800, s: 900, rp: 8000 } },
+  { id: 'g39', t: 'Bouw de Vulkaanglijbaan', prog: (G) => [hasObj(G, 'vulkaanglijbaan') ? 1 : 0, 1], rw: { m: 800, s: 1000, rp: 15000 } },
+  { id: 'g40', t: 'Bouw 20 attracties', prog: (G) => [rideCount(G), 20], rw: { m: 800, s: 1500, rp: 30000 } },
+  { id: 'g41', t: 'Verdien in totaal €500 miljoen', prog: (G) => [G.earnedRun, 5e8], rw: { m: 800, s: 2000, rp: 60000 } },
 ];
 
 // prestaties (blijvend; geven soms een gouden ticket)
@@ -198,9 +245,18 @@ export const ACHS = [
   { id: 'a17', e: '📅', t: 'Trouwe fan', d: 'Haal 7 dagen op rij je dagelijkse beloning op', prog: (G) => [G.daily.streak, 7], tk: 1 },
   { id: 'a18', e: '🎪', t: 'Feestvierder', d: 'Beleef 15 gebeurtenissen', prog: (G) => [G.st.events, 15] },
   { id: 'a19', e: '🌳', t: 'Groene vingers', d: 'Bezit 40 decoratie-stukken', prog: (G) => [objCount(G, ['decor']), 40] },
-  { id: 'a20', e: '🎡', t: 'Volledige set', d: 'Bouw alle soorten attracties', prog: (G) => [new Set(G.parks.flatMap((P) => P.objs.filter((o) => DEFS[o.t].k === 'ride').map((o) => o.t))).size, 11], tk: 2 },
+  { id: 'a20', e: '🎡', t: 'Volledige set', d: 'Bouw 11 soorten attracties', prog: (G) => [new Set(G.parks.flatMap((P) => P.objs.filter((o) => DEFS[o.t].k === 'ride').map((o) => o.t))).size, 11], tk: 2 },
   { id: 'a21', e: '🦄', t: 'Topattractie', d: 'Upgrade een attractie naar niveau 3', prog: (G) => [G.st.maxlvl, 3] },
   { id: 'a22', e: '⏳', t: 'Doorzetter', d: 'Speel 10 uur', prog: (G) => [G.st.play / 3600, 10], tk: 1 },
+  // fase 2
+  { id: 'a23', e: '🚆', t: 'Machinist', d: 'Bouw een Minitrein', prog: (G) => [hasObj(G, 'minitrein') ? 1 : 0, 1] },
+  { id: 'a24', e: '🚀', t: 'Astronaut', d: 'Bouw een Ruimtereis', prog: (G) => [hasObj(G, 'ruimtereis') ? 1 : 0, 1] },
+  { id: 'a25', e: '🦖', t: 'Dino-baas', d: 'Bouw een Dinosafari', prog: (G) => [hasObj(G, 'dinosafari') ? 1 : 0, 1], tk: 1 },
+  { id: 'a26', e: '🌋', t: 'Vulkaanbouwer', d: 'Bouw een Vulkaanglijbaan', prog: (G) => [hasObj(G, 'vulkaanglijbaan') ? 1 : 0, 1], tk: 1 },
+  { id: 'a27', e: '🌈', t: 'Regenboogmaker', d: 'Zet een Regenboog in je park', prog: (G) => [hasObj(G, 'regenboog') ? 1 : 0, 1] },
+  { id: 'a28', e: '🍩', t: 'Smulpaap', d: 'Bouw 8 soorten eten of winkels', prog: (G) => [foodTypes(G), 8] },
+  { id: 'a29', e: '🐉', t: 'Drakenridder', d: 'Zet een Drakenbeeld neer', prog: (G) => [hasObj(G, 'drakenbeeld') ? 1 : 0, 1] },
+  { id: 'a30', e: '🎢', t: 'Attractiegek', d: 'Bouw alle soorten attracties', prog: (G) => [new Set(G.parks.flatMap((P) => P.objs.filter((o) => DEFS[o.t].k === 'ride').map((o) => o.t))).size, ORDER.filter((i) => DEFS[i].k === 'ride').length], tk: 3 },
 ];
 
 /* =====================================================================
@@ -275,8 +331,8 @@ export function newGame(uid, now = Date.now()) {
 
 export const perk = (G, id) => G.res['p:' + id] || 0;
 export const fr = (G, id) => G.pp[id] || 0;
-export const incomeMult = (G) => (1 + 0.08 * perk(G, 'kassa')) * (1 + 0.15 * fr(G, 'goud'));
-export const buildMult = (G) => Math.max(0.2, (1 - 0.05 * perk(G, 'bouwtech')) * (1 - 0.05 * fr(G, 'bouw')));
+export const incomeMult = (G) => (1 + 0.08 * perk(G, 'kassa')) * (1 + 0.06 * perk(G, 'vip')) * (1 + 0.15 * fr(G, 'goud'));
+export const buildMult = (G) => Math.max(0.2, (1 - 0.05 * perk(G, 'bouwtech')) * (1 - 0.04 * perk(G, 'inkoop')) * (1 - 0.05 * fr(G, 'bouw')));
 export const buildCost = (G, id) => Math.max(1, Math.round(DEFS[id].c * buildMult(G)));
 export const sellValue = (G, o) => { const d = DEFS[o.t]; let v = d.c * 0.5; for (let i = 1; i <= o.l; i++) v += d.c * RIDE_UP[i] * 0.3; return Math.round(v); };
 export const rpMult = (G) => (1 + 0.25 * perk(G, 'labteam')) * (1 + 0.2 * fr(G, 'geest'));
@@ -889,7 +945,7 @@ export function calcRating(G, P) {
   let litter = 0, roads = 0;
   for (let i = 0; i < P.roads.length; i++) if (P.roads[i]) { roads++; if (P.litter[i]) litter++; }
   const clean = cl01(1 - (litter / Math.max(8, roads)) * 3);
-  const beauty = cl01(P.beautyTot / (P.n * P.n * 0.045));
+  const beauty = cl01(P.beautyTot * (1 + 0.2 * perk(G, 'glans')) / (P.n * P.n * 0.045));
   const fac = cl01(((P.cnt.food || 0) * 12 + (P.cnt.shop || 0) * 4 + (P.cnt.wc || 0) * 10 + (P.cnt.bench || 0) * 5) / Math.max(24, guests));
   let broken = 0; for (const o of P.rides) if (o.broken) broken++;
   const safety = R_ ? cl01(1 - broken / R_ * 1.5) : 0;
@@ -1441,16 +1497,21 @@ function gable(x0, y0, w, d, z, h, col) { // dak met nok langs de x-as (zichtbar
   quad3(x0, y0, z, x0 + w, y0, z, x0 + w, ym, z + h, x0, ym, z + h, shade(col, 1.12));
   fpoly([X(x0 + w, y0), Y(x0 + w, y0, z), X(x0 + w, y0 + d), Y(x0 + w, y0 + d, z), X(x0 + w, ym), Y(x0 + w, ym, z + h)], shade(col, 0.66));
 }
-function shadow(cx, cy, r, a) { ell(cx, cy, 0, r, `rgba(0,0,0,${a || 0.16})`); }
+function shadow(cx, cy, r, a) {
+  if (BG.GFX.q >= 1) BG.softShadow(C, X(cx, cy), Y(cx, cy, 0), r * 52, r * 26, Math.min(0.5, (a || 0.16) * (ENV.night > 0.3 ? 1.2 : 1.8)));
+  else ell(cx, cy, 0, r, `rgba(0,0,0,${a || 0.16})`);
+}
 function text(t, x, y, size, alpha) {
-  C.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif`; C.textAlign = 'center'; C.textBaseline = 'middle';
   if (alpha != null) C.globalAlpha = alpha;
-  C.fillText(t, x, y);
+  if (typeof t === 'string' && t.length <= 4 && BG.cEmoji(C, t, x, y, size * 1.1)) { /* 3D-icoon getekend */ } else {
+    C.font = `${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",system-ui,sans-serif`; C.textAlign = 'center'; C.textBaseline = 'middle';
+    C.fillText(t, x, y);
+  }
   if (alpha != null) C.globalAlpha = 1;
 }
 function badge(emoji, x, y, z, size, bob) {
   const px = X(x, y), py = Y(x, y, z) + (bob ? Math.sin(ENV.T * 2 + x) * 1.5 : 0);
-  C.beginPath(); C.arc(px, py, size * 0.72, 0, 6.2832); C.fillStyle = 'rgba(255,255,255,.92)'; C.fill();
+  C.beginPath(); C.arc(px, py, size * 0.85, 0, 6.2832); C.fillStyle = 'rgba(255,255,255,.92)'; C.fill();
   C.strokeStyle = 'rgba(0,0,0,.12)'; C.lineWidth = 1; C.stroke();
   text(emoji, px, py + 1, size);
 }
@@ -1482,6 +1543,7 @@ function tree(x, y, id, scale) {
 /* ---------- attracties ---------- */
 const COLS4 = ['#ff595e', '#ffca3a', '#1982c4', '#8ac926'];
 const DR = {};
+const GFXq = () => BG.GFX.q;
 function runOf(o) { return o.st === 1 && !o.broken; }
 
 DR.theekopjes = (o, a) => {
@@ -1753,6 +1815,230 @@ DR.lab = (o, a) => {
   text('🔬', X(x0 + 1.5, y0 + 1), Y(x0 + 1.5, y0 + 1, 70), 16); glow(x0 + 1.5, y0 + 1.5, 20, 70, '120,220,255');
 };
 
+/* ---------- fase 2: nieuwe attracties, kraampjes en decoratie ---------- */
+function rideCtr(o) { const d = DEFS[o.t]; return [o.x + d.w / 2, o.y + d.h / 2, d]; }
+DR.minitrein = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.4, 0.16);
+  ell(cx, cy, 1, 1.15, '#b8a58a'); ell(cx, cy, 1.5, 0.95, '#8fd18c');
+  box(o.x + 0.15, o.y + 0.1, 0.6, 0.5, 0, 14, '#f4e6c8'); cone(o.x + 0.45, o.y + 0.35, 0.45, 14, 8, ['#c0392b', '#e74c3c'], 4, 0.78);
+  const n = 5;
+  for (let i = n - 1; i >= 0; i--) {
+    const an = (runOf(o) ? a * 0.9 : 0.6) - i * 0.3;
+    const px = cx + Math.cos(an) * 1.0, py = cy + Math.sin(an) * 0.75;
+    box(px - 0.12, py - 0.1, 0.24, 0.2, 2, i === 0 ? 9 : 6, i === 0 ? '#e63946' : COLS4[i % 4]);
+    if (i === 0) { cyl(px, py, 0.07, 11, 5, '#333'); if (runOf(o)) ball(px, py, 20 + (a * 8 % 4), 2.5, 'rgba(255,255,255,.6)'); }
+  }
+  text('🚆', X(cx, cy), Y(cx, cy, 46), 15); glow(cx, cy, 14, 44);
+};
+DR.ballonvaart = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 0.9, 0.18);
+  cyl(cx, cy, 0.8, 0, 3, '#c9b18a'); pole(cx - 0.4, cy, 3, 30, '#7a5230', 2); pole(cx + 0.4, cy, 3, 30, '#7a5230', 2);
+  const up = runOf(o) ? 26 + Math.sin(a * 1.1) * 18 : 20;
+  const bz = 38 + up;
+  pole(cx - 0.12, cy, 14 + up * 0.5, bz - 6, '#8a6b45', 1); pole(cx + 0.12, cy, 14 + up * 0.5, bz - 6, '#8a6b45', 1);
+  box(cx - 0.18, cy - 0.15, 0.36, 0.3, 12 + up * 0.5, 7, '#b5814a');
+  const px = X(cx, cy), py = Y(cx, cy, bz + 14);
+  for (let i = 0; i < 5; i++) { C.beginPath(); C.ellipse(px, py, 20 - i * 3.6, 24, 0, 0, 6.2832); C.fillStyle = [shade('#ff7b9c', 1), '#ffd23f', '#4cc9f0', '#ff7b9c', '#ffd23f'][i]; C.globalAlpha = 1; C.fill(); }
+  C.beginPath(); C.ellipse(px - 6, py - 8, 5, 8, 0.5, 0, 6.2832); C.fillStyle = 'rgba(255,255,255,.35)'; C.fill();
+  glow(cx, cy, bz + 8, 46);
+};
+DR.sprookjeskasteel = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.7, 0.2);
+  ell(cx, cy + 0.9, 1, 1.1, '#6cc3ec'); // slotgracht
+  box(o.x + 0.5, o.y + 0.4, 2, 1.8, 0, 26, '#e7dfd0');
+  const tw = [[0.35, 0.25], [2.25, 0.25], [0.35, 2.15], [2.25, 2.15]];
+  for (const [tx, ty] of tw) { cyl(o.x + tx, o.y + ty, 0.3, 0, 40, '#ddd3c0'); cone(o.x + tx, o.y + ty, 0.38, 40, 18, ['#9d4edd', '#c77dff'], 8, a * 0); }
+  cone(cx, cy - 0.1, 0.5, 26, 24, ['#ff6f91', '#ffffff'], 8, 0);
+  pole(cx, cy - 0.1, 50, 64, '#555', 1); fpoly([X(cx, cy - 0.1), Y(cx, cy - 0.1, 64), X(cx, cy - 0.1) + 9 + Math.sin(a * 3) * 2, Y(cx, cy - 0.1, 60), X(cx, cy - 0.1), Y(cx, cy - 0.1, 57)], '#e63946');
+  quad3(o.x + 1.1, o.y + 2.18, 0, o.x + 1.9, o.y + 2.18, 0, o.x + 1.9, o.y + 2.18, 14, o.x + 1.1, o.y + 2.18, 14, '#5a3d2b');
+  for (let i = 0; i < 3; i++) { const x = o.x + 0.8 + i * 0.7; quad3(x, o.y + 2.19, 16, x + 0.2, o.y + 2.19, 16, x + 0.2, o.y + 2.19, 22, x, o.y + 2.19, 22, '#ffe08a'); }
+  if (runOf(o)) { const t = (a * 0.25) % 1; box(o.x + 0.3 + t * 2.2, o.y + 2.5, 0.35, 0.2, 0, 4, '#c0392b'); }
+  text('🏰', X(cx, cy), Y(cx, cy, 84), 16); glow(cx, cy, 30, 90);
+};
+DR.ruimtereis = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.5, 0.2);
+  cyl(cx, cy, 1.25, 0, 4, '#6c757d'); cyl(cx, cy, 0.9, 4, 3, '#adb5bd');
+  const lift = runOf(o) ? Math.abs(Math.sin(a * 0.45)) * 34 : 0, z = 7 + lift;
+  cyl(cx, cy, 0.3, z, 34, '#f1f3f5'); cone(cx, cy, 0.3, z + 34, 22, ['#e63946', '#ff6b6b'], 8, 0);
+  for (const s of [-1, 1]) { fpoly([X(cx + s * 0.3, cy), Y(cx + s * 0.3, cy, z + 2), X(cx + s * 0.62, cy), Y(cx + s * 0.62, cy, z - 4), X(cx + s * 0.3, cy), Y(cx + s * 0.3, cy, z + 16)], '#e63946'); }
+  ball(cx, cy + 0.3, z + 24, 3.4, '#8ecae6');
+  if (runOf(o)) { for (let k = 0; k < 4; k++) { const t = (ENV.T * 2 + k / 4) % 1; ball(cx + Math.sin(k * 3 + t) * 0.1, cy, z - t * 14, 5 * (1 - t) + 1, `rgba(255,${180 - t * 120 | 0},60,${1 - t})`); } }
+  text('🚀', X(cx, cy), Y(cx, cy, z + 78), 15); glow(cx, cy, z + 8, 60, '255,170,80');
+};
+DR.diepzeereis = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.6, 0.14);
+  cyl(cx, cy, 1.4, 0, 6, '#8d99ae'); ell(cx, cy, 6, 1.25, '#0096c7');
+  for (let i = 0; i < 6; i++) { const an = a * 0.5 + i * 1.047; ball(cx + Math.cos(an) * 0.8, cy + Math.sin(an) * 0.55, 6.5, 2, 'rgba(255,255,255,.55)'); }
+  for (let i = 0; i < 3; i++) { const an = a * 0.2 + i * 2.1; ball(cx + Math.cos(an) * 0.7, cy + Math.sin(an) * 0.5, 4, 3, ['#ffb703', '#fb8500', '#ef476f'][i]); }
+  const an = runOf(o) ? a * 0.6 : 0.3, sx = cx + Math.cos(an) * 0.8, sy = cy + Math.sin(an) * 0.6;
+  cyl(sx, sy, 0.2, 7, 7, '#ffd23f'); ball(sx, sy, 17, 3.5, '#8ecae6'); pole(sx, sy, 14, 24, '#444', 1.5);
+  box(o.x + 0.2, o.y + 0.2, 0.7, 0.6, 0, 20, '#bde0fe'); cone(o.x + 0.55, o.y + 0.5, 0.5, 20, 9, ['#0077b6'], 6, 0);
+  text('🛥️', X(cx, cy), Y(cx, cy, 52), 15); glow(cx, cy, 10, 70, '120,220,255');
+};
+DR.helikoptertour = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 0.95, 0.2);
+  cyl(cx, cy, 0.8, 0, 3, '#6c757d'); ell(cx, cy, 3.2, 0.5, '#ffd23f'); ell(cx, cy, 3.4, 0.3, '#6c757d');
+  const up = runOf(o) ? 14 + Math.sin(a * 0.8) * 8 : 0, z = 5 + up;
+  box(cx - 0.3, cy - 0.15, 0.6, 0.3, z, 12, '#ef476f');
+  pole(cx + 0.3, cy, z + 5, z + 9, '#ef476f', 3); box(cx + 0.28, cy - 0.04, 0.5, 0.08, z + 6, 3, '#ef476f');
+  pole(cx, cy, z + 12, z + 18, '#333', 2);
+  const px = X(cx, cy), py = Y(cx, cy, z + 19), ang = (runOf(o) ? ENV.T * 20 : 0.6);
+  C.strokeStyle = 'rgba(40,40,40,.85)'; C.lineWidth = 2.5; C.lineCap = 'round'; C.beginPath(); C.moveTo(px - Math.cos(ang) * 26, py - Math.sin(ang) * 9); C.lineTo(px + Math.cos(ang) * 26, py + Math.sin(ang) * 9); C.stroke();
+  ball(cx - 0.15, cy + 0.12, z + 8, 3, '#8ecae6');
+  text('🚁', X(cx, cy), Y(cx, cy, z + 52), 15); glow(cx, cy, z + 4, 44);
+};
+DR.ufodraaier = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.6, 0.2);
+  cyl(cx, cy, 1.3, 0, 4, '#5a189a'); cyl(cx, cy, 0.2, 4, 32, '#c0c0d0');
+  const z = 30 + (runOf(o) ? Math.sin(a * 0.9) * 6 : 0);
+  const px = X(cx, cy), py = Y(cx, cy, z);
+  C.beginPath(); C.ellipse(px, py, 36, 13, 0, 0, 6.2832); C.fillStyle = '#9d4edd'; C.fill();
+  C.beginPath(); C.ellipse(px, py - 2, 36, 11, 0, Math.PI, 0); C.fillStyle = '#c77dff'; C.fill();
+  C.beginPath(); C.ellipse(px, py - 8, 15, 12, 0, Math.PI, 0); C.fillStyle = 'rgba(160,240,255,.8)'; C.fill();
+  for (let i = 0; i < 6; i++) { const an = ENV.T * 3 + i * 1.047; ball(cx + Math.cos(an) * 0.9, cy + Math.sin(an) * 0.45, z + 0.5, 1.8, i % 2 ? '#ffd23f' : '#ff6b6b'); }
+  if (runOf(o)) { C.globalAlpha = 0.18; fpoly([px - 12, py + 6, px + 12, py + 6, px + 24, Y(cx, cy, 3), px - 24, Y(cx, cy, 3)], '#caf0f8'); C.globalAlpha = 1; }
+  text('🛸', X(cx, cy), Y(cx, cy, z + 36), 15); glow(cx, cy, z, 80, '190,120,255');
+};
+DR.dinosafari = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 2, 0.14);
+  flat(o.x + 0.1, o.y + 0.1, d.w - 0.2, d.h - 0.2, 1, '#6a994e'); flat(o.x + 0.5, o.y + 0.7, d.w - 1.0, 1.6, 1.4, '#a98467');
+  cyl(o.x + 3.2, o.y + 0.7, 0.55, 1, 26, '#5b4636'); cone(o.x + 3.2, o.y + 0.7, 0.62, 27, 14, ['#d62828', '#f77f00'], 7, 0);
+  for (let i = 0; i < 3; i++) { const bx = o.x + 0.8 + i * 1.0, by = o.y + 0.5 + (i % 2) * 0.3; cyl(bx, by, 0.4, 1, 9, ['#52b788', '#74c69d', '#40916c'][i]); ball(bx + 0.1, by, 15, 5, ['#52b788', '#74c69d', '#40916c'][i]); pole(bx + 0.15, by, 12, 25, ['#52b788', '#74c69d', '#40916c'][i], 4 + i % 2); ball(bx + 0.2, by, 27, 4, ['#52b788', '#74c69d', '#40916c'][i]); }
+  tree(o.x + 3.5, o.y + 2.4, o.id, 0.9);
+  const t = runOf(o) ? (a * 0.18) % 1 : 0.1; box(o.x + 0.3 + t * 3, o.y + 2.2, 0.5, 0.3, 1.5, 5, '#f4a261');
+  text('🦖', X(cx, cy), Y(cx, cy, 58), 16); glow(cx, cy, 30, 80, '255,200,120');
+};
+DR.vulkaanglijbaan = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.7, 0.2);
+  cone(cx, cy, 1.2, 0, 62, ['#6b4f3a', '#7d5a42', '#5a4231'], 10, 0.3);
+  const px = X(cx, cy), py = Y(cx, cy, 62);
+  C.beginPath(); C.ellipse(px, py, 15, 7, 0, 0, 6.2832); C.fillStyle = '#ff6b00'; C.fill();
+  C.beginPath(); C.ellipse(px, py, 8, 3.5, 0, 0, 6.2832); C.fillStyle = '#ffd23f'; C.fill();
+  for (let k = 0; k < 5; k++) { const t = (ENV.T * 0.8 + k / 5) % 1; ball(cx + Math.sin(k * 2.3) * 0.2, cy, 62 + t * 30, 4 * (1 - t) + 1, `rgba(255,${120 + k * 20},30,${1 - t})`); }
+  if (runOf(o)) for (let k = 0; k < 3; k++) { const t = (a * 0.2 + k / 3) % 1; const an = 1.5 + k; ball(cx + Math.cos(an) * (0.15 + 0.85 * t), cy + Math.sin(an) * (0.15 + 0.85 * t) + 0.2, 60 - t * 58, 2.6, COLS4[k]); }
+  line3([cx - 0.15, cy + 0.1, 60, cx + 0.5, cy + 0.9, 28, cx + 0.2, cy + 1.3, 3], '#2ec4d6', 4);
+  text('🌋', X(cx, cy), Y(cx, cy, 100), 16); glow(cx, cy, 64, 70, '255,140,60');
+};
+DR.vliegtuigjes = (o, a) => {
+  const [cx, cy, d] = rideCtr(o);
+  shadow(cx, cy, 1.7, 0.2);
+  cyl(cx, cy, 0.9, 0, 4, '#adb5bd'); cyl(cx, cy, 0.14, 4, 54, '#dee2e6');
+  const lift = runOf(o) ? 12 : 0, z = 40 + lift * (0.5 + 0.5 * Math.sin(a));
+  for (let i = 0; i < 6; i++) {
+    const an = (runOf(o) ? a * 1.1 : 0) + i * 1.047, rr = 1.3;
+    const px = cx + Math.cos(an) * rr, py = cy + Math.sin(an) * rr;
+    line3([cx, cy, 54, px, py, z], 'rgba(60,60,70,.7)', 1);
+    const sx = X(px, py), sy = Y(px, py, z);
+    C.beginPath(); C.ellipse(sx, sy, 8, 3.2, 0, 0, 6.2832); C.fillStyle = COLS4[i % 4]; C.fill();
+    fpoly([sx - 3, sy, sx + 3, sy, sx + 9, sy - 7, sx + 5, sy - 7], shade(COLS4[i % 4], 0.8));
+    C.beginPath(); C.moveTo(sx - 9, sy + 1); C.lineTo(sx + 9, sy + 1); C.strokeStyle = '#fff'; C.lineWidth = 1.2; C.stroke();
+  }
+  text('✈️', X(cx, cy), Y(cx, cy, 82), 15); glow(cx, cy, 50, 70);
+};
+// kraampjes en winkels
+DR.hotdog = (o) => stallBase(o, '#ffe0d6', '#e63946', '🌭');
+DR.donut = (o) => stallBase(o, '#ffe3f1', '#ff70a6', '🍩');
+DR.koffie = (o) => stallBase(o, '#e8d4bd', '#6f4e37', '☕');
+DR.burger = (o) => stallBase(o, '#ffe8b8', '#e09f3e', '🍔', 18);
+DR.taart = (o) => stallBase(o, '#fff0f5', '#f7a8c4', '🎂', 18);
+DR.snoepwinkel = (o) => {
+  stallBase(o, '#ffd1e8', '#f15bb5', '🍬', 20);
+  for (let i = 0; i < 4; i++) ball(o.x + 0.3 + i * 0.4, o.y + 0.95, 6, 3, ['#ff595e', '#ffca3a', '#8ac926', '#4cc9f0'][i]);
+};
+DR.fotohokje = (o) => {
+  const x0 = o.x, y0 = o.y;
+  shadow(x0 + 0.5, y0 + 0.5, 0.5, 0.15);
+  box(x0 + 0.18, y0 + 0.2, 0.64, 0.6, 0, 26, '#8d99ae'); box(x0 + 0.14, y0 + 0.16, 0.72, 0.68, 26, 3, '#ef476f');
+  quad3(x0 + 0.3, y0 + 0.81, 6, x0 + 0.7, y0 + 0.81, 6, x0 + 0.7, y0 + 0.81, 20, x0 + 0.3, y0 + 0.81, 20, '#2b2d42');
+  if (((ENV.T * 0.7) | 0) % 3 === 0) quad3(x0 + 0.3, y0 + 0.82, 6, x0 + 0.7, y0 + 0.82, 6, x0 + 0.7, y0 + 0.82, 20, x0 + 0.3, y0 + 0.82, 20, 'rgba(255,255,255,.8)');
+  text('📷', X(x0 + 0.5, y0 + 0.5), Y(x0 + 0.5, y0 + 0.5, 42), 15); glow(x0 + 0.5, y0 + 0.5, 30, 36);
+};
+DR.speelgoed = (o) => {
+  stallBase(o, '#dbe4ff', '#4361ee', '🧩', 24);
+  box(o.x + 0.2, o.y + 0.7, 0.25, 0.25, 0, 9, '#ef476f'); box(o.x + 0.25, o.y + 0.75, 0.2, 0.2, 9, 7, '#ffd166');
+};
+// decoratie
+DR.palm = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5, sw = Math.sin(ENV.T * 1.3 + o.id) * 2;
+  shadow(x, y, 0.35, 0.16);
+  line3([x, y, 0, x + 0.05, y, 14, x + 0.12, y + 0.02, 28, x + 0.12, y + 0.05, 40], '#8a6a43', 4);
+  const px = X(x + 0.12, y + 0.05), py = Y(x + 0.12, y + 0.05, 40);
+  for (let i = 0; i < 7; i++) { const an = i / 7 * 6.2832; const ex = px + Math.cos(an) * 20 + sw, ey = py + Math.sin(an) * 7 + 9; C.beginPath(); C.moveTo(px, py); C.quadraticCurveTo(px + Math.cos(an) * 12, py - 9, ex, ey); C.strokeStyle = i % 2 ? '#2d9a4a' : '#43b05c'; C.lineWidth = 4; C.lineCap = 'round'; C.stroke(); }
+  ball(x + 0.12, y + 0.07, 37, 2.6, '#6b4a2f'); ball(x + 0.18, y + 0.03, 37, 2.6, '#6b4a2f');
+};
+DR.den = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5, sw = Math.sin(ENV.T * 1.1 + o.id);
+  shadow(x, y, 0.38, 0.18); pole(x, y, 0, 12, '#6b4a2f', 5);
+  const px = X(x, y), py = Y(x, y, 0);
+  for (let k = 0; k < 4; k++) { const w = 17 - k * 3.4, z = 10 + k * 11; fpoly([px + sw * k * 0.4, py - z - 18, px - w, py - z + 3, px + w, py - z + 3], k % 2 ? '#2f7d4f' : '#3a9a62'); if (ENV.season === 3) fpoly([px + sw * k * 0.4, py - z - 18, px - w * 0.5, py - z - 7, px + w * 0.5, py - z - 7], 'rgba(255,255,255,.85)'); }
+};
+DR.zonnebloemen = (o) => {
+  const x = o.x, y = o.y;
+  for (let i = 0; i < 5; i++) {
+    const fx = x + 0.2 + ((i * 37) % 6) / 8, fy = y + 0.2 + ((i * 53) % 6) / 8, h = 18 + (i * 7) % 8, sw = Math.sin(ENV.T * 1.2 + i) * 1.2;
+    pole(fx, fy, 0, h, '#3f8f3a', 2);
+    const px = X(fx, fy) + sw, py = Y(fx, fy, h);
+    for (let k = 0; k < 8; k++) { const an = k / 8 * 6.2832; C.beginPath(); C.ellipse(px + Math.cos(an) * 4.5, py + Math.sin(an) * 4.5, 3, 1.8, an, 0, 6.2832); C.fillStyle = '#ffd23f'; C.fill(); }
+    C.beginPath(); C.arc(px, py, 3.3, 0, 6.2832); C.fillStyle = '#6b4a2f'; C.fill();
+  }
+};
+DR.brug = (o) => {
+  const x = o.x, y = o.y;
+  flat(x + 0.02, y + 0.02, 0.96, 0.96, 0, '#5fa8d3'); flat(x + 0.1, y + 0.1, 0.8, 0.8, 0.5, '#7fc4e8');
+  for (let i = 0; i < 5; i++) box(x + 0.12 + i * 0.16, y + 0.05, 0.14, 0.9, 1, 3, i % 2 ? '#b08968' : '#9c7a54');
+  for (const yy of [0.05, 0.9]) { pole(x + 0.1, y + yy, 4, 12, '#8a6b45', 1.5); pole(x + 0.9, y + yy, 4, 12, '#8a6b45', 1.5); line3([x + 0.1, y + yy, 11, x + 0.9, y + yy, 11], '#8a6b45', 1.5); }
+};
+DR.windmolen = (o, a) => {
+  const cx = o.x + 1, cy = o.y + 1;
+  shadow(cx, cy, 0.95, 0.2);
+  cyl(cx, cy, 0.6, 0, 5, '#9c8f7a'); cyl(cx, cy, 0.5, 5, 30, '#f2e9d8'); cone(cx, cy, 0.58, 35, 14, ['#c0392b', '#a93226'], 8, 0);
+  quad3(cx - 0.12, cy + 0.5, 5, cx + 0.12, cy + 0.5, 5, cx + 0.12, cy + 0.5, 16, cx - 0.12, cy + 0.5, 16, '#6b4a2f');
+  const px = X(cx, cy + 0.2), py = Y(cx, cy + 0.2, 36), ang = a * 0.7;
+  C.lineCap = 'round';
+  for (let i = 0; i < 4; i++) { const an = ang + i * 1.5708; C.beginPath(); C.moveTo(px, py); C.lineTo(px + Math.cos(an) * 32, py + Math.sin(an) * 32); C.strokeStyle = '#6b4a2f'; C.lineWidth = 2; C.stroke(); fpoly([px + Math.cos(an) * 10, py + Math.sin(an) * 10, px + Math.cos(an) * 32, py + Math.sin(an) * 32, px + Math.cos(an + 0.25) * 30, py + Math.sin(an + 0.25) * 30, px + Math.cos(an + 0.25) * 10, py + Math.sin(an + 0.25) * 10], 'rgba(255,255,255,.85)'); }
+  ball(cx, cy + 0.2, 36, 3, '#6b4a2f');
+};
+DR.vuurtoren = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5;
+  shadow(x, y, 0.5, 0.18);
+  cyl(x, y, 0.42, 0, 10, '#9c8f7a');
+  for (let i = 0; i < 4; i++) cyl(x, y, 0.36 - i * 0.03, 10 + i * 14, 14, i % 2 ? '#ffffff' : '#e63946');
+  cyl(x, y, 0.3, 66, 3, '#444'); cyl(x, y, 0.2, 69, 9, '#ffe08a'); cone(x, y, 0.28, 78, 9, ['#c0392b'], 8, 0);
+  const on = ENV.night > 0.1 || ((ENV.T * 0.5) % 2) < 1;
+  if (on) glow(x, y, 73, 70 + ENV.night * 40, '255,240,160');
+  LIGHTS.push([X(x, y), Y(x, y, 73), 110, '255,235,150']);
+};
+DR.drakenbeeld = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5;
+  shadow(x, y, 0.4, 0.18);
+  box(x - 0.3, y - 0.3, 0.6, 0.6, 0, 8, '#bdb8a8');
+  const px = X(x, y), py = Y(x, y, 8);
+  C.beginPath(); C.ellipse(px, py - 9, 11, 9, 0, 0, 6.2832); C.fillStyle = '#2a9d8f'; C.fill();
+  C.beginPath(); C.arc(px + 9, py - 22, 6, 0, 6.2832); C.fillStyle = '#34b3a3'; C.fill();
+  fpoly([px - 2, py - 14, px - 20, py - 30, px - 6, py - 12], '#1f7a6f'); fpoly([px + 2, py - 14, px + 20, py - 30, px + 6, py - 12], '#1f7a6f');
+  ball(x + 0.3, y, 8 + 21, 1.4, '#ffd23f');
+  if (ENV.night > 0.2 || ((ENV.T * 1.5) | 0) % 5 === 0) ball(x + 0.5, y + 0.02, 30, 2 + Math.sin(ENV.T * 14), 'rgba(255,150,40,.8)');
+};
+DR.regenboog = (o) => {
+  const cx = o.x + 1, cy = o.y + 0.5, px = X(cx, cy), py = Y(cx, cy, 0);
+  const cols = ['#e63946', '#f77f00', '#ffd23f', '#52b788', '#4cc9f0', '#7b2cbf'];
+  C.lineCap = 'butt';
+  for (let i = 0; i < cols.length; i++) { C.beginPath(); C.ellipse(px, py, 56 - i * 5, 50 - i * 5, 0, Math.PI, 0); C.strokeStyle = cols[i]; C.lineWidth = 5.5; C.globalAlpha = 0.92; C.stroke(); }
+  C.globalAlpha = 1;
+  ball(o.x + 0.1, cy + 0.15, 4, 7, 'rgba(255,255,255,.9)'); ball(o.x + 1.9, cy + 0.15, 4, 7, 'rgba(255,255,255,.9)'); ball(o.x + 0.3, cy + 0.18, 6, 6, 'rgba(255,255,255,.9)');
+  ball(o.x + 1.7, cy + 0.18, 6, 6, 'rgba(255,255,255,.9)');
+  if (GFXq() > 0) for (let k = 0; k < 4; k++) { const t = (ENV.T * 0.4 + k * 0.25) % 1; const an = Math.PI * (1 - t); ball(cx + Math.cos(an) * 1.4, cy, Math.sin(an) * 44 + 4, 1.6, `rgba(255,255,255,${Math.sin(t * 3.14)})`); }
+};
+
 /* ---------- decoratie ---------- */
 DR.boom = (o) => tree(o.x + 0.5, o.y + 0.5, o.id, 1);
 DR.struik = (o) => {
@@ -1811,6 +2097,8 @@ export function objHeight(o) {
   switch (o.t) {
     case 'reuzenrad': return 126; case 'piratenschip': return 84; case 'achtbaan': return 80; case 'valtoren': return 135; case 'waterglijbaan': return 62;
     case 'spookhuis': return 64; case 'boom': return 40; case 'tent': return 60; case 'draaimolen': return 56; case 'theekopjes': return 46; case 'botsauto': return 38; case 'lab': return 58;
+    case 'minitrein': return 34; case 'ballonvaart': return 88; case 'sprookjeskasteel': return 84; case 'ruimtereis': return 78; case 'diepzeereis': return 40; case 'helikoptertour': return 56; case 'ufodraaier': return 66; case 'dinosafari': return 56; case 'vulkaanglijbaan': return 92; case 'vliegtuigjes': return 72;
+    case 'windmolen': return 70; case 'vuurtoren': return 80; case 'regenboog': return 60; case 'drakenbeeld': return 40; case 'palm': return 48; case 'den': return 54;
     case 'restaurant': return 46; case 'fontein': return 30; case 'standbeeld': return 36; case 'lantaarn': return 38; default: return 30;
   }
 }
@@ -1821,7 +2109,7 @@ export function drawObject(c, o, anim, dim) {
   f(o, anim || 0);
   if (DEFS[o.t].k === 'ride') {
     const d = DEFS[o.t], top = objHeight(o) + 12;
-    badge(d.e, o.x + d.w / 2, o.y + d.h / 2, top, 9, true);
+    badge(d.e, o.x + d.w / 2, o.y + d.h / 2, top, 13, true);
     if (o.broken) { const px = X(o.x + d.w / 2, o.y + d.h / 2), py = Y(o.x + d.w / 2, o.y + d.h / 2, top + 22); text('🔧', px, py + Math.sin(ENV.T * 6) * 2, 16); C.strokeStyle = '#e63946'; C.lineWidth = 2; C.beginPath(); C.arc(px, py, 12, 0, 6.2832); C.stroke(); }
     else if (!o.open) { text('⛔', X(o.x + d.w / 2, o.y + d.h / 2), Y(o.x + d.w / 2, o.y + d.h / 2, top + 22), 15); }
     else if (o.wear > 60) { text('⚠️', X(o.x + d.w / 2, o.y + d.h / 2) + 14, Y(o.x + d.w / 2, o.y + d.h / 2, top + 8), 11); }
@@ -1885,17 +2173,27 @@ export function drawGate(c, P) {
 function ball2(px, py, r, col) { C.beginPath(); C.arc(px, py, r, 0, 6.2832); C.fillStyle = col; C.fill(); }
 
 /* ---------- ondergrond (gecachet) ---------- */
+// 4 uiterlijken (werelden): eigen grondpalet, wegen en lucht; de achtergrond komt uit Themes (docs/gfx/themes.js)
+export const LOOKS = [
+  { id: 'klassiek', name: 'Klassiek', emoji: '🎡', world: 'pretpark', d: 'Het vertrouwde zonnige park.', pal: null },
+  { id: 'snoep', name: 'Snoepland', emoji: '🍭', world: 'snoepland', d: 'Roze gras en suikerwegen.', pal: { g: [['#f7b3d4', '#f49fc7']], road: '#fff1c9', edge: '#d46aa0', out: ['#fbcfe8', '#fde68a'], tex: 'rgba(255,255,255,.7)' } },
+  { id: 'woestijn', name: 'Woestijn', emoji: '🏜️', world: 'woestijn', d: 'Zand, zon en een lange schaduw.', pal: { g: [['#ecd08f', '#e5c47e']], road: '#f7e6bd', edge: '#b78a3c', out: ['#fb923c', '#fef3c7'], tex: 'rgba(160,110,40,.3)' } },
+  { id: 'neon', name: 'Neon-nacht', emoji: '🪩', world: 'neon', d: 'Een park vol lichtjes in het donker.', pal: { g: [['#2a1058', '#331466']], road: '#5b2a9b', edge: '#12002b', out: ['#0a0014', '#3b0764'], tex: 'rgba(240,171,252,.35)', night: 0.38 } },
+];
+let LOOK = null;
+export function setLookId(id) { LOOK = LOOKS.find((l) => l.id === id) || LOOKS[0]; if (LOOK.id === 'klassiek') LOOK = LOOKS[0]; }
+const themeOf = (name) => (LOOK && LOOK.pal ? { ...THEMES[name], ...LOOK.pal } : THEMES[name]);
 export const THEMES = {
   meadow: { g: [['#a9dc72', '#9fd368'], ['#86d263', '#7bc85a'], ['#cdb84e', '#c3ad44'], ['#edf4f9', '#e1ebf3']], road: '#ddd5c2', edge: '#8a6a45', out: ['#bfe3ff', '#e9f6e0'] },
   beach: { g: [['#f4e2a8', '#efd99a']], road: '#e7ddc6', edge: '#c9a86a', out: ['#7fd6ee', '#bdeef7'] },
   snow: { g: [['#f6fbff', '#e9f3fb']], road: '#cfd8e3', edge: '#7f8fa3', out: ['#c9dbf0', '#eef5fc'] },
 };
-export function groundKey(G, P) { return [P.n, seasonOf(P, G), P.i].join('|'); }
-export function roadKey(G, P) { return [P.n, P.roadVer, seasonOf(P, G), P.i].join('|'); }
+export function groundKey(G, P) { return [P.n, seasonOf(P, G), P.i, LOOK ? LOOK.id : ''].join('|'); }
+export function roadKey(G, P) { return [P.n, P.roadVer, seasonOf(P, G), P.i, LOOK ? LOOK.id : ''].join('|'); }
 const OUTER = 3;
 export function buildGround(P, G, mk) {
   const n = P.n, M = OUTER, gs = n <= 20 ? 1.5 : n <= 24 ? 1.3 : 1.15;
-  const th = THEMES[PARKS[P.i].theme], season = seasonOf(P, G), themeName = PARKS[P.i].theme;
+  const th = themeOf(PARKS[P.i].theme), season = seasonOf(P, G), themeName = PARKS[P.i].theme;
   const pal = th.g[th.g.length === 1 ? 0 : season];
   const minX = -(n + 2 * M) * 32 - 24, maxX = (n + 2 * M) * 32 + 24, minY = -32 * M - 30, maxY = (2 * n + 2 * M) * 16 + 70;
   const cv = mk(Math.ceil((maxX - minX) * gs), Math.ceil((maxY - minY) * gs));
@@ -1948,7 +2246,8 @@ export function buildGround(P, G, mk) {
   const rnd = () => { seed = (seed * 1664525 + 1013904223) >>> 0; return seed / 4294967296; };
   for (let k = 0; k < n * n * 1.2; k++) {
     const x = rnd() * n, y = rnd() * n, px = X(x, y), py = Y(x, y);
-    if (th === THEMES.snow || season === 3) { c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(px, py, 1.5, 1.5); }
+    if (LOOK && LOOK.pal) { c.fillStyle = LOOK.pal.tex; c.fillRect(px, py, 1.8, 1.8); }
+    else if (th === THEMES.snow || season === 3) { c.fillStyle = 'rgba(255,255,255,.9)'; c.fillRect(px, py, 1.5, 1.5); }
     else if (th === THEMES.beach) { c.fillStyle = 'rgba(180,140,70,.25)'; c.fillRect(px, py, 1.4, 1); }
     else { c.strokeStyle = 'rgba(40,110,40,.28)'; c.lineWidth = 1; c.beginPath(); c.moveTo(px, py); c.lineTo(px - 1.5, py - 3); c.moveTo(px + 1, py); c.lineTo(px + 1.5, py - 2.5); c.stroke(); }
   }
@@ -1959,7 +2258,7 @@ export function buildGround(P, G, mk) {
 // wegenlaag: aparte, kleinere cache zodat slepen met de weg-tool snel blijft
 export function buildRoads(P, G, mk) {
   const n = P.n, gs = n <= 20 ? 1.5 : n <= 24 ? 1.3 : 1.15, season = seasonOf(P, G);
-  const th = THEMES[PARKS[P.i].theme];
+  const th = themeOf(PARKS[P.i].theme);
   const minX = -n * 32 - 12, maxX = n * 32 + 12, minY = -10, maxY = n * 32 + 12;
   const cv = mk(Math.ceil((maxX - minX) * gs), Math.ceil((maxY - minY) * gs));
   const c = cv.getContext('2d');
@@ -2165,7 +2464,21 @@ const CSS = `
 .tp-badge.g{background:#18a058;color:#fff}
 .tp-note{color:var(--mute);font-size:12px}
 @media(max-width:380px){.tp-chip{padding:4px 7px;font-size:12px}.tp-it{flex-basis:80px}}
+.tp-root{font-size:15px}
+.tp-it{flex-basis:104px;padding:8px 5px 7px;font-size:12px}
+.tp-it b{font-size:34px}.tp-it b img.gfx-ic,.tp-it b .gfx-ei{width:46px;height:46px}
+.tp-cat{padding:9px 13px;font-size:14px;min-height:44px}
+.tp-b{padding:10px 14px;font-size:15px;min-height:44px}
+.tp-rb{width:50px;height:50px;font-size:23px}
+.tp-chip{font-size:14px;padding:7px 11px}
+.tp-nav button{font-size:11px}.tp-nav button b{font-size:25px}
+.tp-row .em{font-size:34px;width:46px;flex-basis:46px}.tp-row .em .gfx-ei{width:40px;height:40px}
+.tp-ach b{font-size:34px}.tp-ach b .gfx-ei{width:44px;height:44px}
+.tp-mbox .big .gfx-ei{width:64px;height:64px}
+.tp-side{flex-direction:column;flex-wrap:wrap;align-items:flex-end;max-height:calc(100% - 64px);gap:6px}
+.tp-scr{bottom:calc(56px * var(--gfx-scale,1) * 1.1)}.tp-scr.pn{bottom:56px}
 `;
+const CSS2 = CSS + BG.uiCss(['.tp-nav', '.tp-hud', '.tp-side', '.tp-sheet', '.tp-drawer', '.tp-conf', '.tp-scr.pn', '.tp-tut', '.tp-ev', '.tp-toasts', '.tp-hint', '.tp-mbox'], 1.1);
 
 /* ---------- kleine hulpfuncties voor de UI ---------- */
 const esc2 = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -2339,6 +2652,8 @@ export function tplMore(G, V) {
     <div class="tp-chk"><span>🔊 Geluidjes</span><button class="tp-b ${G.set.sfx ? 'ok' : ''}" data-act="sfx">${G.set.sfx ? 'Aan' : 'Uit'}</button></div><br>
     <div class="tp-chk"><span>🎵 Muziek</span><button class="tp-b ${G.set.mus ? 'ok' : ''}" data-act="mus">${G.set.mus ? 'Aan' : 'Uit'}</button></div><br>
     <div class="tp-chk"><span>⏩ Spelsnelheid</span><button class="tp-b" data-act="speed">×${G.set.spd}</button></div><br>
+    <div class="tp-chk"><span>⚙️ Grafiek &amp; schaal</span><button class="tp-b" data-act="gear">Openen</button></div><br>
+    <div class="tp-chk"><span>🎨 Uiterlijk</span><button class="tp-b" data-act="looks">Kiezen</button></div><br>
     <div class="tp-chk"><span>🎓 Uitleg</span><button class="tp-b" data-act="tutorial">Opnieuw tonen</button></div><br>
     <div class="tp-chk"><span>☁️ Opslag</span><span class="tp-note">${esc2(V.cloudMsg || 'lokaal')}</span></div><br>
     <div class="tp-chk"><span>🗑️ Alles wissen</span><button class="tp-b ${V.resetArmed ? 'red' : ''}" data-act="reset">${V.resetArmed ? 'Zeker weten? Tik nog eens' : 'Opnieuw beginnen'}</button></div></div>
@@ -2366,7 +2681,7 @@ export function themaparkView(ctx) {
   if (typeof CanvasRenderingContext2D !== 'undefined' && !CanvasRenderingContext2D.prototype.roundRect) {
     CanvasRenderingContext2D.prototype.roundRect = function (x, y, w, h) { this.rect(x, y, w, h); };
   }
-  const css = document.createElement('style'); css.textContent = CSS; document.head.appendChild(css);
+  const css = document.createElement('style'); css.textContent = CSS2; document.head.appendChild(css);
   const root = document.createElement('div'); root.className = 'tp-root';
   view.innerHTML = ''; view.appendChild(root);
   root.innerHTML = `
@@ -2383,6 +2698,8 @@ export function themaparkView(ctx) {
       <button class="tp-rb" data-act="daily-btn" data-v="dailybtn">🎁</button>
       <button class="tp-rb" data-act="mus">🎵</button>
       <button class="tp-rb" data-act="center">🧭</button>
+      <button class="tp-rb" data-act="looks" aria-label="Uiterlijk">🎨</button>
+      <button class="tp-rb" data-act="gear" aria-label="Instellingen">⚙️</button>
       <button class="tp-rb" data-act="zoom+" data-v="zp">＋</button>
       <button class="tp-rb" data-act="zoom-" data-v="zm">－</button>
     </div>
@@ -2400,13 +2717,17 @@ export function themaparkView(ctx) {
   const q = (s) => root.querySelector(s);
   const vq = (n) => root.querySelector(`[data-v="${n}"]`);
   const canvas = q('canvas');
+  setLookId(BG.getLook('themapark', LOOKS).id);
+  const stopIcons = BG.iconify(root);
+  const offGfx = BG.Settings.onChange(() => { if (V) { V.ground = null; V.gkey = ''; V.rkey = ''; } });
+  const milestone = (kind, o) => { try { BG.milestone(root, kind, o); } catch (e) { /* geen scene */ } };
 
   /* ---------- toestand van het scherm ---------- */
   const V = {
     tab: 'park', W: 360, H: 560, dpr: 1, cam: { x: 0, y: 0, z: 0.7 }, tool: null, ghost: null, sel: null, cat: 'rides', buildOpen: false,
     parts: [], toasts: [], last: 0, acc: 0, ground: null, gkey: '', incEma: 0, lastEarn: 0, lastEarnT: 0, pdown: false, resetArmed: 0,
     hist: [], fw: [], cloudMsg: 'lokaal', dirty: false, lastCloud: 0, lastLocal: 0, saveTimer: 0, rain: [], tutSkip: false, fps: 0, panelSig: {}, lastPanel: 0,
-    hoverTouch: false, lastPaint: null, painted: 0, dailyShown: false, evId: null, shown: {},
+    fx: new BG.Particles(), lastStars: -1, hoverTouch: false, lastPaint: null, painted: 0, dailyShown: false, evId: null, shown: {},
   };
   for (let i = 0; i < 90; i++) V.rain.push([Math.random(), Math.random(), 0.6 + Math.random()]);
 
@@ -2784,6 +3105,8 @@ export function themaparkView(ctx) {
     const P = G ? cur() : null;
     switch (a) {
       case 'tab': setTab(b); break;
+      case 'gear': BG.openGear({ title: 'Instellingen', toast }); break;
+      case 'looks': BG.openLooks({ gameId: 'themapark', looks: LOOKS, onPick: (l) => { setLookId(l.id); V.ground = null; V.gkey = ''; V.rkey = ''; toast(`${l.emoji} Uiterlijk: ${l.name}`, 'good'); } }); break;
       case 'goto-manage': setTab('manage'); break;
       case 'build': V.buildOpen = !V.buildOpen; syncDrawerOpen(); sfx('click'); updateTutorial(); break;
       case 'cat': V.cat = b; renderDrawer(); sfx('click'); updateTutorial(); break;
@@ -2814,7 +3137,7 @@ export function themaparkView(ctx) {
       case 'nextpark': { const k = (G.cur + 1) % G.parks.length; switchPark(G.parks[k].i); break; }
       case 'park': switchPark(+b); setTab('park'); break;
       case 'expand': { const Q = G.parks.find((p) => p.i === +b); if (Q && expandPark(G, Q)) { sfx('fan'); toast('🗺️ Je park is groter geworden!', 'good'); V.ground = null; V.gkey = ''; V.rkey = ''; if (Q === P) centerOn(P.gx, P.n - 7); afterAction(); } else sfx('err'); break; }
-      case 'unlock': if (unlockPark(G, +b)) { sfx('fan'); toast(`🎉 ${PARKS[+b].n} geopend!`, 'gold'); switchPark(+b); setTab('park'); } else sfx('err'); break;
+      case 'unlock': if (unlockPark(G, +b)) { sfx('fan'); milestone('levelup', { title: PARKS[+b].n + ' geopend!' }); toast(`🎉 ${PARKS[+b].n} geopend!`, 'gold'); switchPark(+b); setTab('park'); } else sfx('err'); break;
       case 'entry-': setEntry(P, P.entry - Math.max(1, Math.round(P.entry * 0.1))); afterAction(); break;
       case 'entry+': setEntry(P, P.entry + Math.max(1, Math.round(P.entry * 0.1))); afterAction(); break;
       case 'entry-auto': P.auto = !P.auto; if (P.auto) P.entry = autoEntry(P); afterAction(); break;
@@ -2827,17 +3150,17 @@ export function themaparkView(ctx) {
         P.prices[b] = clamp(nv, 0, d.pr * 4); sfx('click'); afterAction(); break;
       }
       case 'res': { const id = c2 ? b + ':' + c2 : b; if (buyResearch(G, id)) { sfx('up'); toast('🔬 Ontdekt!', 'good'); afterAction(); } else sfx('err'); break; }
-      case 'goal': if (claimGoal(G, b)) { sfx('fan'); const gl = GOALS.find((x) => x.id === b); toast(`🏆 ${esc2(gl.t)} · +${money(goalReward(G, gl))}`, 'gold'); afterAction(); updateTutorial(); } break;
-      case 'claimall': { let n = 0, tot = 0; for (const g of GOALS) if (!G.goals[g.id] && goalState(G, g).done) { const rw = goalReward(G, g); if (claimGoal(G, g.id)) { n++; tot += rw; } } if (n) { sfx('fan'); toast(`🏆 ${n} doelen · +${money(tot)}`, 'gold'); afterAction(); updateTutorial(); } break; }
+      case 'goal': if (claimGoal(G, b)) { sfx('fan'); milestone('coins-rain', { title: 'Doel gehaald!', sub: GOALS.find((x) => x.id === b).t }); const gl = GOALS.find((x) => x.id === b); toast(`🏆 ${esc2(gl.t)} · +${money(goalReward(G, gl))}`, 'gold'); afterAction(); updateTutorial(); } break;
+      case 'claimall': { let n = 0, tot = 0; for (const g of GOALS) if (!G.goals[g.id] && goalState(G, g).done) { const rw = goalReward(G, g); if (claimGoal(G, g.id)) { n++; tot += rw; } } if (n) { sfx('fan'); milestone('coins-rain', { title: n + ' doelen gehaald!' }); toast(`🏆 ${n} doelen · +${money(tot)}`, 'gold'); afterAction(); updateTutorial(); } break; }
       case 'daily': case 'daily-btn': {
         const r = claimDaily(G);
-        if (r) { sfx('fan'); showModal(`<div class="big">🎁</div><h3>Dagelijkse beloning!</h3><p>Je krijgt <b>${money(r.m)}</b> en <b>${fmtN(r.rp)}</b> 🔬${r.tk ? ' en een gouden ticket 🎟️!' : '.'}</p><p class="tp-note">Reeks: ${G.daily.streak} dagen. Kom morgen terug voor meer!</p><button class="tp-b pri" data-act="mclose" style="margin-top:8px">Top!</button>`); afterAction(); }
+        if (r) { sfx('fan'); milestone('daily-bonus', { title: 'Dagelijkse beloning!', sub: G.daily.streak + ' dagen op rij', force: true }); showModal(`<div class="big">🎁</div><h3>Dagelijkse beloning!</h3><p>Je krijgt <b>${money(r.m)}</b> en <b>${fmtN(r.rp)}</b> 🔬${r.tk ? ' en een gouden ticket 🎟️!' : '.'}</p><p class="tp-note">Reeks: ${G.daily.streak} dagen. Kom morgen terug voor meer!</p><button class="tp-b pri" data-act="mclose" style="margin-top:8px">Top!</button>`); afterAction(); }
         else if (a === 'daily-btn') setTab('goals');
         break;
       }
-      case 'egoal': if (claimEndless(G)) { sfx('fan'); toast('♾️ Mijlpaal gehaald!', 'gold'); afterAction(); } break;
+      case 'egoal': if (claimEndless(G)) { sfx('fan'); milestone('chest-open', { title: 'Mijlpaal!' }); toast('♾️ Mijlpaal gehaald!', 'gold'); afterAction(); } break;
       case 'mclose': hideModal(); break;
-      case 'evclaim': if (claimEvent(G)) { sfx('fan'); toast('🎉 Beloning opgehaald!', 'gold'); afterAction(); } break;
+      case 'evclaim': if (claimEvent(G)) { sfx('fan'); milestone('chest-open', { title: 'Beloning!' }); toast('🎉 Beloning opgehaald!', 'gold'); afterAction(); } break;
       case 'up': { const o = P.byId.get(V.sel && V.sel.id); if (o && upgradeRide(G, P, o)) { sfx('up'); burst(o.x + DEFS[o.t].w / 2, o.y + DEFS[o.t].h / 2, 14); afterAction(); } else sfx('err'); break; }
       case 'repair': { const o = P.byId.get(V.sel && V.sel.id); if (o && repairRide(G, P, o)) { sfx('fixed'); afterAction(); } else sfx('err'); break; }
       case 'toggle': { const o = P.byId.get(V.sel && V.sel.id); if (o) { o.open = !o.open; recomputeValue(P); sfx('click'); afterAction(); } break; }
@@ -2847,7 +3170,7 @@ export function themaparkView(ctx) {
         showModal(`<div class="big">🎉</div><h3>Nieuwe franchise?</h3><p>Je begint opnieuw met één klein park en krijgt <b>${gain} 🎟️</b>. Je houdt je voordelen, prestaties en tickets.</p><p class="tp-note">Geld, parken en onderzoek van nu gaan weg.</p><div class="tp-acts" style="justify-content:center"><button class="tp-b" data-act="mclose">Nog niet</button><button class="tp-b pri" data-act="franchise-go">Ja, nieuw begin!</button></div>`);
         break;
       }
-      case 'franchise-go': { if (startFranchise(G)) { hideModal(); sfx('fan'); V.ground = null; V.gkey = ''; V.rkey = ''; closeSheet(); setTool(null); V.buildOpen = false; syncDrawerOpen(); const P2 = cur(); P2.guests = []; populate(G, P2, 0.1); centerOn(P2.gx, P2.n - 7, 0.7); setTab('park'); toast('🎟️ Nieuwe franchise gestart! Koop voordelen bij Meer.', 'gold'); flushSave(false); afterAction(); } break; }
+      case 'franchise-go': { if (startFranchise(G)) { hideModal(); sfx('fan'); milestone('victory', { title: 'Nieuwe franchise!', sub: 'Je begint opnieuw, maar sterker', force: true }); V.ground = null; V.gkey = ''; V.rkey = ''; closeSheet(); setTool(null); V.buildOpen = false; syncDrawerOpen(); const P2 = cur(); P2.guests = []; populate(G, P2, 0.1); centerOn(P2.gx, P2.n - 7, 0.7); setTab('park'); toast('🎟️ Nieuwe franchise gestart! Koop voordelen bij Meer.', 'gold'); flushSave(false); afterAction(); } break; }
       case 'fb': if (buyFranchise(G, b)) { sfx('up'); afterAction(); } else sfx('err'); break;
       case 'tutorial': G.tut = 0; V.tutSkip = false; setTab('park'); updateTutorial(); afterAction(); break;
       case 'tutskip': V.tutSkip = true; G.tut = 99; updateTutorial(); markDirty(); break;
@@ -2957,6 +3280,7 @@ export function themaparkView(ctx) {
     for (const e of P.fx) {
       if (e.k === 'coin') {
         if (e.v >= 1 && V.parts.length < 50) { const w = t2w(e.x, e.y); floatText(w[0], w[1] - 26, '+' + fmtMs(e.v), '#ffd23f'); }
+        if (e.v >= 1 && V.tab === 'park' && V.fx.count < 40 && Math.random() < 0.6) { const w = t2w(e.x, e.y); V.fx.burst((w[0] - V.cam.x) * V.cam.z + V.W / 2, (w[1] - V.cam.y) * V.cam.z + V.H / 2 - 30 * V.cam.z, { kind: 'coins', n: 2, power: 0.45, size: 0.55, spread: Math.PI * 0.7 }); }
         sfx('coin');
       } else if (e.k === 'scream') {
         const o = e.o; if (!o) continue; const d = DEFS[o.t], w = t2w(o.x + d.w / 2, o.y + d.h / 2);
@@ -2970,7 +3294,7 @@ export function themaparkView(ctx) {
     for (const e of G.fx) {
       if (e.k === 'msg') toast(e.e + ' ' + e.tx, e.kind);
       else if (e.k === 'event') { sfx('bell'); }
-      else if (e.k === 'ach') { sfx('fan'); toast(`${e.a.e} Prestatie: ${esc2(e.a.t)}${e.a.tk ? ' · +' + e.a.tk + ' 🎟️' : ''}`, 'gold'); markDirty(); }
+      else if (e.k === 'ach') { sfx('fan'); milestone('new-record', { title: 'Prestatie!', sub: e.a.t, icon: 'trophy' }); toast(`${e.a.e} Prestatie: ${esc2(e.a.t)}${e.a.tk ? ' · +' + e.a.tk + ' 🎟️' : ''}`, 'gold'); markDirty(); }
     }
     G.fx.length = 0;
   }
@@ -2999,6 +3323,7 @@ export function themaparkView(ctx) {
     // inkomen-gemiddelde
     V.lastEarnT += dt;
     if (V.lastEarnT >= 1) { const d = (G.earnedAll - V.lastEarn) / V.lastEarnT; V.incEma = V.incEma ? V.incEma * 0.7 + d * 0.3 : d; V.lastEarn = G.earnedAll; V.lastEarnT = 0; V.histN = (V.histN || 0) + 1; if (V.histN % 10 === 0) { V.hist.push(Math.round(V.incEma)); if (V.hist.length > 60) V.hist.shift(); } }
+    V.fx.update(dt);
     // deeltjes
     for (let i = V.parts.length - 1; i >= 0; i--) { const p = V.parts[i]; p.life -= dt; p.x += p.vx * dt; p.y += p.vy * dt; if (p.kind === 'dot') p.vy += 160 * dt; if (p.life <= 0) V.parts.splice(i, 1); }
   }
@@ -3008,7 +3333,7 @@ export function themaparkView(ctx) {
   function draw(now) {
     const P = cur(), c = canvas.getContext('2d', { alpha: false }); if (!c) return;
     const T = now / 1000, n = P.n, z = V.cam.z, dpr = V.dpr, W = V.W, H = V.H;
-    const season = seasonOf(P, G), theme = PARKS[P.i].theme, night = nightFactor(G), wx = weatherOf(P, G);
+    const season = seasonOf(P, G), theme = PARKS[P.i].theme, night = Math.max(nightFactor(G), (LOOK && LOOK.pal && LOOK.pal.night) || 0), wx = weatherOf(P, G);
     ENV = { T, night, season, theme, wx };
     LIGHTS = [];
     const gk = groundKey(G, P);
@@ -3016,10 +3341,16 @@ export function themaparkView(ctx) {
     const rk = roadKey(G, P);
     if (!V.roadsC || V.rkey !== rk) { V.roadsC = buildRoads(P, G, mkCanvas); V.rkey = rk; }
     // achtergrond
-    const th = THEMES[theme];
+    const th = themeOf(theme);
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
     const bg = c.createLinearGradient(0, 0, 0, H); bg.addColorStop(0, th.out[0]); bg.addColorStop(1, th.out[1]);
     c.fillStyle = bg; c.fillRect(0, 0, W, H);
+    if (LOOK && LOOK.pal) { // gekozen wereld als achtergrond, met parallax (verschuift mee met de camera)
+      const par = BG.parallax(V.cam.x, V.cam.y, 1), ox = clamp(par[0], -36, 36), oy = clamp(par[1], -24, 24);
+      c.save(); c.translate(-40 + ox, -40 + oy);
+      try { BG.Themes.paintBackground(c, W + 80, H + 80, BG.Themes.world(LOOK.world), T); } catch (e) { /* geen achtergrond */ }
+      c.restore();
+    }
     if (theme === 'beach') { c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 2; for (let i = 0; i < 12; i++) { const y = (i / 12 * H + T * 6) % H; c.beginPath(); for (let x = 0; x <= W; x += 20) c.lineTo(x, y + Math.sin(x * 0.05 + T + i) * 4); c.stroke(); } }
     c.setTransform(dpr * z, 0, 0, dpr * z, dpr * (W / 2 - V.cam.x * z), dpr * (H / 2 - V.cam.y * z));
     C = c;
@@ -3088,6 +3419,9 @@ export function themaparkView(ctx) {
     }
     // dag/nacht en weer in schermruimte
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (V.fx) V.fx.draw(c);
+    if (night < 0.45 && wx !== 2) BG.cloudShadows(c, W, H, T, wx === 1 ? 0.07 : 0.11);
+    if (BG.GFX.q >= 1 && night > 0.05 && night < 0.5) { c.fillStyle = `rgba(255,120,50,${0.1 * Math.sin((night - 0.05) / 0.45 * 3.14)})`; c.fillRect(0, 0, W, H); } // avondgloed
     if (night > 0.04) {
       c.globalCompositeOperation = 'multiply'; c.fillStyle = `rgb(${255 - night * 190 | 0},${255 - night * 170 | 0},${255 - night * 80 | 0})`; c.fillRect(0, 0, W, H); c.globalCompositeOperation = 'source-over';
       if (night > 0.12) {
@@ -3127,6 +3461,7 @@ export function themaparkView(ctx) {
     if (!view.isConnected) return;
     { const r = canvas.getBoundingClientRect(); if (Math.abs(r.width - V.W) > 1 || Math.abs(r.height - V.H) > 1) { if (r.width > 50) { resize(); clampCam(); } } }
     updateHUD();
+    { const st = Math.floor(cur().rs + 1e-6); if (V.lastStars >= 0 && st > V.lastStars) milestone('levelup', { title: st + ' sterren!', sub: 'Je park wordt steeds beroemder' }); V.lastStars = st; }
     updateTutorial();
     if (V.tab !== 'park' && !V.pdown) renderPanel(V.tab);
     if (V.sel && !V.pdown) renderSheet();
@@ -3154,6 +3489,7 @@ export function themaparkView(ctx) {
     A.sfx = !!G.set.sfx; A.mus = !!G.set.mus;
     hideModal();
     renderDrawer(); updateHUD(true); updateTutorial();
+    try { BG.intro(root, 'themapark', 'intro-pretpark', { title: 'Themapark Tycoon', sub: 'Bouw het mooiste pretpark!' }); } catch (e) { /* geen intro */ }
     V.last = performance.now(); V.lastEarn = G.earnedAll;
     if (off) showModal(`<div class="big">👋</div><h3>Welkom terug!</h3><p>Je was ${hm(off.away)} weg.</p><p>Je park verdiende <b>${money(off.gain)}</b> en <b>${fmtN(off.rpGain)}</b> 🔬 onderzoekspunten.</p><p class="tp-note">Offline verdien je ${Math.round(off.eff * 100)}% van wat je park normaal oplevert.</p><button class="tp-b pri" data-act="mclose" style="margin-top:8px">Top!</button>`);
     raf = requestAnimationFrame(frame);
@@ -3175,6 +3511,7 @@ export function themaparkView(ctx) {
     for (const [t, ev, fn, opt] of listeners) { try { t.removeEventListener(ev, fn, opt); } catch (e) { /* weg */ } }
     if (G) { saveLocal(); saveCloud(true); }
     A.destroy();
+    try { stopIcons(); offGfx(); } catch (e) { /* weg */ }
     try { css.remove(); root.remove(); } catch (e) { /* weg */ }
   });
   return { G: () => G, V, advance, draw, onAct, setTab, A };

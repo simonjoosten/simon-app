@@ -1,12 +1,12 @@
 // Mini nep-DOM + handmatige klok voor de rooktests van de Learn-spellen (SPELLEN-C)
 export const clock = { now: 0, id: 1, timers: new Map(), raf: new Map() };
 export class El {
-  constructor(tag) { this.tagName = String(tag).toUpperCase(); this.children = []; this.style = {}; this.className = ''; this._t = ''; this.listeners = {}; this.parentNode = null; this.clientWidth = 390; this.clientHeight = 640; this.isConnected = true; this.dataset = {}; this.attrs = {}; this.value = ''; this.disabled = false; this.width = 300; this.height = 300; }
+  constructor(tag) { this.tagName = String(tag).toUpperCase(); this.children = []; this.style = { setProperty() {} }; this.className = ''; this._t = ''; this.listeners = {}; this.parentNode = null; this.clientWidth = 390; this.clientHeight = 640; this.isConnected = true; this.dataset = {}; this.attrs = {}; this.value = ''; this.disabled = false; this.width = 300; this.height = 300; }
   get textContent() { return this._t + this.children.map(c => c.textContent).join(''); }
   set textContent(v) { this.children = []; this._t = String(v); }
   set innerHTML(v) { this.children = []; this._t = String(v).replace(/<[^>]*>/g, ''); }
   get innerHTML() { return this._t; }
-  get classList() { const s = this; return { add: (...c) => { s.className = (s.className + ' ' + c.join(' ')).trim(); }, remove: (...c) => { s.className = s.className.split(/\s+/).filter(x => !c.includes(x)).join(' '); }, contains: c => s.className.split(/\s+/).includes(c), toggle: (c, f) => { const h = s.className.split(/\s+/).includes(c); if (f === undefined ? h : !f) this.remove(c); else this.add(c); } }; }
+  get classList() { const s = this; return { add: (...c) => { s.className = (s.className + ' ' + c.join(' ')).trim(); }, remove: (...c) => { s.className = s.className.split(/\s+/).filter(x => !c.includes(x)).join(' '); }, contains: c => s.className.split(/\s+/).includes(c), toggle: (c, f) => { const h = s.className.split(/\s+/).includes(c); if (f === undefined ? h : !f) s.classList.remove(c); else s.classList.add(c); } }; }
   appendChild(c) { c.parentNode = this; this.children.push(c); return c; }
   append(...cs) { cs.forEach(c => { if (typeof c === 'string') { this._t += c; } else this.appendChild(c); }); }
   prepend(c) { c.parentNode = this; this.children.unshift(c); }

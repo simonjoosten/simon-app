@@ -26,6 +26,10 @@ export const WORLDS = [
   { id: 'kepler', e: '🌍', n: 'Kepler-22b', rare: 'biogel', rn: 'Biogel', re: '🧪', dur: 2400, cost: 400000, p: 2800, req: 'r_ver', hz: 'Gloeiende planten groeien door de raket heen' },
   { id: 'pluto', e: '⚪', n: 'Pluto', rare: 'rijp', rn: 'Koudkristal', re: '🔹', dur: 3600, cost: 1200000, p: 6500, req: 'r_warp', hz: 'Een diepvrieswind blaast over het ijs' },
   { id: 'aurora', e: '🌟', n: 'Aurora-ster', rare: 'aurora', rn: 'Aurorastof', re: '🌈', dur: 5400, cost: 4000000, p: 15000, req: 'r_warp', hz: 'Een lichtstorm kriebelt overal' },
+  { id: 'proxima', e: '👽', n: 'Proxima b', rare: 'alienmetaal', rn: 'Alienmetaal', re: '🛡️', dur: 7200, cost: 14000000, p: 38000, req: 'r_prox', hz: 'Vriendelijke aliens zwaaien met tentakels' },
+  { id: 'trappist', e: '🌍', n: 'Trappist-1e', rare: 'oerzaad', rn: 'Oerzaad', re: '🍀', dur: 10800, cost: 50000000, p: 90000, req: 'r_prox', hz: 'Een warme stoomwolk hangt in de lucht' },
+  { id: 'kometen', e: '☄️', n: 'Kometengordel', rare: 'komeetijs', rn: 'Komeetijs', re: '☄️', dur: 14400, cost: 200000000, p: 220000, req: 'r_deep', hz: 'Een komeet scheert langs de neus' },
+  { id: 'zwart', e: '🕳️', n: 'Zwart gat Sagitta', rare: 'donker', rn: 'Donkere materie', re: '👻', dur: 21600, cost: 800000000, p: 520000, req: 'r_deep', hz: 'De zwaartekracht trekt aan de raket' },
 ];
 const RARES = WORLDS.map((w) => w.rare);
 export const E = { erts: '🪨', kennis: '🔬', cred: '🪙' };
@@ -46,6 +50,20 @@ export const MODS = [
   { id: 'werk', e: '🏭', n: 'Robotfabriek', c: { erts: 250, cred: 40 }, g: 1.3, req: 'r_robot', fx: '+4 robotplekken, gebruikt 3 ⚡' },
   { id: 'reactor', e: '⚛️', n: 'Fusiereactor', c: { erts: 400, cred: 60, ijzer: 8 }, g: 1.28, req: 'r_reactor', fx: '+28 ⚡ energie' },
   { id: 'schild', e: '🛡️', n: 'Schildgenerator', c: { erts: 800, cred: 100, ijskristal: 6 }, g: 1.4, req: 'r_schild', fx: 'Minder rampjes, gebruikt 6 ⚡' },
+  // nieuw: x = extra productie (erts/kennis/cred per s), sup/dem = energie, o2/food/house = leefruimte
+  { id: 'hotel', e: '🏢', n: 'Maanhotel', c: { erts: 900, cred: 30 }, g: 1.22, req: 'r_hotel', x: { house: 12, dem: 2 }, fx: '+12 slaapplekken, gebruikt 2 ⚡' },
+  { id: 'kas2', e: '🥕', n: 'Superkas', c: { erts: 1200, cred: 20 }, g: 1.2, req: 'r_kas2', x: { food: 18, dem: 3 }, fx: '+18 🍅 voedsel, gebruikt 3 ⚡' },
+  { id: 'oxy2', e: '⛲', n: 'Zuurstoffabriek', c: { erts: 1200, cred: 20 }, g: 1.2, req: 'r_o2b', x: { o2: 22, dem: 3 }, fx: '+22 💨 zuurstof, gebruikt 3 ⚡' },
+  { id: 'steen', e: '🪨', n: 'Steengroeve', c: { erts: 1500, cred: 20 }, g: 1.12, req: 'r_steen', x: { erts: 12, dem: 4 }, fx: '+12 🪨/s, gebruikt 4 ⚡' },
+  { id: 'sat', e: '🛰️', n: 'Satelliet', c: { erts: 3000, cred: 60 }, g: 1.2, req: 'r_sat', x: { kennis: 4, dem: 2 }, fx: '+4 🔬/s, gebruikt 2 ⚡' },
+  { id: 'zontoren', e: '🗼', n: 'Zonnetoren', c: { erts: 5000, cred: 80 }, g: 1.25, req: 'r_zon2', x: { sup: 60 }, fx: '+60 ⚡ energie' },
+  { id: 'bank', e: '💰', n: 'Ruimtebank', c: { erts: 6000, cred: 150 }, g: 1.22, req: 'r_bank', x: { cred: 3, dem: 3 }, fx: '+3 🪙/s, gebruikt 3 ⚡' },
+  { id: 'drone', e: '🚁', n: 'Droneloods', c: { erts: 12000, cred: 200 }, g: 1.3, req: 'r_drone', x: { erts: 60, dem: 8 }, fx: '+60 🪨/s, gebruikt 8 ⚡' },
+  { id: 'toer', e: '🎡', n: 'Maanpretpark', c: { erts: 20000, cred: 400 }, g: 1.3, req: 'r_toer', x: { cred: 6, dem: 5 }, fx: '+6 🪙/s, gebruikt 5 ⚡' },
+  { id: 'obs', e: '🌐', n: 'Sterrenwacht', c: { erts: 25000, cred: 300, ijskristal: 4 }, g: 1.3, req: 'r_obs', x: { kennis: 20, dem: 6 }, fx: '+20 🔬/s, gebruikt 6 ⚡' },
+  { id: 'smelt', e: '🏭', n: 'Smelterij', c: { erts: 40000, cred: 600, zwavel: 10 }, g: 1.35, req: 'r_smelt', x: { erts: 300, dem: 12 }, fx: '+300 🪨/s, gebruikt 12 ⚡' },
+  { id: 'kristal', e: '🔮', n: 'Kristalmijn', c: { erts: 150000, cred: 2500, diamant: 6 }, g: 1.35, req: 'r_kristal', x: { erts: 1500, kennis: 5, dem: 20 }, fx: '+1,5k 🪨/s en +5 🔬/s, gebruikt 20 ⚡' },
+  { id: 'alien', e: '🛸', n: 'Alien-handelsstation', c: { erts: 2000000, cred: 30000, biogel: 10 }, g: 1.4, req: 'r_alien', x: { cred: 120, kennis: 60, dem: 30 }, fx: '+120 🪙/s en +60 🔬/s, gebruikt 30 ⚡' },
 ];
 export const MOD = Object.fromEntries(MODS.map((m) => [m.id, m]));
 
@@ -68,6 +86,21 @@ export const RESEARCH = [
   { id: 'r_boor2', e: '💥', n: 'Plasmaboor', c: { kennis: 4000 }, req: 'r_boor', d: 'Mijnen leveren dubbel zoveel.' },
   { id: 'r_warp', e: '🌀', n: 'Warpmotor', c: { kennis: 12000, diamant: 12 }, req: 'r_ver', d: 'Raketten 30% sneller; reis naar Pluto en de Aurora-ster.' },
   { id: 'r_terra', e: '🌍', n: 'Terraforming', c: { kennis: 30000, biogel: 12 }, req: 'r_ai', d: 'Alles 50% productiever en meer Sterrenlicht bij verhuizen.' },
+  { id: 'r_hotel', e: '🏢', n: 'Maanhotels', c: { kennis: 350 }, req: 'r_wonen', d: 'Bouw hotels met 12 slaapplekken.' },
+  { id: 'r_steen', e: '🪨', n: 'Steenzaag', c: { kennis: 500 }, req: 'r_boor', d: 'Bouw steengroeves (veel erts).' },
+  { id: 'r_sat', e: '🛰️', n: 'Satellietbouw', c: { kennis: 700 }, req: 'r_hangaar', d: 'Bouw satellieten die kennis verzamelen.' },
+  { id: 'r_kas2', e: '🥕', n: 'Superkassen', c: { kennis: 900 }, req: 'r_kas', d: 'Bouw superkassen met veel voedsel.' },
+  { id: 'r_o2b', e: '⛲', n: 'Zuurstoffabriek', c: { kennis: 900 }, req: 'r_o2', d: 'Bouw zuurstoffabrieken.' },
+  { id: 'r_bank', e: '💰', n: 'Maanbank', c: { kennis: 1200 }, req: 'r_handel', d: 'Bouw een ruimtebank die credits verdient.' },
+  { id: 'r_drone', e: '🚁', n: 'Dronetechniek', c: { kennis: 1600 }, req: 'r_robot', d: 'Bouw droneloodsen die erts halen.' },
+  { id: 'r_zon2', e: '🗼', n: 'Zonnetorens', c: { kennis: 1800 }, req: 'r_zon', d: 'Bouw zonnetorens met veel energie.' },
+  { id: 'r_smelt', e: '🏭', n: 'Smelttechniek', c: { kennis: 3500, zwavel: 8 }, req: 'r_boor', d: 'Bouw smelterijen.' },
+  { id: 'r_toer', e: '🎡', n: 'Maantoerisme', c: { kennis: 5000 }, req: 'r_bank', d: 'Bouw een maanpretpark voor toeristen.' },
+  { id: 'r_obs', e: '🌐', n: 'Sterrenwachten', c: { kennis: 6000 }, req: 'r_sat', d: 'Bouw sterrenwachten (veel kennis).' },
+  { id: 'r_kristal', e: '🔮', n: 'Kristalboring', c: { kennis: 20000, diamant: 8 }, req: 'r_boor2', d: 'Bouw kristalmijnen.' },
+  { id: 'r_alien', e: '🛸', n: 'Buitenaards contact', c: { kennis: 40000, biogel: 8 }, req: 'r_ver', d: 'Bouw een handelsstation voor aliens.' },
+  { id: 'r_prox', e: '🌀', n: 'Hyperdrive', c: { kennis: 60000, rijp: 10 }, req: 'r_warp', d: 'Reis naar Proxima b en Trappist-1e.' },
+  { id: 'r_deep', e: '🔭', n: 'Diepe ruimte', c: { kennis: 150000, aurora: 10 }, req: 'r_prox', d: 'Reis naar de Kometengordel en het zwarte gat.' },
 ];
 export const RES = Object.fromEntries(RESEARCH.map((r) => [r.id, r]));
 
@@ -85,6 +118,10 @@ export const PU = [
   { id: 'ken', e: '🔬', n: 'Nieuwsgierig brein', d: '+25% kennis per niveau', max: 10, cost: (l) => 2 + 2 * l },
   { id: 'fast', e: '🚀', n: 'Turbo-raketten', d: '8% snellere reizen per niveau', max: 5, cost: (l) => 2 + 2 * l },
   { id: 'off', e: '🌙', n: 'Nachtwacht', d: '+5% opbrengst terwijl je weg bent', max: 5, cost: (l) => 2 + l },
+  { id: 'solw', e: '☀️', n: 'Zonnekracht', d: '+10% energie per niveau', max: 5, cost: (l) => 2 + 2 * l },
+  { id: 'cre', e: '💰', n: 'Handelsgeest', d: '+20% credits per niveau', max: 10, cost: (l) => 2 + 2 * l },
+  { id: 'hui', e: '🏠', n: 'Gastvrijheid', d: '+2 woonplekken per niveau', max: 5, cost: (l) => 2 + l },
+  { id: 'dag', e: '🎁', n: 'Dagelijkse bonus', d: '+20% dagelijkse beloning per niveau', max: 5, cost: (l) => 2 + l },
 ];
 
 const PREST_K = 2e7;
@@ -112,10 +149,20 @@ export const QUESTS = [
   { t: 'Bouw 5 robots 🤖', tab: 'team', ok: (s) => s.bots >= 5, rew: { m: 10 }, p: (s) => [s.bots, 5] },
   { t: 'Ontdek 6 werelden', tab: 'mis', ok: (s) => s.wd.length >= 6, rew: { m: 15, k: 300 }, p: (s) => [s.wd.length, 6] },
   { t: 'Verdien samen 100.000 🪨 erts', tab: null, ok: (s) => s.st.all >= 1e5, rew: { m: 15 }, p: (s) => [s.st.all, 1e5] },
-  { t: 'Ontdek alle 11 werelden', tab: 'mis', ok: (s) => s.wd.length >= WORLDS.length, rew: { m: 30, k: 1500 }, p: (s) => [s.wd.length, WORLDS.length] },
+  { t: 'Ontdek 11 werelden', tab: 'mis', ok: (s) => s.wd.length >= 11, rew: { m: 30, k: 1500 }, p: (s) => [s.wd.length, 11] },
   { t: 'Verhuis naar een nieuwe maan en verdien Sterrenlicht ✨ (tab Meer)', tab: 'meer', ok: (s) => s.np >= 1, rew: { m: 20 } },
   { t: 'Verdien samen 1 miljoen 🪨 erts', tab: null, ok: (s) => s.st.all >= 1e6, rew: { m: 30 }, p: (s) => [s.st.all, 1e6] },
   { t: 'Verhuis 5 keer', tab: 'meer', ok: (s) => s.np >= 5, rew: { m: 60 }, p: (s) => [s.np, 5] },
+  { t: 'Bouw een 🏢 Maanhotel (onderzoek Maanhotels)', tab: 'bouw', ok: (s) => nb(s, 'hotel') >= 1, rew: { m: 10 } },
+  { t: 'Bouw een 🛰️ Satelliet', tab: 'bouw', ok: (s) => nb(s, 'sat') >= 1, rew: { m: 15, k: 200 } },
+  { t: 'Voltooi 15 onderzoeken', tab: 'lab', ok: (s) => s.res.length >= 15, rew: { m: 20 }, p: (s) => [s.res.length, 15] },
+  { t: 'Bouw een 💰 Ruimtebank', tab: 'bouw', ok: (s) => nb(s, 'bank') >= 1, rew: { m: 20, c: 200 } },
+  { t: 'Bouw in totaal 100 modules', tab: 'bouw', ok: (s) => s.st.bld >= 100, rew: { m: 40 }, p: (s) => [s.st.bld, 100] },
+  { t: 'Ontdek 12 werelden', tab: 'mis', ok: (s) => s.wd.length >= 12, rew: { m: 40, k: 3000 }, p: (s) => [s.wd.length, 12] },
+  { t: 'Bouw een 🛸 Alien-handelsstation', tab: 'bouw', ok: (s) => nb(s, 'alien') >= 1, rew: { m: 80 } },
+  { t: 'Verdien samen 1 miljard 🪨 erts', tab: null, ok: (s) => s.st.all >= 1e9, rew: { m: 60 }, p: (s) => [s.st.all, 1e9] },
+  { t: 'Verhuis 10 keer', tab: 'meer', ok: (s) => s.np >= 10, rew: { m: 120 }, p: (s) => [s.np, 10] },
+  { t: 'Ontdek alle 15 werelden', tab: 'mis', ok: (s) => s.wd.length >= WORLDS.length, rew: { m: 150, k: 20000 }, p: (s) => [s.wd.length, WORLDS.length] },
 ];
 
 export const ACHS = [
@@ -146,6 +193,18 @@ export const ACHS = [
   { id: 'pr5', e: '🪐', n: 'Sterrenreiziger', d: '5x verhuisd', ok: (s) => s.np >= 5 },
   { id: 'dl3', e: '📅', n: 'Trouwe bezoeker', d: '3 dagen op rij', ok: (s) => s.dl.k >= 3 },
   { id: 'dl7', e: '🗓️', n: 'Elke dag!', d: '7 dagen op rij', ok: (s) => s.dl.k >= 7 },
+  { id: 'tap10k', e: '✋', n: 'Duizendpoot', d: '10.000x tikken', ok: (s) => s.st.tap >= 1e4 },
+  { id: 'steen10', e: '🪨', n: 'Steengroever', d: '10 steengroeves', ok: (s) => nb(s, 'steen') >= 10 },
+  { id: 'sat5', e: '🛰️', n: 'Satellietenpark', d: '5 satellieten', ok: (s) => nb(s, 'sat') >= 5 },
+  { id: 'hotel8', e: '🏢', n: 'Hotelketen', d: '8 maanhotels', ok: (s) => nb(s, 'hotel') >= 8 },
+  { id: 'bank5', e: '💰', n: 'Bankier', d: '5 ruimtebanken', ok: (s) => nb(s, 'bank') >= 5 },
+  { id: 'c1b', e: '🤑', n: 'Maanmiljardair', d: '1 miljard credits verdiend', ok: (s) => s.st.cred >= 1e9 },
+  { id: 'bot25', e: '🦾', n: 'Robotlegioen', d: '25 robots', ok: (s) => s.bots >= 25 },
+  { id: 'bld200', e: '🏙️', n: 'Stadsbouwer', d: '200 modules gebouwd', ok: (s) => s.st.bld >= 200 },
+  { id: 'w12', e: '👽', n: 'Contact!', d: '12 werelden ontdekt', ok: (s) => s.wd.length >= 12 },
+  { id: 'mis100', e: '🚀', n: 'Vliegveld', d: '100 missies voltooid', ok: (s) => s.st.mis >= 100 },
+  { id: 'pr10', e: '🌌', n: 'Melkwegreiziger', d: '10x verhuisd', ok: (s) => s.np >= 10 },
+  { id: 'res30', e: '🧪', n: 'Wetenschapper', d: '30 onderzoeken', ok: (s) => s.res.length >= 30 },
 ];
 
 /* =====================================================================
@@ -157,7 +216,7 @@ export function newState(now = Date.now()) {
   return {
     v: VERSION, t: now, upd: now, r, b: {}, w: { del: 0, ond: 0, kwe: 0, han: 0 }, pop: 2, bots: 0,
     res: [], up: {}, mis: [], wd: [], sd: 0, sdt: 0, np: 0, pu: {}, ach: [], q: 0, dl: { d: '', k: 0 },
-    st: { tap: 0, mis: 0, ln: 0, run: 0, all: 0, cred: 0, bld: 0, sold: 0, star: 0 }, set: { snd: 1, mus: 0 },
+    st: { tap: 0, mis: 0, ln: 0, run: 0, all: 0, cred: 0, bld: 0, sold: 0, star: 0 }, set: { snd: 1, mus: 0, skin: 'maan', seen: [] },
     ev: null, born: now,
   };
 }
@@ -174,7 +233,7 @@ export const tierMul = (n) => Math.pow(2, TIERS.filter((t) => n >= t).length);
 export const nextTier = (n) => TIERS.find((t) => n < t) || 0;
 
 // Verbeteringen: per niveau x1,8 voor zonnepaneel, mijn, lab en handelspost. Kost erts, credits en zeldzaam spul van een wereld.
-export const UPS = ['mijn', 'solar', 'lab', 'handel'];
+export const UPS = ['mijn', 'solar', 'lab', 'handel', 'steen', 'sat', 'bank', 'zontoren'];
 export const UP_MAX = 10;
 export const upLevel = (s, id) => (s.up && s.up[id]) || 0;
 export const upMul = (s, id) => Math.pow(1.8, upLevel(s, id));
@@ -189,17 +248,19 @@ export function upgrade(s, id) {
   pay(s, c); s.up[id] = upLevel(s, id) + 1; return true;
 }
 
+const XMODS = MODS.filter((m) => m.x);
 export function rates(s, now = Date.now()) {
   const n = (id) => s.b[id] || 0, hr = (id) => has(s, id);
+  const X = (k) => { let a = 0; for (const m of XMODS) if (m.x[k] && s.b[m.id]) a += s.b[m.id] * m.x[k] * (k === 'erts' || k === 'kennis' || k === 'cred' ? upMul(s, m.id) : 1); return a; };
   const gm = gMult(s);
   const flare = s.ev && s.ev.k === 'vlam' && s.ev.until > now && !n('schild') ? 0.6 : 1;
-  const pSup = (4 + n('solar') * 4 * upMul(s, 'solar') * (1 + 0.5 * hr('r_zon')) + n('reactor') * 28) * flare;
-  const pDem = 2 * n('mijn') + n('oxy') + n('kas') + n('wonen') + 3 * n('lab') + 2 * n('hangaar') + 2 * n('handel') + 3 * n('werk') + 6 * n('schild') + 0.5 * s.bots;
+  const pSup = (4 + n('solar') * 4 * upMul(s, 'solar') * (1 + 0.5 * hr('r_zon')) + n('reactor') * 28 + X('sup') * upMul(s, 'zontoren')) * flare * (1 + 0.1 * lv(s, 'solw'));
+  const pDem = 2 * n('mijn') + n('oxy') + n('kas') + n('wonen') + 3 * n('lab') + 2 * n('hangaar') + 2 * n('handel') + 3 * n('werk') + 6 * n('schild') + 0.5 * s.bots + X('dem');
   const pe = pDem <= pSup ? 1 : Math.max(0.2, pSup / pDem);
   const pop = Math.floor(s.pop);
-  const house = 3 + n('wonen') * (4 + 2 * hr('r_wonen'));
-  const o2S = 3 + n('oxy') * 6 * (1 + 0.5 * hr('r_o2')) * pe;
-  const foS = 3 + n('kas') * 5 * (1 + 0.5 * hr('r_kas')) * pe + s.w.kwe * 1.5;
+  const house = 3 + n('wonen') * (4 + 2 * hr('r_wonen')) + X('house') + 2 * lv(s, 'hui');
+  const o2S = 3 + (n('oxy') * 6 * (1 + 0.5 * hr('r_o2')) + X('o2')) * pe;
+  const foS = 3 + (n('kas') * 5 * (1 + 0.5 * hr('r_kas')) + X('food')) * pe + s.w.kwe * 1.5;
   const o2E = pop <= 0 ? 1 : Math.min(1, o2S / pop);
   const foE = pop <= 0 ? 1 : Math.min(1, foS / pop);
   const wel = Math.max(0.3, Math.min(o2E, foE));
@@ -207,10 +268,10 @@ export function rates(s, now = Date.now()) {
   const q = crew <= 0 ? 1 : (pop * wel + s.bots * pe) / crew;
   const free = Math.max(0, crew - sumW(s));
   const mineMul = 1 + 0.5 * hr('r_boor') + 1 * hr('r_boor2');
-  const baseE = 0.5 + n('mijn') * mineMul * upMul(s, 'mijn') * tierMul(n('mijn')) * pe + s.w.del * 0.4 * q;
+  const baseE = 0.5 + n('mijn') * mineMul * upMul(s, 'mijn') * tierMul(n('mijn')) * pe + X('erts') * pe + s.w.del * 0.4 * q;
   const erts = baseE * gm * (1 + 0.2 * lv(s, 'ert'));
-  const kennis = (0.08 + n('lab') * 0.5 * upMul(s, 'lab') * tierMul(n('lab')) * pe + s.w.ond * 0.12 * q) * gm * (1 + 0.25 * lv(s, 'ken'));
-  const cred = (0.02 + n('handel') * 0.3 * upMul(s, 'handel') * tierMul(n('handel')) * pe + s.w.han * 0.1 * q) * gm * (1 + tradeBonus(s));
+  const kennis = (0.08 + n('lab') * 0.5 * upMul(s, 'lab') * tierMul(n('lab')) * pe + X('kennis') * pe + s.w.ond * 0.12 * q) * gm * (1 + 0.25 * lv(s, 'ken'));
+  const cred = (0.02 + n('handel') * 0.3 * upMul(s, 'handel') * tierMul(n('handel')) * pe + X('cred') * pe + s.w.han * 0.1 * q) * gm * (1 + tradeBonus(s)) * (1 + 0.2 * lv(s, 'cre'));
   const tap = (1 + 0.1 * baseE) * (1 + 2 * hr('r_hand')) * (1 + 0.5 * lv(s, 'tap')) * (1 + 0.5 * (gm - 1));
   return {
     erts, kennis, cred, tap, gm, pSup, pDem, pe, house, o2S, o2E, foS, foE, wel, q, pop, crew, free,
@@ -388,7 +449,7 @@ export function dailyInfo(s, now = Date.now()) {
 export function claimDaily(s, now = Date.now(), R = rates(s, now)) {
   const { can, streak } = dailyInfo(s, now);
   if (!can) return null;
-  const mul = 1 + 0.1 * Math.min(streak - 1, 9);
+  const mul = (1 + 0.1 * Math.min(streak - 1, 9)) * (1 + 0.2 * lv(s, 'dag'));
   const erts = Math.round(Math.max(100, R.erts * 900) * mul);
   const kennis = Math.round(Math.max(5, R.kennis * 600) * mul);
   const cred = Math.round(Math.max(20, R.cred * 600 + 20 * Math.min(streak, 10)) * mul);
@@ -578,69 +639,142 @@ function makeAudio(flags) {
 }
 
 /* =====================================================================
+   4b. GRAFISCHE KERN (dynamisch geladen, zodat de pure logica ook in node werkt)
+   ===================================================================== */
+const G = { art: null, icons: null, fx: null, set: null, panel: null, scenes: null, themes: null };
+async function loadGfx() {
+  const ld = async (k, p) => { try { G[k] = await import(p); } catch (e) { G[k] = null; } };
+  await Promise.all([ld('art', './gfx/art.js?v=1'), ld('icons', './gfx/icons.js?v=1'), ld('fx', './gfx/fx.js?v=1'), ld('set', './gfx/settings.js?v=1'), ld('panel', './gfx/panel.js?v=1'), ld('scenes', './gfx/scenes.js?v=1')]);
+}
+const gq = () => (G.set && G.set.GFX ? G.set.GFX.q : 1);
+const gred = () => !!(G.set && G.set.GFX && G.set.GFX.reduce);
+const uiS = () => { try { return (G.set && G.set.Settings.get().uiScale) || 1; } catch (e) { return 1; } };
+
+// 3D-icoonnamen per id (alles wat niet in de lijst staat valt terug op de emoji van het item)
+export const IC = {
+  solar: 'sun', mijn: 'pickaxe', oxy: 'cloud', kas: 'tomato', wonen: 'house', lab: 'microscope', hangaar: 'rocket', handel: 'shop', werk: 'robot', reactor: 'bolt', schild: 'shield',
+  hotel: 'skyscraper', kas2: 'carrot', oxy2: 'fountain', steen: 'rock', sat: 'satellite', zontoren: 'tower', bank: 'bag', drone: 'helicopter', toer: 'ferriswheel', obs: 'globe', smelt: 'factory', kristal: 'crystal', alien: 'ufo',
+  del: 'pickaxe', ond: 'microscope', kwe: 'tomato', han: 'coin',
+  erts: 'rock', kennis: 'microscope', cred: 'coin',
+  mars: 'planet', venus: 'sun', mercurius: 'flame', ceres: 'rock', europa: 'snowflake', titan: 'earth', ringen: 'ring', neptunus: 'wave', kepler: 'earth', pluto: 'snowflake', aurora: 'star', proxima: 'alien', trappist: 'earth', kometen: 'comet', zwart: 'ghost',
+  ijzer: 'magnet', zwavel: 'flask', zonnemetaal: 'bolt', kosmisch: 'gear', ijskristal: 'gem', methaan: 'cloud', ringijs: 'snowflake', diamant: 'gem', biogel: 'potion', rijp: 'crystal', alienmetaal: 'shield', oerzaad: 'clover', komeetijs: 'comet', donker: 'ghost',
+  r_hand: 'hammer', r_zon: 'sun', r_boor: 'pickaxe', r_kas: 'carrot', r_o2: 'leaf', r_wonen: 'house', r_hangaar: 'rocket', r_handel: 'shop', r_robot: 'robot', r_motor: 'satellite', r_cargo: 'chest', r_reactor: 'bolt', r_schild: 'shield', r_ai: 'lightbulb', r_ver: 'compass', r_boor2: 'bomb', r_warp: 'comet', r_terra: 'earth',
+  r_hotel: 'skyscraper', r_steen: 'rock', r_sat: 'satellite', r_kas2: 'carrot', r_o2b: 'fountain', r_bank: 'bag', r_drone: 'helicopter', r_zon2: 'tower', r_smelt: 'factory', r_toer: 'ferriswheel', r_obs: 'globe', r_kristal: 'crystal', r_alien: 'ufo', r_prox: 'planet', r_deep: 'map',
+  start: 'bag', tap: 'hammer', ert: 'pickaxe', ken: 'book', fast: 'rocket', off: 'moon', solw: 'sun', cre: 'bag', hui: 'house', dag: 'gift',
+};
+export const SKINS = {
+  maan: { n: 'Maan', ic: 'moon', sky: ['#05081c', '#171a4a', '#33306e'], neb: ['120,90,220', '60,200,180'], planet: ['#ffd9a8', '#c46f8a'], pg: '#ffb08a', ring: '255,230,200', g1: '#8d8cc9', g2: '#4a4983', gb: '#4b4a86', cr: '40,38,90', edge: '190,190,240', ridge: '#2c2b63', accent: '#8be3c4', d: 'Grijs stof en paarse nevels' },
+  mars: { n: 'Mars', ic: 'flame', sky: ['#1a0806', '#4d1c10', '#b0562c'], neb: ['255,120,60', '255,200,120'], planet: ['#dff1ff', '#4b78c4'], pg: '#8fc0ff', ring: '', g1: '#d98353', g2: '#7e3822', gb: '#8d3f26', cr: '70,25,15', edge: '255,190,150', ridge: '#6d2a1a', accent: '#ffc58a', d: 'Rode rotsen en een blauwe aarde' },
+  ijs: { n: 'IJsmaan', ic: 'snowflake', sky: ['#031326', '#0b3050', '#2a78ab'], neb: ['100,200,255', '190,245,255'], planet: ['#ffffff', '#8fc8f2'], pg: '#bfe8ff', ring: '200,240,255', g1: '#ecf7ff', g2: '#a8cae4', gb: '#b4d3ea', cr: '90,130,170', edge: '255,255,255', ridge: '#5d8fb5', accent: '#a8e6ff', d: 'Sneeuw, ijs en een koude gloed' },
+  neon: { n: 'Neon-station', ic: 'robot', sky: ['#070015', '#2b0b4d', '#80206f'], neb: ['255,60,200', '60,255,230'], planet: ['#fff0a8', '#ff4fa0'], pg: '#ff7ad0', ring: '255,120,255', g1: '#4b3394', g2: '#1c1040', gb: '#271657', cr: '10,5,30', edge: '255,110,255', ridge: '#3a1766', accent: '#ff9bf0', d: 'Gloeiende lichten in de nacht' },
+};
+// emoji -> icoon (uit icons.js) voor teksten
+let REV = null, EMO_RE = null;
+function buildRev() {
+  const sv = (x) => x.replace(/\uFE0F/g, '');
+  REV = { '👩‍🚀': 'astronaut', '⚙': 'gear', '💨': 'cloud', '✨': 'star', '🕳': 'ghost', '⭐': 'star' };
+  const I = G.icons && G.icons.ICONS;
+  if (I) for (const [n, e] of Object.entries(I)) if (!REV[sv(e)]) REV[sv(e)] = n;
+  const keys = Object.keys(REV).filter((k) => G.art && G.art.has(REV[k])).sort((a, b) => b.length - a.length);
+  EMO_RE = keys.length ? new RegExp(keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\uFE0F?').join('|'), 'g') : null;
+}
+const FB = { hammer: '🔨', astronaut: '🧑‍🚀', microscope: '🔬', rocket: '🚀', coin: '🪙', trophy: '🏆', star: '⭐', lock: '🔒', gift: '🎁', target: '🎯', moon: '🌙', bag: '💰', bolt: '⚡', cloud: '☁️', tomato: '🍅', robot: '🤖', snowflake: '❄️', flame: '🔥' };
+function I(name, size = 40, extra = '') {
+  if (G.art) return G.art.icon(name, { size: Math.round(size * (size > 24 ? uiS() : 1)), cls: extra, alt: '' });
+  return `<span class="rb-em" style="font-size:${Math.round(size * 0.8)}px">${FB[name] || ''}</span>`;
+}
+// icoon voor een item (met id en e) - groot
+const ico = (it, size = 44) => {
+  const name = IC[it.id] || (REV && REV[(it.e || '').replace(/\uFE0F/g, '')]);
+  if (G.art && name && G.art.has(name)) return I(name, size);
+  return `<span class="rb-em" style="font-size:${Math.round(size * 0.78 * uiS())}px">${it.e || ''}</span>`;
+};
+const rico = (r, size = 20) => {
+  const name = IC[r] || 'rock';
+  return G.art && G.art.has(name) ? I(name, size) : `<span class="rb-em">${E[r] || ''}</span>`;
+};
+// tekst met emoji's -> tekst met kleine icoontjes
+function T(str) {
+  if (!str) return '';
+  if (!REV) buildRev();
+  if (!EMO_RE) return str;
+  EMO_RE.lastIndex = 0;
+  return str.replace(EMO_RE, (m) => I(REV[m.replace(/\uFE0F/g, '')], 20));
+}
+
+/* =====================================================================
    5. STIJL
    ===================================================================== */
 const CSS = `
-.rb-root{position:relative;display:flex;flex-direction:column;height:calc(100dvh - 4.4rem);min-height:540px;max-height:920px;background:#0a0f26;color:#e8ecff;border-radius:16px;overflow:hidden;font-size:14px;line-height:1.3;-webkit-user-select:none;user-select:none;touch-action:manipulation;box-sizing:border-box;margin:.4rem 0;border:1px solid #27305e}
+.rb-root{--rb-acc:#8be3c4;position:relative;display:flex;flex-direction:column;height:calc(100dvh - 4.4rem);min-height:600px;max-height:1100px;background:#0a0f26;color:#e8ecff;border-radius:18px;overflow:hidden;font-size:calc(16px * var(--gfx-font,1));line-height:1.3;-webkit-user-select:none;user-select:none;touch-action:manipulation;box-sizing:border-box;margin:.4rem 0;border:1px solid #27305e;box-shadow:0 10px 30px rgba(0,0,10,.35)}
 .rb-root *{box-sizing:border-box}
-.rb-root button{font:inherit;color:inherit;cursor:pointer;border:1px solid #2f3a73;background:#18204a;border-radius:10px;padding:.45rem .7rem}
+.rb-root button{font:inherit;color:inherit;cursor:pointer;border:1px solid #2f3a73;background:linear-gradient(#1d2658,#161d44);border-radius:12px;padding:.5em .8em;min-height:calc(44px * var(--gfx-scale,1));box-shadow:0 2px 0 rgba(0,0,0,.25)}
 .rb-root button:active{transform:scale(.96)}
-.rb-top{display:flex;flex-direction:column;gap:3px;padding:6px 8px;background:linear-gradient(#11183a,#0d1330);border-bottom:1px solid #222c5a;flex:0 0 auto}
-.rb-row{display:flex;gap:5px;flex-wrap:nowrap;justify-content:space-between}
-.rb-pill{flex:1 1 0;min-width:0;background:#182050;border:1px solid #2a3570;border-radius:9px;padding:2px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600;font-size:13px}
-.rb-pill small{display:block;font-weight:400;color:#8f9ac7;font-size:10.5px;margin-top:-1px}
-.rb-chip{flex:1 1 0;text-align:center;font-size:11.5px;color:#aeb8e6;background:#121a40;border-radius:8px;padding:1px 3px;white-space:nowrap}
+.rb-em{display:inline-block;text-align:center;line-height:1}
+.rb-root .gfx-icon{vertical-align:middle;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35))}
+.rb-top{display:flex;flex-direction:column;gap:4px;padding:8px 10px;background:linear-gradient(#11183a,#0d1330);border-bottom:1px solid #222c5a;flex:0 0 auto}
+.rb-row{display:flex;gap:6px;flex-wrap:nowrap;justify-content:space-between;align-items:stretch}
+.rb-pill{flex:1 1 0;min-width:0;background:linear-gradient(#1b2358,#151c4a);border:1px solid #2a3570;border-radius:12px;padding:3px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700;font-size:1.05em}
+.rb-pill small{display:block;font-weight:400;color:#9aa6d6;font-size:.72em;margin-top:-1px}
+.rb-root button.rb-gear{flex:0 0 auto;width:calc(48px * var(--gfx-scale,1));padding:0;font-size:1.5em;line-height:1}
+.rb-chip{flex:1 1 0;display:flex;align-items:center;justify-content:center;gap:4px;font-size:.85em;color:#bcc6f0;background:#121a40;border-radius:10px;padding:2px 4px;white-space:nowrap}
 .rb-chip.bad{color:#ffb4a8;background:#3b1c2c}
-.rb-scene{position:relative;flex:0 0 36%;min-height:150px;max-height:260px;background:#070b1e;overflow:hidden}
+.rb-scene{position:relative;flex:0 0 38%;min-height:190px;max-height:380px;background:#070b1e;overflow:hidden}
 .rb-scene canvas{display:block;width:100%;height:100%;touch-action:none}
 .rb-toasts{position:absolute;left:6px;right:6px;top:6px;display:flex;flex-direction:column;gap:4px;pointer-events:none}
-.rb-toast{align-self:center;background:rgba(18,26,64,.92);border:1px solid #3a4890;border-radius:12px;padding:4px 10px;font-size:12.5px;animation:rb-in .25s ease-out;max-width:96%}
+.rb-toast{align-self:center;background:rgba(18,26,64,.94);border:1px solid #3a4890;border-radius:14px;padding:5px 12px;font-size:.92em;animation:rb-in .25s ease-out;max-width:96%;box-shadow:0 4px 14px rgba(0,0,0,.4)}
 @keyframes rb-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
-.rb-quest{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:6px 10px;background:#141c46;border-bottom:1px solid #222c5a;cursor:pointer;min-height:34px}
-.rb-quest b{color:#8be3c4}
+.rb-quest{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;background:#141c46;border-bottom:1px solid #222c5a;cursor:pointer;min-height:calc(44px * var(--gfx-scale,1))}
+.rb-quest b{color:var(--rb-acc)}
 .rb-quest span{flex:1;min-width:0}
-.rb-body{flex:1 1 auto;overflow-y:auto;padding:8px;-webkit-overflow-scrolling:touch}
+.rb-body{flex:1 1 auto;overflow-y:auto;padding:10px;-webkit-overflow-scrolling:touch}
 .rb-nav{flex:0 0 auto;display:flex;background:#0d1330;border-top:1px solid #222c5a}
-.rb-nav button{flex:1;border:0;border-radius:0;background:transparent;padding:5px 0 4px;font-size:10.5px;color:#8f9ac7;position:relative;min-width:0}
-.rb-nav button span{display:block;font-size:19px;line-height:1.1}
-.rb-nav button.on{color:#8be3c4;background:#151e4b}
+.rb-nav button{flex:1;border:0;border-radius:0;background:transparent;box-shadow:none;padding:6px 0 5px;font-size:.72em;color:#9aa6d6;position:relative;min-width:0;min-height:calc(58px * var(--gfx-scale,1))}
+.rb-nav button span{display:block;line-height:1.1;margin-bottom:1px}
+.rb-nav button.on{color:var(--rb-acc);background:#151e4b}
 .rb-nav button.hl{animation:rb-pulse 1.2s infinite}
 @keyframes rb-pulse{50%{background:#2a3a7c;color:#fff}}
-.rb-badge{position:absolute;top:2px;right:18%;background:#ff8a9a;color:#fff;border-radius:99px;font-size:10px;padding:0 5px;min-width:15px}
-.rb-card{display:flex;gap:9px;align-items:center;background:#131b44;border:1px solid #26306a;border-radius:13px;padding:8px;margin-bottom:7px}
+.rb-badge{position:absolute;top:3px;right:16%;background:#ff8a9a;color:#fff;border-radius:99px;font-size:11px;padding:0 6px;min-width:17px}
+.rb-card{display:flex;gap:11px;align-items:center;background:linear-gradient(#151e4c,#121a42);border:1px solid #26306a;border-radius:16px;padding:10px;margin-bottom:9px;box-shadow:0 3px 10px rgba(0,0,12,.28)}
 .rb-card.lock{opacity:.5}
-.rb-card.done{opacity:.75;border-color:#2f6f5a}
-.rb-ic{font-size:28px;width:38px;text-align:center;flex:0 0 auto}
+.rb-card.done{opacity:.8;border-color:#2f6f5a}
+.rb-ic{width:calc(56px * var(--gfx-scale,1));text-align:center;flex:0 0 auto}
 .rb-mid{flex:1;min-width:0}
-.rb-mid b{font-size:14px}
-.rb-mid small{display:block;color:#9aa6d6;font-size:11.5px}
-.rb-act{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:3px;max-width:44%}
-.rb-act button{background:#2a6f63;border-color:#3b9c8a;font-weight:600;white-space:nowrap}
+.rb-mid b{font-size:1.05em}
+.rb-mid small{display:block;color:#a6b1de;font-size:.8em;margin-top:1px}
+.rb-act{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:46%}
+.rb-act button{background:linear-gradient(#34877a,#2a6f63);border-color:#3b9c8a;font-weight:700;white-space:nowrap}
 .rb-act button.no{background:#232b5a;border-color:#2f3a73;color:#8f9ac7}
-.rb-c{font-size:11.5px;background:#0d1330;border-radius:7px;padding:0 5px;margin-left:2px;white-space:nowrap;display:inline-block}
+.rb-c{font-size:.8em;background:#0d1330;border-radius:9px;padding:1px 6px;margin-left:2px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
 .rb-c.no{color:#ff9aa8}
-.rb-h{font-weight:700;margin:10px 2px 6px;color:#b8a4ff;font-size:13px}
-.rb-seg{display:flex;gap:5px;margin-bottom:8px}
-.rb-seg button{flex:1;padding:.3rem}
-.rb-seg button.on{background:#2a6f63;border-color:#3b9c8a}
-.rb-bar{height:7px;background:#0d1330;border-radius:9px;overflow:hidden;margin-top:4px}
+.rb-h{font-weight:800;margin:14px 2px 8px;color:#b8a4ff;font-size:1em}
+.rb-seg{display:flex;gap:6px;margin-bottom:9px;flex-wrap:wrap}
+.rb-seg button{flex:1;padding:.35em}
+.rb-seg button.on{background:linear-gradient(#34877a,#2a6f63);border-color:#3b9c8a}
+.rb-bar{height:9px;background:#0d1330;border-radius:9px;overflow:hidden;margin-top:5px}
 .rb-bar i{display:block;height:100%;background:linear-gradient(90deg,#8be3c4,#b8a4ff)}
-.rb-ctl{display:flex;align-items:center;gap:6px}
-.rb-ctl button{width:34px;height:34px;padding:0;font-size:18px}
-.rb-ctl b{min-width:22px;text-align:center}
-.rb-modal{position:absolute;inset:0;background:rgba(5,8,22,.78);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
+.rb-ctl{display:flex;align-items:center;gap:8px}
+.rb-ctl button{width:calc(46px * var(--gfx-scale,1));padding:0;font-size:1.3em}
+.rb-ctl b{min-width:26px;text-align:center;font-size:1.1em}
+.rb-modal{position:absolute;inset:0;background:rgba(5,8,22,.8);display:flex;align-items:center;justify-content:center;padding:14px;z-index:5}
 .rb-modal[hidden]{display:none}
-.rb-mbox{background:#141c46;border:1px solid #3a4890;border-radius:16px;padding:14px;max-width:420px;width:100%;max-height:90%;overflow:auto;box-shadow:0 10px 40px #000a}
-.rb-mbox h3{margin:0 0 6px;font-size:17px}
-.rb-mbox .rb-btns{display:flex;gap:8px;margin-top:12px}
-.rb-mbox .rb-btns button{flex:1;padding:.6rem}
-.rb-mbox .rb-btns button.pri{background:#2a6f63;border-color:#3b9c8a;font-weight:700}
-.rb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:6px}
-.rb-ach{background:#131b44;border:1px solid #26306a;border-radius:11px;padding:6px;text-align:center;font-size:11px}
-.rb-ach span{font-size:22px;display:block}
+.rb-mbox{background:#141c46;border:1px solid #3a4890;border-radius:20px;padding:18px;max-width:460px;width:100%;max-height:92%;overflow:auto;box-shadow:0 10px 40px #000a}
+.rb-mbox h3{margin:0 0 8px;font-size:1.25em}
+.rb-mbox .rb-btns{display:flex;gap:8px;margin-top:14px}
+.rb-mbox .rb-btns button{flex:1;padding:.7em}
+.rb-mbox .rb-btns button.pri{background:linear-gradient(#34877a,#2a6f63);border-color:#3b9c8a;font-weight:700}
+.rb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(112px * var(--gfx-scale,1)),1fr));gap:8px}
+.rb-ach{background:#131b44;border:1px solid #26306a;border-radius:14px;padding:8px;text-align:center;font-size:.8em}
+.rb-ach .rb-em,.rb-ach .gfx-icon{display:block;margin:0 auto 2px}
 .rb-ach.off{opacity:.35;filter:grayscale(1)}
-.rb-note{color:#9aa6d6;font-size:12px;margin:4px 2px}
+.rb-skins{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-bottom:10px}
+.rb-skin{display:flex;flex-direction:column;align-items:center;gap:3px;text-align:center;padding:10px 6px !important}
+.rb-skin.on{border-color:var(--rb-acc) !important;box-shadow:0 0 0 2px var(--rb-acc) !important}
+.rb-skin i{display:block;width:100%;height:34px;border-radius:9px;border:1px solid rgba(255,255,255,.2)}
+.rb-skin small{font-size:.75em;color:#a6b1de}
+.rb-note{color:#a6b1de;font-size:.85em;margin:5px 2px}
 .rb-up{color:#8be3c4}.rb-dn{color:#ff9aa8}
+html[data-reduce="1"] .rb-toast,html[data-reduce="1"] .rb-nav button.hl{animation:none}
 `;
 
 /* =====================================================================
@@ -719,12 +853,12 @@ const SPR = {
     const p = (t * 0.5) % 1; c.strokeStyle = 'rgba(139,227,196,' + (1 - p) + ')'; c.lineWidth = 1.5; c.beginPath(); c.arc(0, -16, 6 + p * 20, Math.PI * 1.05, Math.PI * 1.95); c.stroke();
   },
 };
-const ORDER = ['solar', 'mijn', 'oxy', 'kas', 'wonen', 'lab', 'hangaar', 'handel', 'werk', 'reactor', 'schild'];
+const ORDER = ['solar', 'mijn', 'oxy', 'kas', 'wonen', 'lab', 'hangaar', 'handel', 'werk', 'reactor', 'schild', 'hotel', 'kas2', 'oxy2', 'steen', 'sat', 'zontoren', 'bank', 'drone', 'toer', 'obs', 'smelt', 'kristal', 'alien'];
 
 /* =====================================================================
    7. DE VIEW
    ===================================================================== */
-const TABS = [['bouw', '🏗️', 'Bouw'], ['team', '👩‍🚀', 'Team'], ['lab', '🔬', 'Lab'], ['mis', '🚀', 'Missies'], ['han', '🪙', 'Handel'], ['doel', '🏆', 'Doelen'], ['meer', '✨', 'Meer']];
+const TABS = [['bouw', 'hammer', 'Bouw'], ['team', 'astronaut', 'Team'], ['lab', 'microscope', 'Lab'], ['mis', 'rocket', 'Missies'], ['han', 'coin', 'Handel'], ['doel', 'trophy', 'Doelen'], ['meer', 'star', 'Meer']];
 
 export async function ruimtebasisView(ctx) {
   const { db, me, view, addCleanup } = ctx;
@@ -733,7 +867,7 @@ export async function ruimtebasisView(ctx) {
   const timers = new Set(), tos = new Set();
   const setI = (f, ms) => { const id = setInterval(f, ms); timers.add(id); return id; };
   const setT = (f, ms) => { const id = setTimeout(() => { tos.delete(id); f(); }, ms); tos.add(id); return id; };
-  let S = null, store = null, raf = 0, audio = null;
+  let S = null, store = null, raf = 0, audio = null, offSet = null;
   let dirty = false, saveTO = 0, cloudDirty = false;
 
   view.innerHTML = '<div class="rb-load" style="padding:2rem;text-align:center">🪐 Ruimtebasis laden…</div>';
@@ -748,12 +882,16 @@ export async function ruimtebasisView(ctx) {
     window.removeEventListener('pagehide', onHide); document.removeEventListener('visibilitychange', onVis);
     if (S && store) { S.t = Date.now(); store.saveLocal(S); store.saveCloud(S, true); }
     if (audio) audio.close();
+    if (sceneRun) { try { sceneRun.stop(); } catch (e) { /* stil */ } }
+    if (offSet) offSet();
     if (st.parentNode) st.parentNode.removeChild(st);
   };
   addCleanup(cleanup);
 
   let fs = null;
   try { fs = await import(FS_URL); } catch (e) { fs = null; }
+  await loadGfx();
+  if (!alive) return;
   store = makeStore({ uid, db, fs, storage: (() => { try { return window.localStorage; } catch (e) { return { getItem() { return null; }, setItem() {} }; } })() });
   S = await store.load();
   if (!alive) return;
@@ -783,7 +921,7 @@ export async function ruimtebasisView(ctx) {
   root.innerHTML = `
     <div class="rb-top">
       <div class="rb-row">
-        <div class="rb-pill" data-k="erts"></div><div class="rb-pill" data-k="kennis"></div><div class="rb-pill" data-k="cred"></div>
+        <div class="rb-pill" data-k="erts"></div><div class="rb-pill" data-k="kennis"></div><div class="rb-pill" data-k="cred"></div><button class="rb-gear" data-a="gear" aria-label="Instellingen">⚙</button>
       </div>
       <div class="rb-row">
         <div class="rb-chip" data-k="pw"></div><div class="rb-chip" data-k="o2"></div><div class="rb-chip" data-k="fo"></div><div class="rb-chip" data-k="pp"></div>
@@ -792,18 +930,21 @@ export async function ruimtebasisView(ctx) {
     <div class="rb-scene"><canvas></canvas><div class="rb-toasts"></div></div>
     <div class="rb-quest" data-a="tab:doel"></div>
     <div class="rb-body"></div>
-    <nav class="rb-nav">${TABS.map((t) => `<button data-a="tab:${t[0]}" data-t="${t[0]}"><span>${t[1]}</span>${t[2]}</button>`).join('')}</nav>
+    <nav class="rb-nav">${TABS.map((t) => `<button data-a="tab:${t[0]}" data-t="${t[0]}"><span>${I(t[1], 30)}</span>${t[2]}</button>`).join('')}</nav>
     <div class="rb-modal" hidden></div>`;
   view.appendChild(root);
   const $ = (sel) => root.querySelector(sel);
   const cv = $('canvas'), body = $('.rb-body'), toasts = $('.rb-toasts'), modalEl = $('.rb-modal'), questEl = $('.rb-quest');
   const topEls = {}; root.querySelectorAll('[data-k]').forEach((el) => { topEls[el.dataset.k] = el; });
 
-  let tab = 'bouw', bulk = '1', R = rates(S, Date.now()), lastHtml = '', pDown = false;
+  let tab = 'bouw', bulk = '1', R = rates(S, Date.now()), lastHtml = '', pDown = false, coinBurst = () => {};
+  const skinId = () => (SKINS[S.set.skin] ? S.set.skin : 'maan');
+  const skin = () => SKINS[skinId()];
+  let sceneRun = null;
   let rocketAnim = 0;
 
   const toast = (txt) => {
-    const d = document.createElement('div'); d.className = 'rb-toast'; d.textContent = txt; toasts.appendChild(d);
+    const d = document.createElement('div'); d.className = 'rb-toast'; d.innerHTML = T(txt); toasts.appendChild(d);
     while (toasts.children.length > 3) toasts.removeChild(toasts.firstChild);
     setT(() => { if (d.parentNode) d.parentNode.removeChild(d); }, 3400);
   };
@@ -820,38 +961,40 @@ export async function ruimtebasisView(ctx) {
   window.addEventListener('pagehide', onHide); document.addEventListener('visibilitychange', onVis);
 
   /* ---------- weergave van tabs ---------- */
-  const costHtml = (c) => Object.entries(c).map(([r, v]) => `<span class="rb-c${S.r[r] >= v ? '' : ' no'}">${E[r]} ${fmt(v)}</span>`).join('');
+  const costHtml = (c) => Object.entries(c).map(([r, v]) => `<span class="rb-c${S.r[r] >= v ? '' : ' no'}">${rico(r, 18)} ${fmt(v)}</span>`).join('');
   const btn = (act, label, ok, extra = '') => `<button class="${ok ? '' : 'no'}" data-a="${act}" ${extra}>${label}</button>`;
+  const card = (cls, ic, mid, act = '') => `<div class="rb-card ${cls}"><div class="rb-ic">${ic}</div><div class="rb-mid">${mid}</div>${act ? `<div class="rb-act">${act}</div>` : ''}</div>`;
+  const lockIc = () => (G.art ? I('lock', 40) : '<span class="rb-em" style="font-size:30px">🔒</span>');
 
   function vBouw() {
     let h = `<div class="rb-seg">${['1', '10', 'max'].map((b) => `<button class="${bulk === b ? 'on' : ''}" data-a="bulk:${b}">${b === 'max' ? 'Max' : 'x' + b}</button>`).join('')}</div>`;
     for (const m of MODS) {
       const o = nb(S, m.id);
-      if (!unlocked(S, m)) { h += `<div class="rb-card lock"><div class="rb-ic">🔒</div><div class="rb-mid"><b>${m.n}</b><small>Onderzoek eerst ${RES[m.req].e} ${RES[m.req].n} in het Lab</small></div></div>`; continue; }
+      if (!unlocked(S, m)) { h += card('lock', lockIc(), `<b>${m.n}</b><small>Onderzoek eerst ${T(RES[m.req].e)} ${RES[m.req].n} in het Lab</small>`); continue; }
       const k = bulk === 'max' ? Math.max(1, maxBuy(S, m)) : +bulk;
       const c = modCost(m, o, k), ok = canPay(S, c);
-      h += `<div class="rb-card"><div class="rb-ic">${m.e}</div><div class="rb-mid"><b>${m.n}</b> <span class="rb-c">x${o}</span><small>${m.fx}</small>${TIERS_ON[m.id] && nextTier(o) ? `<small>Mijlpaal: dubbel bij ${nextTier(o)} (nu x${tierMul(o)})</small>` : ''}</div><div class="rb-act">${btn('buy:' + m.id + ':' + k, 'Bouw' + (k > 1 ? ' x' + k : ''), ok)}<div>${costHtml(c)}</div></div></div>`;
+      h += card('', ico(m), `<b>${m.n}</b> <span class="rb-c">x${o}</span><small>${T(m.fx)}</small>${TIERS_ON[m.id] && nextTier(o) ? `<small>Mijlpaal: dubbel bij ${nextTier(o)} (nu x${tierMul(o)})</small>` : ''}`, `${btn('buy:' + m.id + ':' + k, 'Bouw' + (k > 1 ? ' x' + k : ''), ok)}<div>${costHtml(c)}</div>`);
     }
     h += '<div class="rb-h">Verbeteringen (x1,8 per niveau)</div>';
     for (const id of UPS) {
       const m = MOD[id], L = upLevel(S, id), c = upCost(S, id);
-      h += `<div class="rb-card"><div class="rb-ic">${m.e}</div><div class="rb-mid"><b>${m.n}-upgrade</b> <span class="rb-c">niveau ${L}/${UP_MAX}</span><small>Nu x${fmt(upMul(S, id))} opbrengst. Zeldzaam spul van missies is nodig!</small></div><div class="rb-act">${L >= UP_MAX ? '<span class="rb-c">max</span>' : btn('up:' + id, 'Verbeter', canPay(S, c)) + '<div>' + costHtml(c) + '</div>'}</div></div>`;
+      if (!unlocked(S, m) && !L) continue;
+      h += card('', ico(m), `<b>${m.n}-upgrade</b> <span class="rb-c">niveau ${L}/${UP_MAX}</span><small>Nu x${fmt(upMul(S, id))} opbrengst. Zeldzaam spul van missies is nodig!</small>`, L >= UP_MAX ? '<span class="rb-c">max</span>' : btn('up:' + id, 'Verbeter', canPay(S, c)) + '<div>' + costHtml(c) + '</div>');
     }
     return h;
   }
   function vTeam() {
     const pop = Math.floor(S.pop);
-    let h = `<div class="rb-card"><div class="rb-ic">👩‍🚀</div><div class="rb-mid"><b>${pop} bewoners</b> van ${R.house} plekken<small>${R.growth > 0 ? 'Er komt zo weer iemand bij!' : pop >= R.house ? 'Vol! Bouw een 🏠 woonmodule.' : 'Zorg voor genoeg zuurstof en voedsel.'}</small>
-      <small>Werkgeluk: ${Math.round(R.wel * 100)}%${R.wel < 0.7 ? ' (bouw 💨 / 🍅 bij)' : ''}</small></div></div>`;
+    let h = card('', I('astronaut', 44), `<b>${pop} bewoners</b> van ${R.house} plekken<small>${R.growth > 0 ? 'Er komt zo weer iemand bij!' : pop >= R.house ? T('Vol! Bouw een 🏠 woonmodule.') : 'Zorg voor genoeg zuurstof en voedsel.'}</small><small>Werkgeluk: ${Math.round(R.wel * 100)}%${R.wel < 0.7 ? T(' (bouw 💨 / 🍅 bij)') : ''}</small>`);
     h += `<div class="rb-h">Taken (${R.free} vrij)</div>`;
     for (const t of TASKS) {
-      h += `<div class="rb-card"><div class="rb-ic">${t.e}</div><div class="rb-mid"><b>${t.n}</b><small>${t.d}</small></div><div class="rb-ctl">${btn('asg:' + t.id + ':-1', '−', true)}<b>${S.w[t.id]}</b>${btn('asg:' + t.id + ':1', '+', R.free >= 1)}</div></div>`;
+      h += card('', ico(t), `<b>${t.n}</b><small>${T(t.d)}</small>`, `<div class="rb-ctl">${btn('asg:' + t.id + ':-1', '−', true)}<b>${S.w[t.id]}</b>${btn('asg:' + t.id + ':1', '+', R.free >= 1)}</div>`);
     }
     h += `<div class="rb-seg">${btn('auto', '⚖️ Slim verdelen', true)}</div>`;
-    h += `<div class="rb-h">Robots 🤖</div>`;
+    h += `<div class="rb-h">Robots</div>`;
     const c = robotCost(S), cap = R.botCap;
-    if (!unlocked(S, MOD.werk)) h += `<div class="rb-card lock"><div class="rb-ic">🔒</div><div class="rb-mid"><b>Robots</b><small>Onderzoek 🤖 Robotica en bouw een 🏭 Robotfabriek</small></div></div>`;
-    else h += `<div class="rb-card"><div class="rb-ic">🤖</div><div class="rb-mid"><b>${S.bots} van ${cap} robots</b><small>Werken altijd, eten niks. Gebruiken 0,5 ⚡</small></div><div class="rb-act">${btn('robot', 'Bouw robot', S.bots < cap && canPay(S, c))}<div>${costHtml(c)}</div></div></div>`;
+    if (!unlocked(S, MOD.werk)) h += card('lock', lockIc(), `<b>Robots</b><small>${T('Onderzoek 🤖 Robotica en bouw een 🏭 Robotfabriek')}</small>`);
+    else h += card('', I('robot', 44), `<b>${S.bots} van ${cap} robots</b><small>${T('Werken altijd, eten niks. Gebruiken 0,5 ⚡')}</small>`, `${btn('robot', 'Bouw robot', S.bots < cap && canPay(S, c))}<div>${costHtml(c)}</div>`);
     return h;
   }
   function vLab() {
@@ -859,26 +1002,26 @@ export async function ruimtebasisView(ctx) {
     for (const r of RESEARCH) (S.res.includes(r.id) ? dn : resAvail(S, r) ? av : lk).push(r);
     let h = '<div class="rb-h">Beschikbaar</div>';
     if (!av.length) h += '<div class="rb-note">Alles onderzocht wat nu kan!</div>';
-    for (const r of av) h += `<div class="rb-card"><div class="rb-ic">${r.e}</div><div class="rb-mid"><b>${r.n}</b><small>${r.d}</small></div><div class="rb-act">${btn('res:' + r.id, 'Onderzoek', canPay(S, r.c))}<div>${costHtml(r.c)}</div></div></div>`;
-    if (lk.length) { h += '<div class="rb-h">Later</div>'; for (const r of lk) h += `<div class="rb-card lock"><div class="rb-ic">🔒</div><div class="rb-mid"><b>${r.n}</b><small>Eerst: ${RES[r.req].e} ${RES[r.req].n}</small></div></div>`; }
-    if (dn.length) { h += '<div class="rb-h">Klaar</div>'; for (const r of dn) h += `<div class="rb-card done"><div class="rb-ic">${r.e}</div><div class="rb-mid"><b>${r.n}</b><small>${r.d}</small></div></div>`; }
+    for (const r of av) h += card('', ico(r), `<b>${r.n}</b><small>${T(r.d)}</small>`, `${btn('res:' + r.id, 'Onderzoek', canPay(S, r.c))}<div>${costHtml(r.c)}</div>`);
+    if (lk.length) { h += '<div class="rb-h">Later</div>'; for (const r of lk) h += card('lock', lockIc(), `<b>${r.n}</b><small>Eerst: ${T(RES[r.req].e)} ${RES[r.req].n}</small>`); }
+    if (dn.length) { h += '<div class="rb-h">Klaar</div>'; for (const r of dn) h += card('done', ico(r), `<b>${r.n}</b><small>${T(r.d)}</small>`); }
     return h;
   }
   function vMis() {
     const now = Date.now(), slots = nb(S, 'hangaar');
-    let h = `<div class="rb-card"><div class="rb-ic">🛖</div><div class="rb-mid"><b>${S.mis.length} van ${slots} raketplekken in gebruik</b><small>${slots ? 'Rampjes gebeuren soms (' + Math.round(hazChance(S) * 100) + '%): dan is de lading half. Nooit gevaarlijk!' : 'Onderzoek 🚀 Raketbouw en bouw een 🛖 hangaar.'}</small></div></div>`;
+    let h = card('', ico(MOD.hangaar), `<b>${S.mis.length} van ${slots} raketplekken in gebruik</b><small>${slots ? 'Rampjes gebeuren soms (' + Math.round(hazChance(S) * 100) + '%): dan is de lading half. Nooit gevaarlijk!' : T('Onderzoek 🚀 Raketbouw en bouw een hangaar.')}</small>`);
     S.mis.forEach((m, i) => {
       const w = WORLDS[m.w], left = (m.e - now) / 1000, total = (m.e - m.s) / 1000, pr = Math.min(1, 1 - left / total);
       h += left <= 0
-        ? `<div class="rb-card done"><div class="rb-ic">${w.e}</div><div class="rb-mid"><b>Raket terug van ${w.n}!</b><small>${m.hz ? w.hz + '. De lading is half.' : 'Alles goed gegaan.'}</small></div><div class="rb-act">${btn('col:' + i, '🎁 Ophalen', true)}</div></div>`
-        : `<div class="rb-card"><div class="rb-ic">🚀</div><div class="rb-mid"><b>Onderweg naar ${w.e} ${w.n}</b><small>nog ${fmtT(left)}</small><div class="rb-bar"><i style="width:${Math.round(pr * 100)}%"></i></div></div></div>`;
+        ? card('done', ico(w), `<b>Raket terug van ${w.n}!</b><small>${m.hz ? w.hz + '. De lading is half.' : 'Alles goed gegaan.'}</small>`, btn('col:' + i, T('🎁') + ' Ophalen', true))
+        : card('', I('rocket', 44), `<b>Onderweg naar ${w.n}</b><small>nog ${fmtT(left)}</small><div class="rb-bar"><i style="width:${Math.round(pr * 100)}%"></i></div>`);
     });
     h += '<div class="rb-h">Werelden</div>';
     WORLDS.forEach((w, i) => {
       const disc = S.wd.includes(w.id), open = worldOpen(S, w);
-      if (!open) { h += `<div class="rb-card lock"><div class="rb-ic">❓</div><div class="rb-mid"><b>Onbekende wereld</b><small>Onderzoek ${RES[w.req].e} ${RES[w.req].n}</small></div></div>`; return; }
+      if (!open) { h += card('lock', '<span class="rb-em" style="font-size:30px">❓</span>', `<b>Onbekende wereld</b><small>Onderzoek ${T(RES[w.req].e)} ${RES[w.req].n}</small>`); return; }
       const can = slots > S.mis.length && S.r.erts >= w.cost;
-      h += `<div class="rb-card"><div class="rb-ic">${w.e}</div><div class="rb-mid"><b>${w.n}</b> ${disc ? '' : '<span class="rb-c">nieuw!</span>'}<small>${w.re} ${w.rn} (${fmt(price(S, w.rare))} 🪙/st) · ${fmtT(missionTime(S, w))}</small><small>Rampje: ${w.hz}</small></div><div class="rb-act">${btn('go:' + i, 'Lanceer 🚀', can)}<div>${costHtml({ erts: w.cost })}</div></div></div>`;
+      h += card('', ico(w), `<b>${w.n}</b> ${disc ? '' : '<span class="rb-c">nieuw!</span>'}<small>${rico(w.rare, 16)} ${w.rn} (${fmt(price(S, w.rare))} ${rico('cred', 14)}/st) · ${fmtT(missionTime(S, w))}</small><small>Rampje: ${w.hz}</small>`, `${btn('go:' + i, 'Lanceer', can)}<div>${costHtml({ erts: w.cost })}</div>`);
     });
     return h;
   }
@@ -888,38 +1031,39 @@ export async function ruimtebasisView(ctx) {
     const ids = ['erts'].concat(WORLDS.filter((w) => S.wd.includes(w.id)).map((w) => w.rare));
     for (const id of ids) {
       const p = price(S, id, now), p2 = price(S, id, now + 20000), amt = Math.floor(S.r[id]);
-      h += `<div class="rb-card"><div class="rb-ic">${E[id]}</div><div class="rb-mid"><b>${RNAME[id]}</b> <span class="rb-c">${fmt(amt)}</span><small>${fmt(p)} 🪙 per stuk <span class="${p2 >= p ? 'rb-up' : 'rb-dn'}">${p2 >= p ? '▲' : '▼'}</span></small></div><div class="rb-act"><div style="display:flex;gap:4px">${btn('sell:' + id + ':1', 'x1', amt >= 1)}${btn('sell:' + id + ':10', 'x10', amt >= 10)}${btn('sell:' + id + ':all', 'Alles', amt >= 1)}</div></div></div>`;
+      h += card('', rico(id, 44), `<b>${RNAME[id]}</b> <span class="rb-c">${fmt(amt)}</span><small>${fmt(p)} ${rico('cred', 14)} per stuk <span class="${p2 >= p ? 'rb-up' : 'rb-dn'}">${p2 >= p ? '▲' : '▼'}</span></small>`, `<div style="display:flex;gap:5px">${btn('sell:' + id + ':1', 'x1', amt >= 1)}${btn('sell:' + id + ':10', 'x10', amt >= 10)}${btn('sell:' + id + ':all', 'Alles', amt >= 1)}</div>`);
     }
     const cr = Math.floor(S.r.cred);
-    h += `<div class="rb-h">Erts inkopen</div><div class="rb-card"><div class="rb-ic">🛒</div><div class="rb-mid"><b>Credits omzetten in erts</b><small>Kost ca. ${fmt(0.6 * price(S, 'erts', now) / (basePrice('erts') * (1 + tradeBonus(S))))} 🪙 per 🪨</small></div><div class="rb-act"><div style="display:flex;gap:4px">${btn('ore:0.25', '25%', cr >= 4)}${btn('ore:1', 'Alles', cr >= 4)}</div></div></div>`;
+    h += `<div class="rb-h">Erts inkopen</div>` + card('', I('bag', 44), `<b>Credits omzetten in erts</b><small>Kost ca. ${fmt(0.6 * price(S, 'erts', now) / (basePrice('erts') * (1 + tradeBonus(S))))} ${rico('cred', 14)} per ${rico('erts', 14)}</small>`, `<div style="display:flex;gap:5px">${btn('ore:0.25', '25%', cr >= 4)}${btn('ore:1', 'Alles', cr >= 4)}</div>`);
     h += `<div class="rb-note">Zeldzaam spul van nieuwe werelden verschijnt hier na je eerste bezoek.</div>`;
     return h;
   }
   function vDoel() {
     const q = QUESTS[S.q], d = dailyInfo(S);
-    let h = `<div class="rb-h">Dagelijkse beloning</div><div class="rb-card"><div class="rb-ic">🎁</div><div class="rb-mid"><b>Dag ${d.streak}${d.can ? '' : ' (al opgehaald)'}</b><small>Elke dag meer, op dag 7 een ✨. ${d.can ? '' : 'Kom morgen terug!'}</small></div><div class="rb-act">${btn('daily', 'Ophalen', d.can)}</div></div>`;
+    let h = `<div class="rb-h">Dagelijkse beloning</div>` + card('', I('gift', 44), `<b>Dag ${d.streak}${d.can ? '' : ' (al opgehaald)'}</b><small>${T('Elke dag meer, op dag 7 een ✨. ')}${d.can ? '' : 'Kom morgen terug!'}</small>`, btn('daily', 'Ophalen', d.can));
     h += '<div class="rb-h">Huidig doel</div>';
     if (q) {
       const p = q.p ? q.p(S) : null;
-      h += `<div class="rb-card"><div class="rb-ic">🎯</div><div class="rb-mid"><b>${q.t}</b>${p ? `<small>${fmt(Math.min(p[0], p[1]))} / ${fmt(p[1])}</small><div class="rb-bar"><i style="width:${Math.min(100, Math.round(p[0] / p[1] * 100))}%"></i></div>` : ''}<small>Beloning: ${rewText(q.rew)}</small></div></div>`;
-    } else h += '<div class="rb-card done"><div class="rb-ic">🌟</div><div class="rb-mid"><b>Alle doelen gehaald!</b><small>Jij bent een echte sterrenkapitein.</small></div></div>';
+      h += card('', I('target', 44), `<b>${T(q.t)}</b>${p ? `<small>${fmt(Math.min(p[0], p[1]))} / ${fmt(p[1])}</small><div class="rb-bar"><i style="width:${Math.min(100, Math.round(p[0] / p[1] * 100))}%"></i></div>` : ''}<small>Beloning: ${rewText(q.rew)}</small>`);
+    } else h += card('done', I('trophy', 44), '<b>Alle doelen gehaald!</b><small>Jij bent een echte sterrenkapitein.</small>');
     h += `<div class="rb-h">Prestaties (${S.ach.length}/${ACHS.length}) · elk +1% productie</div><div class="rb-grid">`;
-    for (const a of ACHS) h += `<div class="rb-ach ${S.ach.includes(a.id) ? '' : 'off'}"><span>${a.e}</span><b>${a.n}</b><br>${a.d}</div>`;
+    for (const a of ACHS) h += `<div class="rb-ach ${S.ach.includes(a.id) ? '' : 'off'}">${ico(a, 36)}<b>${a.n}</b><br>${a.d}</div>`;
     return h + '</div>';
   }
-  const rewText = (r) => [r.e || r.m ? '🪨 ' + fmt(Math.max(r.e || 0, (r.m || 0) * 60 * R.erts)) : '', r.k ? '🔬 ' + r.k : '', r.c ? '🪙 ' + r.c : ''].filter(Boolean).join('  ');
+  const rewText = (r) => [r.e || r.m ? rico('erts', 16) + ' ' + fmt(Math.max(r.e || 0, (r.m || 0) * 60 * R.erts)) : '', r.k ? rico('kennis', 16) + ' ' + r.k : '', r.c ? rico('cred', 16) + ' ' + r.c : ''].filter(Boolean).join('  ');
   function vMeer() {
     const g = prestigeGain(S);
-    let h = `<div class="rb-h">Verhuizen naar een nieuwe maan ✨</div><div class="rb-card"><div class="rb-ic">🌙</div><div class="rb-mid"><b>Sterrenlicht: ${S.sd} ✨ <span class="rb-c">totaal ${S.sdt}</span></b><small>Begin opnieuw met een frisse maan. Je houdt ontdekte werelden, prestaties en Sterrenlicht (ongeveer +10% op alles per ✨). Onderzoek en gebouwen gaan weg.</small>
-      <small>${g >= 1 ? `Nu verhuizen geeft <b>${g} ✨</b>.` : `Nog ${fmt(Math.max(0, PREST_K - S.st.run))} 🪨 verdienen voor je eerste ✨ (deze ronde: ${fmt(S.st.run)}).`}</small></div><div class="rb-act">${btn('prest', 'Verhuis', g >= 1)}</div></div>`;
+    let h = `<div class="rb-h">Uiterlijk van je maan</div><div class="rb-skins">${Object.entries(SKINS).map(([id, k]) => `<button class="rb-skin ${skinId() === id ? 'on' : ''}" data-a="skin:${id}"><i style="background:linear-gradient(${k.sky.join(',')})"></i>${I(k.ic, 28)}<b>${k.n}</b><small>${k.d}</small></button>`).join('')}</div>`;
+    h += `<div class="rb-h">Verhuizen naar een nieuwe maan</div>` + card('', I('moon', 44), `<b>Sterrenlicht: ${S.sd} ${T('✨')} <span class="rb-c">totaal ${S.sdt}</span></b><small>${T('Begin opnieuw met een frisse maan. Je houdt ontdekte werelden, prestaties en Sterrenlicht (ongeveer +10% op alles per ✨). Onderzoek en gebouwen gaan weg.')}</small>
+      <small>${g >= 1 ? `Nu verhuizen geeft <b>${g} ${T('✨')}</b>.` : `Nog ${fmt(Math.max(0, PREST_K - S.st.run))} ${rico('erts', 14)} verdienen voor je eerste ${T('✨')} (deze ronde: ${fmt(S.st.run)}).`}</small>`, btn('prest', 'Verhuis', g >= 1));
     h += '<div class="rb-h">Sterrenlicht-winkel</div>';
     for (const p of PU) {
       const l = lv(S, p.id), c = p.cost(l), mx = l >= p.max;
-      h += `<div class="rb-card"><div class="rb-ic">${p.e}</div><div class="rb-mid"><b>${p.n}</b> <span class="rb-c">${l}/${p.max}</span><small>${p.d}</small></div><div class="rb-act">${mx ? '<span class="rb-c">max</span>' : btn('pu:' + p.id, c + ' ✨', S.sd >= c)}</div></div>`;
+      h += card('', ico(p), `<b>${p.n}</b> <span class="rb-c">${l}/${p.max}</span><small>${p.d}</small>`, mx ? '<span class="rb-c">max</span>' : btn('pu:' + p.id, c + ' ' + T('✨'), S.sd >= c));
     }
-    h += `<div class="rb-h">Instellingen</div><div class="rb-seg">${btn('snd', S.set.snd ? '🔊 Geluid aan' : '🔇 Geluid uit', true)}${btn('mus', S.set.mus ? '🎵 Muziek aan' : '🎵 Muziek uit', true)}</div>`;
-    h += `<div class="rb-note">Offline verdien je tot 8 uur lang ${Math.round(offlineEff(S) * 100)}% van je opbrengst. Je voortgang wordt automatisch lokaal en in de cloud bewaard. Tips: tik op vallende sterren ⭐ in de lucht voor bonus!</div>`;
-    h += `<div class="rb-seg">${btn('tut', '❓ Uitleg opnieuw', true)}</div>`;
+    h += `<div class="rb-h">Instellingen</div><div class="rb-seg">${btn('snd', S.set.snd ? '🔊 Geluid aan' : '🔇 Geluid uit', true)}${btn('mus', S.set.mus ? '🎵 Muziek aan' : '🎵 Muziek uit', true)}${btn('gear', '⚙ Meer instellingen', true)}</div>`;
+    h += `<div class="rb-note">${T(`Offline verdien je tot 8 uur lang ${Math.round(offlineEff(S) * 100)}% van je opbrengst. Je voortgang wordt automatisch lokaal en in de cloud bewaard. Tips: tik op vallende sterren ⭐ in de lucht voor bonus!`)}</div>`;
+    h += `<div class="rb-seg">${btn('tut', '❓ Uitleg opnieuw', true)}${btn('intro', '🎬 Intro bekijken', true)}</div>`;
     return h;
   }
   const TIERS_ON = { mijn: 1, lab: 1, handel: 1 };
@@ -934,17 +1078,17 @@ export async function ruimtebasisView(ctx) {
   }
 
   function updTop() {
-    const set = (k, a, b, extra) => { const el = topEls[k]; const t = `${a}<small>${b}</small>`; if (el.dataset.v !== t) { el.dataset.v = t; el.innerHTML = t; } if (extra !== undefined) el.classList.toggle('bad', extra); };
-    set('erts', `🪨 ${fmt(S.r.erts)}`, `+${fmt(R.erts)}/s`);
-    set('kennis', `🔬 ${fmt(S.r.kennis)}`, `+${fmt(R.kennis)}/s`);
-    set('cred', `🪙 ${fmt(S.r.cred)}`, `+${fmt(R.cred)}/s`);
-    const chip = (k, txt, bad) => { const el = topEls[k]; if (el.textContent !== txt) el.textContent = txt; el.classList.toggle('bad', bad); };
-    chip('pw', `⚡ ${fmt(R.pSup)}/${fmt(R.pDem)}`, R.pe < 1);
-    chip('o2', `💨 ${Math.round(R.o2E * 100)}%`, R.o2E < 1);
-    chip('fo', `🍅 ${Math.round(R.foE * 100)}%`, R.foE < 1);
-    chip('pp', `👩‍🚀 ${R.pop}/${R.house}${S.bots ? ' 🤖' + S.bots : ''}`, false);
+    const set = (k, a, b) => { const el = topEls[k]; const t = `${a}<small>${b}</small>`; if (el.dataset.v !== t) { el.dataset.v = t; el.innerHTML = t; } };
+    set('erts', `${rico('erts', 24)} ${fmt(S.r.erts)}`, `+${fmt(R.erts)}/s`);
+    set('kennis', `${rico('kennis', 24)} ${fmt(S.r.kennis)}`, `+${fmt(R.kennis)}/s`);
+    set('cred', `${rico('cred', 24)} ${fmt(S.r.cred)}`, `+${fmt(R.cred)}/s`);
+    const chip = (k, html, bad) => { const el = topEls[k]; if (el.dataset.v !== html) { el.dataset.v = html; el.innerHTML = html; } el.classList.toggle('bad', bad); };
+    chip('pw', `${I('bolt', 18)} ${fmt(R.pSup)}/${fmt(R.pDem)}`, R.pe < 1);
+    chip('o2', `${I('cloud', 18)} ${Math.round(R.o2E * 100)}%`, R.o2E < 1);
+    chip('fo', `${I('tomato', 18)} ${Math.round(R.foE * 100)}%`, R.foE < 1);
+    chip('pp', `${I('astronaut', 18)} ${R.pop}/${R.house}${S.bots ? ' ' + I('robot', 18) + S.bots : ''}`, false);
     const q = QUESTS[S.q];
-    const qt = q ? `🎯 <span><b>Doel:</b> ${q.t}${q.p ? ` (${fmt(Math.min(q.p(S)[0], q.p(S)[1]))}/${fmt(q.p(S)[1])})` : ''}</span>` : '🌟 <span>Alle doelen gehaald!</span>';
+    const qt = q ? `${I('target', 26)} <span><b>Doel:</b> ${T(q.t)}${q.p ? ` (${fmt(Math.min(q.p(S)[0], q.p(S)[1]))}/${fmt(q.p(S)[1])})` : ''}</span>` : `${I('trophy', 26)} <span>Alle doelen gehaald!</span>`;
     if (questEl.dataset.v !== qt) { questEl.dataset.v = qt; questEl.innerHTML = qt; }
     const ready = S.mis.filter((m) => m.e <= Date.now()).length;
     root.querySelectorAll('.rb-nav button').forEach((b) => {
@@ -958,7 +1102,7 @@ export async function ruimtebasisView(ctx) {
   }
 
   /* ---------- modals ---------- */
-  const modal = (html) => { modalEl.innerHTML = `<div class="rb-mbox">${html}</div>`; modalEl.hidden = false; };
+  const modal = (html) => { modalEl.innerHTML = `<div class="rb-mbox">${T(html)}</div>`; modalEl.hidden = false; };
   const closeModal = () => { modalEl.hidden = true; modalEl.innerHTML = ''; };
   function tutorialModal() {
     modal(`<h3>🌙 Welkom op je maan!</h3><p>Je landingsmodule staat er. Nu bouw je een kolonie:</p>
@@ -978,6 +1122,29 @@ export async function ruimtebasisView(ctx) {
     if (sound) audio[sound]();
     progress(); updTop(); renderBody(true); markDirty();
   };
+  const MILES = [
+    ['q5', () => S.q >= 5, 'chest-open', 'Training klaar!', 'Je kolonie draait'],
+    ['q12', () => S.q >= 12, 'victory', 'Eerste raket geland!', 'Jouw kolonie groeit'],
+    ['w4', () => S.wd.length >= 4, 'coins-rain', '4 werelden ontdekt', 'Wat een ontdekker!'],
+    ['w8', () => S.wd.length >= 8, 'new-record', '8 werelden ontdekt', 'De sterrenkaart groeit'],
+    ['w15', () => S.wd.length >= WORLDS.length, 'victory', 'Alle werelden ontdekt', 'Sterrenkapitein!'],
+    ['qall', () => S.q >= QUESTS.length, 'victory', 'Alle doelen gehaald', 'Sterrenkapitein!'],
+  ];
+  function playScene(id, title, sub, key, then) {
+    if (key) { if (S.set.seen.includes(key)) return false; S.set.seen.push(key); markDirty(); }
+    const sn = G.scenes && G.scenes.Scenes;
+    if (!sn || sceneRun) { if (then) then(); return false; }
+    try {
+      const run = sn.play(root, id, { title, sub });
+      sceneRun = run;
+      run.done.then(() => { if (sceneRun === run) sceneRun = null; if (alive && then) then(); }, () => { sceneRun = null; if (alive && then) then(); });
+      return true;
+    } catch (e) { sceneRun = null; if (then) then(); return false; }
+  }
+  function milestones() {
+    if (sceneRun || !modalEl.hidden) return;
+    for (const m of MILES) if (!S.set.seen.includes(m[0]) && m[1]()) { playScene(m[2], m[3], m[4], m[0]); break; }
+  }
   function progress() {
     const done = checkProgress(S, Date.now());
     for (const d of done) {
@@ -985,6 +1152,7 @@ export async function ruimtebasisView(ctx) {
       else { toast(`🏆 Prestatie: ${d.a.e} ${d.a.n}`); audio.quest(); }
     }
     if (done.length) R = rates(S, Date.now());
+    milestones();
   }
   const deny = (msg) => { audio.deny(); toast(msg); };
   const A = {
@@ -1007,7 +1175,7 @@ export async function ruimtebasisView(ctx) {
       toast(`${r.w.e} ${r.w.n}: +${r.qty} ${r.w.re} +${fmt(r.erts)} 🪨${r.first ? ` · nieuwe wereld! +${r.kennis} 🔬` : ''}`);
       if (r.hz) { audio.bad(); toast('😅 ' + r.w.hz + ', lading half.'); }
     },
-    sell(id, k) { const g = sell(S, id, k === 'all' ? 'all' : +k); if (g > 0) { toast(`+${fmt(g)} 🪙`); after('coin'); } },
+    sell(id, k) { const g = sell(S, id, k === 'all' ? 'all' : +k); if (g > 0) { toast(`+${fmt(g)} 🪙`); coinBurst(Math.min(14, 6 + Math.round(Math.log10(g + 1) * 2))); after('coin'); } },
     ore(f) { const got = buyOre(S, Math.floor(S.r.cred * +f)); if (got > 0) { toast(`+${fmt(got)} 🪨`); after('coin'); } },
     daily() {
       const r = claimDaily(S, Date.now(), R);
@@ -1022,12 +1190,15 @@ export async function ruimtebasisView(ctx) {
     prest2() {
       const g = prestige(S);
       closeModal(); tab = 'bouw'; lastHtml = '';
-      if (g) { toast(`✨ Nieuwe maan! +${g} Sterrenlicht`); after('quest'); }
+      if (g) { toast(`✨ Nieuwe maan! +${g} Sterrenlicht`); after('quest'); playScene('levelup', 'Nieuwe maan!', `+${g} Sterrenlicht`, null); }
     },
     pu(id) { if (buyPU(S, id)) after('research'); else deny('Te weinig Sterrenlicht'); },
     snd() { S.set.snd = S.set.snd ? 0 : 1; if (S.set.snd) { audio.unlock(); audio.coin(); } after(); },
     mus() { S.set.mus = S.set.mus ? 0 : 1; if (S.set.mus) { audio.unlock(); } audio.music(!!S.set.mus); after(); },
     tut() { tutorialModal(); },
+    intro() { closeModal(); playScene('intro-ruimte', 'Ruimtebasis', 'Bouw je kolonie op de maan', null); },
+    gear() { try { if (G.panel && G.panel.openSettingsPanel) G.panel.openSettingsPanel({ title: 'Instellingen Ruimtebasis', toast }); else toast('Instellingen zijn niet beschikbaar'); } catch (e) { toast('Instellingen zijn niet beschikbaar'); } },
+    skin(id) { if (!SKINS[id]) return; S.set.skin = id; try { root.style.setProperty('--rb-acc', SKINS[id].accent); } catch (e) { /* stil */ } after(); toast('Uiterlijk: ' + SKINS[id].n); },
     close() { closeModal(); },
   };
   root.addEventListener('click', (e) => {
@@ -1075,37 +1246,45 @@ export async function ruimtebasisView(ctx) {
   const c2 = cv.getContext('2d');
   let W = 0, H = 0, dpr = 1;
   const rnd = (() => { let s = 12345; return () => ((s = (s * 1664525 + 1013904223) >>> 0) / 4294967296); })();
-  const stars = Array.from({ length: 110 }, () => ({ x: rnd(), y: rnd() * 0.8, r: 0.4 + rnd() * 1.2, ph: rnd() * 6, sp: 0.5 + rnd() * 2 }));
+  const stars = Array.from({ length: 170 }, (_, i) => ({ x: rnd(), y: rnd() * 0.8, r: 0.5 + rnd() * 1.3, ph: rnd() * 6, sp: 0.5 + rnd() * 2, l: i % 3 }));
   const craters = Array.from({ length: 7 }, () => ({ x: rnd(), y: rnd(), w: 8 + rnd() * 16 }));
-  let parts = [], floats = [], ripples = [], shoot = null;
+  const DRIFT = [3, 7, 14];
+  let parts = [], floats = [], ripples = [], shoot = null, fx = null, incT = 0;
+  try { if (G.fx) fx = new G.fx.Particles(); } catch (e) { fx = null; }
   const walkers = Array.from({ length: 8 }, (_, i) => ({ x: 0.1 + rnd() * 0.8, v: (rnd() < 0.5 ? -1 : 1) * (0.015 + rnd() * 0.02), ph: rnd() * 6, bot: i >= 4 }));
   function spawnStar() { shoot = { t: 0, dur: 7, x0: 1.05, y0: 0.05, x1: -0.1, y1: 0.55 }; }
   function resize() {
     const w = cv.clientWidth, h = cv.clientHeight;
     if (!w || !h) return;
-    dpr = Math.min(2, window.devicePixelRatio || 1);
+    dpr = (G.set && G.set.GFX && G.set.GFX.dpr) || Math.min(2, window.devicePixelRatio || 1);
     if (w === W && h === H && cv.width === Math.round(w * dpr)) return;
     W = w; H = h; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
   }
   const starPos = () => shoot ? { x: (shoot.x0 + (shoot.x1 - shoot.x0) * shoot.t / shoot.dur) * W, y: (shoot.y0 + (shoot.y1 - shoot.y0) * shoot.t / shoot.dur) * H } : null;
-  function addFloat(x, y, txt, col = '#8be3c4') { if (floats.length < 24) floats.push({ x, y, txt, col, t: 0 }); }
-  function burst(x, y, n, cols) { for (let i = 0; i < n && parts.length < 120; i++) { const a = rnd() * TAU, v = 20 + rnd() * 50; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: 0.7 + rnd() * 0.5, t: 0, col: cols[i % cols.length] }); } }
+  function addFloat(x, y, txt, col = '#8be3c4', ic = null) { if (floats.length < 24) floats.push({ x, y, txt, col, t: 0, ic }); }
+  function burst(x, y, n, cols, kind) {
+    if (fx && kind) { fx.burst(x, y, { kind, n, color: cols && cols[0], power: 0.8 }); return; }
+    n = Math.max(2, G.set ? G.set.GFX.particles(n) : n);
+    for (let i = 0; i < n && parts.length < 120; i++) { const a = rnd() * TAU, v = 20 + rnd() * 50; parts.push({ x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 20, life: 0.7 + rnd() * 0.5, t: 0, col: cols[i % cols.length] }); }
+  }
+  const rockUp = (x, y, name) => { if (floats.length < 24) floats.push({ x, y, txt: '', t: 0, ic: name, small: 1 }); };
+  coinBurst = (n = 8) => { if (W && fx) fx.burst(W * 0.5, H - 40, { kind: 'coins', n, power: 0.9, angle: -Math.PI / 2, spread: 1.6 }); };
   let tapCombo = 0, lastTap = 0;
   cv.addEventListener('pointerdown', (e) => {
     audio.unlock();
     const rc = cv.getBoundingClientRect(), x = e.clientX - rc.left, y = e.clientY - rc.top;
     const sp = starPos();
-    if (sp && Math.hypot(sp.x - x, sp.y - y) < 36) {
+    if (sp && Math.hypot(sp.x - x, sp.y - y) < 40) {
       shoot = null; S.st.star++;
       const g = Math.max(25, R.erts * 25); S.r.erts += g; S.st.all += g; S.st.run += g;
-      addFloat(x, y, `⭐ +${fmt(g)} 🪨`, '#ffe08a'); burst(x, y, 24, ['#ffe08a', '#fff', '#ffb4e0']); audio.star(); toast('⭐ Vallende ster gevangen!');
+      addFloat(x, y, `+${fmt(g)}`, '#ffe08a', 'star'); burst(x, y, 24, ['#ffe08a', '#fff', '#ffb4e0'], 'stars'); audio.star(); toast('⭐ Vallende ster gevangen!');
       progress(); markDirty(); return;
     }
     const now = performance.now();
     tapCombo = now - lastTap < 600 ? Math.min(6, tapCombo + 1) : 0; lastTap = now;
     const g = R.tap;
     S.r.erts += g; S.st.all += g; S.st.run += g; S.st.tap++;
-    addFloat(x, y, '+' + fmt(g) + ' 🪨'); ripples.push({ x, y, t: 0 }); burst(x, y, 6, ['#d8dcff', '#8be3c4']);
+    addFloat(x, y, '+' + fmt(g), skin().accent, 'rock'); ripples.push({ x, y, t: 0 }); burst(x, y, 6, ['#d8dcff', skin().accent], 'sparkle');
     audio.tap(tapCombo); markDirty();
     if (S.st.tap <= 12 || S.st.tap % 10 === 0) { progress(); updTop(); }
   });
@@ -1119,103 +1298,163 @@ export async function ruimtebasisView(ctx) {
     const t = ts / 1000, dt = Math.min(0.1, (ts - (frame.last || ts)) / 1000); frame.last = ts;
     draw(t, dt);
   }
+  const mod = (v, m) => ((v % m) + m) % m;
+  const useIc = (name) => !!(G.art && G.art.has(name));
   function draw(t, dt) {
-    const c = c2;
+    const c = c2, K = skin(), q = gq(), red = gred();
     c.setTransform(dpr, 0, 0, dpr, 0, 0);
-    const gy = H - 30;
+    const gy = H - 36, fxm = G.fx;
     // lucht
-    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, '#05081c'); g.addColorStop(0.6, '#171a4a'); g.addColorStop(1, '#33306e');
+    const g = c.createLinearGradient(0, 0, 0, H); g.addColorStop(0, K.sky[0]); g.addColorStop(0.6, K.sky[1]); g.addColorStop(1, K.sky[2]);
     c.fillStyle = g; c.fillRect(0, 0, W, H);
-    // nevel
-    let ng = c.createRadialGradient(W * 0.25, H * 0.3, 0, W * 0.25, H * 0.3, W * 0.5); ng.addColorStop(0, 'rgba(120,90,220,.28)'); ng.addColorStop(1, 'rgba(120,90,220,0)');
+    // nevels (ultra: bewegen mee)
+    let ng = c.createRadialGradient(W * 0.25, H * 0.3, 0, W * 0.25, H * 0.3, W * 0.5); ng.addColorStop(0, `rgba(${K.neb[0]},.28)`); ng.addColorStop(1, `rgba(${K.neb[0]},0)`);
     c.fillStyle = ng; c.fillRect(0, 0, W, H);
-    ng = c.createRadialGradient(W * 0.8, H * 0.55, 0, W * 0.8, H * 0.55, W * 0.4); ng.addColorStop(0, 'rgba(60,200,180,.18)'); ng.addColorStop(1, 'rgba(60,200,180,0)');
-    c.fillStyle = ng; c.fillRect(0, 0, W, H);
-    // sterren
-    for (const s of stars) { c.globalAlpha = 0.35 + 0.65 * Math.abs(Math.sin(t * s.sp + s.ph)); c.fillStyle = '#fff'; c.fillRect(s.x * W, s.y * H, s.r, s.r); }
+    if (q > 0) {
+      const sx = q > 1 && !red ? Math.sin(t * 0.05) * W * 0.05 : 0;
+      ng = c.createRadialGradient(W * 0.8 + sx, H * 0.55, 0, W * 0.8 + sx, H * 0.55, W * 0.4); ng.addColorStop(0, `rgba(${K.neb[1]},.2)`); ng.addColorStop(1, `rgba(${K.neb[1]},0)`);
+      c.fillStyle = ng; c.fillRect(0, 0, W, H);
+    }
+    // sterren in 3 lagen met parallax
+    const ns = [70, 120, 170][q];
+    c.fillStyle = '#fff';
+    for (let i = 0; i < ns; i++) {
+      const s = stars[i], x = red ? s.x * W : mod(s.x * W - t * DRIFT[s.l], W);
+      c.globalAlpha = (0.3 + 0.7 * Math.abs(Math.sin(t * s.sp + s.ph))) * (0.5 + s.l * 0.25);
+      const sz = s.r * (0.8 + s.l * 0.3); c.fillRect(x, s.y * H, sz, sz);
+    }
     c.globalAlpha = 1;
-    // planeet met ring (langzaam driftend)
-    const px = W * 0.82 + Math.sin(t * 0.05) * 6, py = H * 0.28;
-    const pr = Math.min(W, H) * 0.17;
-    const pg = c.createRadialGradient(px - pr * 0.4, py - pr * 0.4, pr * 0.1, px, py, pr); pg.addColorStop(0, '#ffd9a8'); pg.addColorStop(1, '#c46f8a');
+    // planeet met ring en gloed
+    const px = W * 0.82 + Math.sin(t * 0.05) * 6, py = H * 0.28, pr = Math.min(W, H) * 0.17;
+    if (q > 0 && fxm) fxm.glow(c, px, py, pr * 2.3, K.pg, 0.35);
+    const pg = c.createRadialGradient(px - pr * 0.4, py - pr * 0.4, pr * 0.1, px, py, pr); pg.addColorStop(0, K.planet[0]); pg.addColorStop(1, K.planet[1]);
     c.save(); c.translate(px, py); c.rotate(-0.35);
-    c.strokeStyle = 'rgba(255,230,200,.55)'; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, pr * 1.7, pr * 0.42, 0, Math.PI, TAU); c.stroke();
+    if (K.ring) { c.strokeStyle = `rgba(${K.ring},.55)`; c.lineWidth = 3; c.beginPath(); c.ellipse(0, 0, pr * 1.7, pr * 0.42, 0, Math.PI, TAU); c.stroke(); }
     circ(c, 0, 0, pr, pg);
-    c.beginPath(); c.ellipse(0, 0, pr * 1.7, pr * 0.42, 0, 0, Math.PI); c.stroke(); c.restore();
+    c.fillStyle = 'rgba(0,0,20,.18)'; c.beginPath(); c.arc(0, 0, pr, -1.2, 1.9); c.arc(-pr * 0.35, -pr * 0.05, pr * 0.95, 1.9, -1.2, true); c.fill();
+    if (K.ring) { c.strokeStyle = `rgba(${K.ring},.55)`; c.beginPath(); c.ellipse(0, 0, pr * 1.7, pr * 0.42, 0, 0, Math.PI); c.stroke(); }
+    c.restore();
+    // satelliet / ufo die voorbij drijft (hoog en ultra)
+    if (q > 0 && !red && useIc('satellite')) G.art.drawIcon(c, K === SKINS.neon && useIc('ufo') ? 'ufo' : 'satellite', mod(t * 9 + W * 0.3, W + 80) - 40, H * 0.16 + Math.sin(t * 0.4) * 6, 28 * Math.min(1.4, uiS()), { alpha: 0.85, rot: Math.sin(t * 0.5) * 0.2 });
     // vallende ster
     if (shoot) {
       shoot.t += dt; if (shoot.t > shoot.dur) shoot = null;
       else {
         const p = starPos(), a = 0.8 + 0.2 * Math.sin(t * 8);
-        const tg = c.createLinearGradient(p.x, p.y, p.x + 60, p.y - 30); tg.addColorStop(0, 'rgba(255,224,138,' + a + ')'); tg.addColorStop(1, 'rgba(255,224,138,0)');
-        c.strokeStyle = tg; c.lineWidth = 3; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x + 60, p.y - 30); c.stroke();
-        circ(c, p.x, p.y, 5 + Math.sin(t * 10), '#fff6c8'); c.strokeStyle = 'rgba(255,246,200,.5)'; c.lineWidth = 1; c.beginPath(); c.arc(p.x, p.y, 13 + Math.sin(t * 6) * 2, 0, TAU); c.stroke();
+        const tg = c.createLinearGradient(p.x, p.y, p.x + 70, p.y - 35); tg.addColorStop(0, 'rgba(255,224,138,' + a + ')'); tg.addColorStop(1, 'rgba(255,224,138,0)');
+        c.strokeStyle = tg; c.lineWidth = 3.5; c.beginPath(); c.moveTo(p.x, p.y); c.lineTo(p.x + 70, p.y - 35); c.stroke();
+        if (q > 0 && fxm) fxm.glow(c, p.x, p.y, 26, '#ffe08a', 0.6);
+        if (useIc('star')) G.art.drawIcon(c, 'star', p.x, p.y, 30 + Math.sin(t * 10) * 2, { rot: t * 2 });
+        else circ(c, p.x, p.y, 6 + Math.sin(t * 10), '#fff6c8');
       }
     }
+    // verre bergrug (parallax)
+    if (q > 0) {
+      c.fillStyle = K.ridge; c.globalAlpha = 0.7; c.beginPath(); c.moveTo(0, gy);
+      for (let x = 0; x <= W; x += 12) c.lineTo(x, gy - 16 - (Math.sin(x * 0.011 + 2) * 0.5 + 0.5) * 22 - Math.sin(x * 0.04) * 3);
+      c.lineTo(W, gy); c.closePath(); c.fill(); c.globalAlpha = 1;
+    }
     // raketten onderweg
+    const now0 = Date.now();
     S.mis.forEach((m, i) => {
-      const now = Date.now(), p = Math.min(1, (now - m.s) / (m.e - m.s));
+      const p = Math.min(1, (now0 - m.s) / (m.e - m.s));
       const w = WORLDS[m.w];
-      c.font = '16px serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
-      c.globalAlpha = 0.9; c.fillText(w.e, W - 18 - i * 24, 14); c.globalAlpha = 1;
-      if (p >= 1) { c.fillText('📦', W * 0.5 + Math.sin(t * 2 + i) * 4, H * 0.3 + i * 20); return; }
-      const x = W * (0.12 + 0.76 * p), y = H * 0.62 - Math.sin(p * Math.PI) * H * 0.45 - p * H * 0.1;
-      for (let k = 1; k < 7; k++) { const pk = Math.max(0, p - k * 0.012); c.fillStyle = 'rgba(255,200,120,' + (0.5 - k * 0.07) + ')'; c.beginPath(); c.arc(W * (0.12 + 0.76 * pk), H * 0.62 - Math.sin(pk * Math.PI) * H * 0.45 - pk * H * 0.1, 3 - k * 0.3, 0, TAU); c.fill(); }
-      c.save(); c.translate(x, y); c.rotate(Math.PI / 4 * (1 - p * 2) - 0.4); c.font = '20px serif'; c.fillText('🚀', 0, 0); c.restore();
+      if (useIc(IC[w.id])) G.art.drawIcon(c, IC[w.id], W - 22 - i * 30, 22, 26, { alpha: 0.95 });
+      else { c.font = '16px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(w.e, W - 18 - i * 24, 14); }
+      if (p >= 1) { if (useIc('chest')) G.art.drawIcon(c, 'chest', W * 0.5 + Math.sin(t * 2 + i) * 4, H * 0.3 + i * 26, 30); return; }
+      const pos = (pp) => ({ x: W * (0.12 + 0.76 * pp), y: H * 0.62 - Math.sin(pp * Math.PI) * H * 0.45 - pp * H * 0.1 });
+      const P = pos(p), P2 = pos(Math.min(1, p + 0.01));
+      for (let k = 1; k < 7; k++) { const pk = pos(Math.max(0, p - k * 0.012)); c.fillStyle = 'rgba(255,200,120,' + (0.5 - k * 0.07) + ')'; c.beginPath(); c.arc(pk.x, pk.y, 3.5 - k * 0.35, 0, TAU); c.fill(); }
+      if (q > 0 && fx && !red && rnd() < dt * 20) fx.burst(P.x, P.y, { kind: 'smoke', n: 1, color: '#c8c0ff', power: 0.2, size: 0.4 });
+      const ang = Math.atan2(P2.y - P.y, P2.x - P.x) + Math.PI / 2;
+      if (q > 0 && fxm) fxm.glow(c, P.x, P.y, 30, '#ffb060', 0.35);
+      if (useIc('rocket')) G.art.drawIcon(c, 'rocket', P.x, P.y, 40 * Math.min(1.4, uiS()), { rot: ang });
+      else { c.save(); c.translate(P.x, P.y); c.rotate(ang - Math.PI / 4); c.font = '22px serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('🚀', 0, 0); c.restore(); }
     });
     // grond
-    c.fillStyle = '#4b4a86'; c.beginPath(); c.moveTo(0, H);
+    c.fillStyle = K.gb; c.beginPath(); c.moveTo(0, H);
     for (let x = 0; x <= W; x += 10) c.lineTo(x, gy - 6 - Math.sin(x * 0.02 + 1) * 5 - Math.sin(x * 0.05) * 2);
     c.lineTo(W, H); c.closePath(); c.fill();
-    const gg = c.createLinearGradient(0, gy - 10, 0, H); gg.addColorStop(0, '#8d8cc9'); gg.addColorStop(1, '#4a4983');
+    const gg = c.createLinearGradient(0, gy - 10, 0, H); gg.addColorStop(0, K.g1); gg.addColorStop(1, K.g2);
     c.fillStyle = gg; c.fillRect(0, gy, W, H - gy);
-    c.fillStyle = 'rgba(40,38,90,.4)'; for (const k of craters) { c.beginPath(); c.ellipse(k.x * W, gy + 4 + k.y * (H - gy - 6), k.w, k.w * 0.28, 0, 0, TAU); c.fill(); }
-    c.strokeStyle = 'rgba(190,190,240,.6)'; c.lineWidth = 1.5; c.beginPath(); for (let x = 0; x <= W; x += 10) { const y = gy - 6 - Math.sin(x * 0.02 + 1) * 5 - Math.sin(x * 0.05) * 2 + 6; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
-    // gebouwen: maximaal ~14 sprites
+    c.fillStyle = `rgba(${K.cr},.4)`; for (const k of craters) { c.beginPath(); c.ellipse(k.x * W, gy + 4 + k.y * (H - gy - 6), k.w, k.w * 0.28, 0, 0, TAU); c.fill(); }
+    c.strokeStyle = `rgba(${K.edge},.6)`; c.lineWidth = 1.5; c.beginPath(); for (let x = 0; x <= W; x += 10) { const y = gy - 6 - Math.sin(x * 0.02 + 1) * 5 - Math.sin(x * 0.05) * 2 + 6; x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke();
+    // gebouwen: maximaal ~14 sprites, nu als 3D-icoon
     const types = ORDER.filter((id) => nb(S, id) > 0);
     let cap = 3; const total = (cp) => types.reduce((a, id) => a + Math.min(nb(S, id), cp), 1);
     while (cap > 1 && total(cap) > 12) cap--;
     const items = [];
     for (let k = 0; k < cap; k++) for (const id of types) if (nb(S, id) > k) items.push(id);
-    const n = items.length + 1, sp = (W - 24) / n, sc = Math.max(0.55, Math.min(1.15, sp / 38));
+    const n = items.length + 1, sp = (W - 24) / n, sc = Math.max(0.6, Math.min(1.3, sp / 40)) * Math.min(1.25, uiS());
     const place = [W / 2];
     for (let i = 0; i < items.length; i++) { const side = i % 2 ? 1 : -1, step = Math.floor(i / 2) + 1; place.push(W / 2 + side * step * sp * (1 + (items.length < 4 ? 0.4 : 0))); }
     const sprites = [{ id: 'landing', x: place[0], s: sc * 1.15 }].concat(items.map((id, i) => ({ id, x: place[i + 1], s: sc })));
     for (const sp2 of sprites) {
-      const x = sp2.x, y = gy + 2 - Math.sin(x * 0.02 + 1) * 3;
-      c.save(); c.translate(x, y); c.scale(sp2.s, sp2.s);
-      c.fillStyle = 'rgba(0,0,0,.2)'; c.beginPath(); c.ellipse(0, 1, 18, 3, 0, 0, TAU); c.fill();
-      SPR[sp2.id](c, t); c.restore();
-      if (sp2.id === 'mijn' && rnd() < dt * 1.2 && parts.length < 100) parts.push({ x: x + 15 * sp2.s, y: y - 8, vx: (rnd() - 0.5) * 14, vy: -20 - rnd() * 14, life: 1, t: 0, col: '#ffd27a' });
+      const x = sp2.x, y = gy + 2 - Math.sin(x * 0.02 + 1) * 3, nm = sp2.id === 'landing' ? 'rocket' : IC[sp2.id];
+      if (G.fx) G.fx.softShadow(c, x, y + 2, 22 * sp2.s, 6 * sp2.s, 0.35);
+      if (useIc(nm)) {
+        const sz = 52 * sp2.s, bob = red ? 0 : Math.sin(t * 1.5 + x) * 1.2;
+        if (q > 0 && fxm && sp2.id !== 'landing') fxm.glow(c, x, y - sz * 0.5, sz * 0.8, K.accent, 0.1 + 0.05 * Math.sin(t * 2 + x));
+        G.art.drawIcon(c, nm, x, y - sz * 0.46 + bob, sz);
+      } else {
+        c.save(); c.translate(x, y); c.scale(sp2.s, sp2.s); SPR[sp2.id] && SPR[sp2.id](c, t); c.restore();
+      }
+      if (!red && sp2.id === 'mijn' && rnd() < dt * 1.2 && parts.length < 100) parts.push({ x: x + 15 * sp2.s, y: y - 8, vx: (rnd() - 0.5) * 14, vy: -20 - rnd() * 14, life: 1, t: 0, col: '#ffd27a' });
+    }
+    // inkomsten: opstijgende icoontjes en muntjes boven de gebouwen
+    incT += dt;
+    if (!red && incT > (q === 0 ? 1.6 : q === 1 ? 0.9 : 0.55) && sprites.length > 1) {
+      incT = 0;
+      const sp3 = sprites[1 + Math.floor(rnd() * (sprites.length - 1))], k = sp3.id;
+      const nm = k === 'lab' || k === 'sat' || k === 'obs' ? 'kennis' : k === 'handel' || k === 'bank' || k === 'toer' || k === 'alien' ? 'cred' : (k === 'mijn' || k === 'steen' || k === 'drone' || k === 'smelt' || k === 'kristal') ? 'erts' : '';
+      if (nm) rockUp(sp3.x, gy - 40 * sp3.s, IC[nm]);
     }
     // bewoners en robots
     const nPop = Math.min(4, R.pop), nBot = Math.min(4, S.bots);
     walkers.forEach((wk, i) => {
       if (wk.bot ? i - 4 >= nBot : i >= nPop) return;
       wk.x += wk.v * dt; if (wk.x < 0.04 || wk.x > 0.96) { wk.v = -wk.v; wk.x = Math.max(0.04, Math.min(0.96, wk.x)); }
-      const x = wk.x * W, y = gy + 12 + (i % 3) * 3 + Math.abs(Math.sin(t * 6 + wk.ph)) * -1.5;
+      const x = wk.x * W, y = gy + 14 + (i % 3) * 3 + Math.abs(Math.sin(t * 6 + wk.ph)) * -2;
+      const nm = wk.bot ? 'robot' : 'astronaut';
+      if (useIc(nm)) { G.art.drawIcon(c, nm, x, y - 12, 26 * Math.min(1.3, uiS()), { rot: Math.sin(t * 6 + wk.ph) * 0.08 }); return; }
       c.save(); c.translate(x, y); c.scale(wk.v < 0 ? -1 : 1, 1);
       if (wk.bot) { c.fillStyle = '#b6c1e8'; rr(c, -4, -9, 8, 7, 2); c.fill(); circ(c, 1.5, -6, 1.3, Math.sin(t * 4 + wk.ph) > 0 ? '#8be3c4' : '#355'); c.fillStyle = '#4a4a80'; c.fillRect(-4, -2, 8, 2); }
       else { c.fillStyle = '#fff'; rr(c, -3, -9, 6, 8, 2); c.fill(); circ(c, 0, -11, 3.4, '#f3f5ff'); c.fillStyle = '#4a6bd0'; rr(c, -1, -12.3, 3.4, 2.4, 1); c.fill(); c.fillStyle = '#c8d0f0'; c.fillRect(-5, -8, 2, 5); }
       c.restore();
     });
     // deeltjes en ripples
+    if (fx && !red) { fx.update(dt); fx.draw(c); }
     parts = parts.filter((p) => { p.t += dt; if (p.t > p.life) return false; p.x += p.vx * dt; p.y += p.vy * dt; p.vy += 40 * dt; c.globalAlpha = 1 - p.t / p.life; c.fillStyle = p.col; c.fillRect(p.x, p.y, 2.5, 2.5); c.globalAlpha = 1; return true; });
-    ripples = ripples.filter((r) => { r.t += dt; if (r.t > 0.5) return false; c.strokeStyle = 'rgba(139,227,196,' + (1 - r.t * 2) + ')'; c.lineWidth = 2; c.beginPath(); c.arc(r.x, r.y, 6 + r.t * 50, 0, TAU); c.stroke(); return true; });
-    c.font = '700 13px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
-    floats = floats.filter((f) => { f.t += dt; if (f.t > 1.1) return false; c.globalAlpha = 1 - f.t / 1.1; c.fillStyle = f.col; c.strokeStyle = 'rgba(0,0,30,.7)'; c.lineWidth = 3; const y = f.y - 10 - f.t * 36; c.strokeText(f.txt, f.x, y); c.fillText(f.txt, f.x, y); c.globalAlpha = 1; return true; });
+    ripples = ripples.filter((r) => { r.t += dt; if (r.t > 0.5) return false; c.strokeStyle = skin().accent; c.globalAlpha = 1 - r.t * 2; c.lineWidth = 2; c.beginPath(); c.arc(r.x, r.y, 6 + r.t * 50, 0, TAU); c.stroke(); c.globalAlpha = 1; return true; });
+    c.font = '800 ' + Math.round(15 * Math.min(1.4, uiS())) + 'px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'alphabetic';
+    floats = floats.filter((f) => {
+      f.t += dt; const life = f.small ? 1.6 : 1.1; if (f.t > life) return false;
+      c.globalAlpha = 1 - f.t / life; const y = f.y - 10 - f.t * (f.small ? 26 : 36);
+      if (f.small) { if (useIc(f.ic)) G.art.drawIcon(c, f.ic, f.x, y, 16); }
+      else {
+        const tw = f.txt.length * 8.5, ix = useIc(f.ic) ? 11 : 0;
+        c.fillStyle = f.col; c.strokeStyle = 'rgba(0,0,30,.7)'; c.lineWidth = 3; c.strokeText(f.txt, f.x - ix, y); c.fillText(f.txt, f.x - ix, y);
+        if (ix) G.art.drawIcon(c, f.ic, f.x + tw / 2 - 2, y - 5, 18);
+      }
+      c.globalAlpha = 1; return true;
+    });
     // zonnevlam
     if (S.ev && S.ev.k === 'vlam' && S.ev.until > Date.now()) { c.fillStyle = 'rgba(255,170,90,' + (0.12 + 0.06 * Math.sin(t * 6)) + ')'; c.fillRect(0, 0, W, H); }
+    if (q > 0 && fxm) fxm.vignette(c, W, H, 0.3);
     // tutorial: pijl naar de maan
-    if (S.q === 0 && S.st.tap < 10) { c.font = '22px serif'; c.textBaseline = 'middle'; c.fillText('👆', W / 2 + 40, gy + 6 + Math.sin(t * 5) * 5); c.font = '700 12px system-ui'; c.fillStyle = '#8be3c4'; c.fillText('Tik op de maan!', W / 2 - 30, gy + 30); }
+    if (S.q === 0 && S.st.tap < 10) { c.font = '26px serif'; c.textBaseline = 'middle'; c.fillText('👆', W / 2 + 40, gy + 6 + Math.sin(t * 5) * 5); c.font = '700 14px system-ui'; c.fillStyle = skin().accent; c.fillText('Tik op de maan!', W / 2 - 30, gy + 30); }
   }
 
   /* ---------- start ---------- */
+  if (!Array.isArray(S.set.seen)) S.set.seen = [];
+  if (!isNew) { for (const m of MILES) if (m[1]()) { if (!S.set.seen.includes(m[0])) S.set.seen.push(m[0]); } if (!S.set.seen.includes('intro')) S.set.seen.push('intro'); }
   progress();
   R = rates(S, Date.now());
   updTop(); renderBody(true);
   if (S.set.mus) { /* muziek start pas na de eerste tik (browser-regel) */ const startMus = () => { audio.unlock(); audio.music(true); root.removeEventListener('pointerdown', startMus); }; root.addEventListener('pointerdown', startMus); }
-  if (isNew) tutorialModal(); else if (away) awayModal();
+  try { root.style.setProperty('--rb-acc', skin().accent); } catch (e) { /* stil */ }
+  if (G.set) { try { offSet = G.set.Settings.onChange(() => { lastHtml = ''; Object.values(topEls).forEach((el) => { el.dataset.v = ''; }); questEl.dataset.v = ''; updTop(); renderBody(true); }); } catch (e) { offSet = null; } }
+  if (isNew) { S.set.seen.push('intro'); playScene('intro-ruimte', 'Ruimtebasis', 'Bouw je kolonie op de maan', null, tutorialModal); } else if (away) awayModal();
   raf = requestAnimationFrame(frame);
   markDirty();
   saveNow();

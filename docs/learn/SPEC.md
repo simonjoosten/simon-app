@@ -141,3 +141,11 @@ Resultaten worden verwerkt met core: Prog.record per vraag, Profile.addXp/addCoi
 - Houd geheugen/CPU in de hand (geen zware loops per frame; pauzeer rAF als view niet verbonden is).
 - Schrijf pure logica los testbaar (node-tests in `tools/test-learn-<naam>.mjs`: bv. checkAnswer-tolerantie, pick, Leitner, generators, parsers, economie/balans van een spel via een bot-simulatie). Controleer `node --check`. Gebruik de browser NIET (de pane wordt gedeeld; de hoofdagent test visueel).
 - Schrijf ALLEEN je eigen bestanden. Rapporteer kort in het Nederlands: wat erin zit, exacte exports, wat je niet kon testen.
+
+## § Wereld & kwaliteit (fase 2, bindend voor spelbestanden)
+De hub (games.js) laat per spel een WERELD kiezen (Themes.forGame/setForGame) en geeft die door in `env`:
+- `env.world` = het wereld-object uit `docs/gfx/themes.js` (`{id,name,emoji,bg:[top,bottom],accent,ground,deco:[icoonnamen],particle,mood}`); altijd gezet (valt terug op de eerste wereld).
+- `env.gfx` = `{ q: GFX.q (0 normaal|1 hoog|2 ultra), reduce: GFX.reduce (bool) }` (momentopname bij start; lees gerust ook GFX zelf live).
+- `env.scene` = scene-id van de intro (informatief). De hub speelt de intro-scène VOOR `create()`; het spel hoeft niets te doen.
+Gebruik in een spel: `import { Themes } from '../../gfx/themes.js?v=1'; Themes.paintBackground(ctx, w, h, env.world, t)` of `Themes.cssVars(env.world)` voor DOM-spellen; deco-iconen via `drawIcon(ctx, env.world.deco[i], ...)`; deeltjes/gloed alleen als `env.gfx.q >= 1`, niets bewegends als `env.gfx.reduce`. Een spel MOET ook werken als `env.world`/`env.gfx` ontbreken (oude tests): gebruik `const world = env.world || null; const q = (env.gfx && env.gfx.q) || 0`.
+Opslag per spel-wereld: localStorage `gfx:world:<gameId>` (door Themes beheerd). De hub houdt in zijn eigen save het compacte veld `wp` bij (spel -> aantal werelden gespeeld) voor de 'Wereld'-prestaties.

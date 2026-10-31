@@ -2,9 +2,14 @@
 // Spellen staan in ./games/<id>.js (lui geladen). Zie docs/learn/SPEC.md §5 en §7.
 // Hulpbestanden: games-shop.js (winkel, uiterlijk, prestaties, beloning, stijlen), games-duel.js (uitdagingen).
 import { Profile, Prog, Snd, TTS, Kits, allKits, getKit, pick, rng, qkey, bindCtx, fmt, esc } from './core.js?v=1';
-import * as Shop from './games-shop.js?v=1';
-import * as Duel from './games-duel.js?v=1';
-import * as KM from './games-kitmaker.js?v=1';
+import * as Shop from './games-shop.js?v=2';
+import * as Duel from './games-duel.js?v=2';
+import * as KM from './games-kitmaker.js?v=2';
+import { GFX, Settings } from '../gfx/settings.js?v=1';
+import { openSettingsPanel } from '../gfx/panel.js?v=1';
+import { Themes, WORLDS } from '../gfx/themes.js?v=1';
+import { Scenes } from '../gfx/scenes.js?v=1';
+const { ic, emo } = Shop;
 
 export const GAME_IDS = ['klassiek', 'toren', 'baas', 'race', 'vissen', 'vlag', 'pizza', 'monster', 'regen', 'memory', 'ruimte', 'bom', 'slang', 'boerderij', 'vlieg', 'schat', 'escape', 'miljonair'];
 // reservemeta zodat de kaarten meteen getoond worden; het spelbestand zelf wint zodra het geladen is
@@ -28,6 +33,30 @@ export const META = {
   escape: ['Escape-kamer', '🗝️', '#475569', 'Open deuren en sloten in 5 kamers.', ['denken', 'rustig'], 7],
   miljonair: ['Quizshow', '🎤', '#c026d3', 'Klim de ladder naar de top met 3 hulplijnen.', ['quiz', 'denken'], 6],
 };
+/* ---------- iconen, werelden, scenes per spel ---------- */
+export const GAME_ICON = { klassiek: 'coin', toren: 'castle', baas: 'dragon', race: 'car', vissen: 'fish', vlag: 'flag', pizza: 'pizza', monster: 'sword', regen: 'cloud', memory: 'puzzle', ruimte: 'rocket', bom: 'bomb', slang: 'frog', boerderij: 'cow', vlieg: 'balloon', schat: 'pickaxe', escape: 'key', miljonair: 'trophy', _demo: 'target' };
+// standaardwereld per spel (de speler kan elke wereld kiezen)
+export const DEFAULT_WORLD = { klassiek: 'stad', toren: 'kasteel', baas: 'vulkaan', race: 'woestijn', vissen: 'onderwater', vlag: 'bos', pizza: 'pretpark', monster: 'dino', regen: 'wolken', memory: 'snoepland', ruimte: 'ruimte', bom: 'neon', slang: 'jungle', boerderij: 'boerderij', vlieg: 'wolken', schat: 'piraten', escape: 'robots', miljonair: 'neon', _demo: 'herfst' };
+// welke intro-scène bij welke wereld hoort (de scène krijgt de wereld als achtergrond via opts.theme)
+export const INTRO_FOR = { ruimte: 'intro-ruimte', onderwater: 'intro-onderwater', kasteel: 'intro-kasteel', bos: 'intro-bos', stad: 'intro-stad', pretpark: 'intro-pretpark', boerderij: 'intro-boerderij', snoepland: 'intro-snoepland',
+  woestijn: 'intro-bos', ijs: 'intro-bos', jungle: 'intro-bos', herfst: 'intro-bos', dino: 'intro-bos', vulkaan: 'intro-kasteel', piraten: 'intro-onderwater', robots: 'intro-stad', neon: 'intro-stad', wolken: 'intro-pretpark' };
+export const TIPS = ['Tip: een lange reeks goede antwoorden geeft extra bonus!', 'Tip: lees de vraag rustig, snel hoeft niet altijd.', 'Tip: met upgrades uit de winkel kom je verder.', 'Tip: kies een andere wereld met de wereld-knop.', 'Tip: fouten oefen je later nog eens in Learn Study.', 'Tip: elke dag nieuwe dagopdrachten met munten.', 'Tip: speel een spel in 3 werelden voor een prestatie!'];
+export function introFor(worldId) { return INTRO_FOR[worldId] || 'intro-stad'; }
+// Welke scène(s) hoort bij een resultaat? (pure functie, getest)
+export function resultScenes(r) {
+  const out = [];
+  if (r.win === true) out.push(r.id === 'baas' ? 'boss-defeated' : 'victory');
+  else if (r.newRecord) out.push('new-record');
+  else if (r.coins >= 40) out.push('coins-rain');
+  if (r.lvUps && r.lvUps.length) out.push('levelup');
+  if (r.win === true && r.newRecord && out.length < 2) out.push('new-record');
+  return out.slice(0, 2);
+}
+export function worldOf(id) {
+  let saved = null; try { saved = globalThis.localStorage.getItem('gfx:world:' + id); } catch {}
+  if (saved && WORLDS.some((w) => w.id === saved)) return Themes.world(saved);
+  return DEFAULT_WORLD[id] ? Themes.world(DEFAULT_WORLD[id]) : Themes.forGame(id);
+}
 const DEMO_META = { name: 'Oefenen', emoji: '🎯', color: '#0d9488', desc: 'Gewoon vragen beantwoorden met bonus voor een reeks.', tags: ['rustig'], minutes: 3 };
 const TYPES = [['mc', '🔘 Kiezen'], ['type', '⌨️ Typen'], ['tf', '✅ Waar/onwaar'], ['order', '🔢 Volgorde'], ['match', '🔗 Paren'], ['fill', '✏️ Invullen'], ['num', '🔟 Getal'], ['multi', '☑️ Meerdere']];
 
@@ -46,10 +75,11 @@ export function builtinKit() {
 /* ---------- env voor een spel (los testbaar) ---------- */
 export function makeEnv(o) {
   const { kit, level = 2, seed = 1, fx = {}, fixed = null, types = [] } = o;
+  const gq = (() => { try { return { q: GFX.q | 0, reduce: !!GFX.reduce }; } catch { return { q: 0, reduce: false }; } })();
   const pickFn = o.pickFn || pick, qk = o.qkey || qkey;
   let calls = 0, cursor = 0; const used = new Set();
   const env = {
-    kit, uid: o.uid, name: o.name, seed, level, fx, snd: o.snd, tts: o.tts, rand: (o.rng || rng)(seed), w: o.w || 360, h: o.h || 560,
+    kit, uid: o.uid, name: o.name, seed, level, fx, world: o.world || WORLDS[0], gfx: o.gfx || gq, scene: o.scene || '', snd: o.snd, tts: o.tts, rand: (o.rng || rng)(seed), w: o.w || 360, h: o.h || 560,
     pick(n, po = {}) {
       n = Math.max(1, Math.floor(n) || 1);
       if (fixed && fixed.length) { const out = []; for (let i = 0; i < n; i++) out.push({ ...fixed[cursor++ % fixed.length] }); return out; }
@@ -95,7 +125,7 @@ export async function learnSpelView(ctx) {
       this.cloudAt = Date.now(); this.dirty = false;
       try {
         const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
-        let data = JSON.stringify(this.d); if (data.length > 17500) { const c = { ...this.d, kits: {} }; data = JSON.stringify(c); }
+        const data = Shop.hubForCloud(this.d);
         await setDoc(doc(ctx.db, 'gamesaves', 'learn-hub__' + uid), { game: 'learn-hub', uid, data, updated: Date.now() });
       } catch { this.dirty = true; }
     },
@@ -113,7 +143,7 @@ export async function learnSpelView(ctx) {
   const S = {
     screen: 'home', shopTab: 'up', kitList: [], kitId: store.d.lastKit || '', kit: null, level: store.d.level || 2, types: new Set(store.d.types || []),
     query: '', tag: '', picker: false, kq: '', avail: {}, availErr: {}, probed: false, duels: null, duelBusy: false, duelErr: '', duelT: 0, dform: null,
-    run: null, result: null, stopArm: false, reviewOpen: false,
+    run: null, result: null, stopArm: false, reviewOpen: false, wsheet: '', scene: null,
   };
   const P = Profile;
   const pget = () => { try { return P.get() || {}; } catch { return {}; } };
@@ -125,7 +155,7 @@ export async function learnSpelView(ctx) {
   const modCache = new Map();
   function loadGame(id) {
     if (!modCache.has(id)) {
-      modCache.set(id, import('./games/' + id + '.js?v=1').then((m) => {
+      modCache.set(id, import('./games/' + id + '.js?v=2').then((m) => {
         const d = m && m.default;
         if (!d || typeof d.create !== 'function') throw new Error('Dit spel mist een create()-functie.');
         return { ok: true, def: d };
@@ -192,18 +222,40 @@ export async function learnSpelView(ctx) {
     later(() => { try { t.remove(); } catch {} }, 2600);
   }
   function confetti(n = 26) {
-    if (!doc_ || !root) return;
-    const em = ['🎉', '⭐', '✨', '🪙', '🎊', '💫'];
-    for (let i = 0; i < n; i++) {
-      const s = doc_.createElement('span'); s.className = 'lsp-cf'; s.textContent = em[i % em.length];
-      s.style.left = Math.round(Math.random() * 96) + '%'; s.style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's'; s.style.fontSize = 16 + Math.round(Math.random() * 16) + 'px';
+    if (!doc_ || !root || GFX.reduce) return;
+    const set = Shop.fxSet(store.d.eq && store.d.eq.fx).slice(4, 5)[0] || ['star'];
+    const lim = Math.min(n, GFX.q === 0 ? 14 : GFX.q === 1 ? 24 : 40);
+    for (let i = 0; i < lim; i++) {
+      const s = doc_.createElement('span'); s.className = 'lsp-cf'; s.innerHTML = ic(set[i % set.length], 22 + Math.round(Math.random() * 16));
+      s.style.left = Math.round(Math.random() * 96) + '%'; s.style.animationDelay = (Math.random() * 0.6).toFixed(2) + 's';
       root.appendChild(s); later(() => { try { s.remove(); } catch {} }, 3200);
     }
   }
+  /* --- scenes (korte canvas-animaties, tik = overslaan) --- */
+  function stopScene() { const sc = S.scene; S.scene = null; if (sc) { try { sc.stop(); } catch {} } }
+  function playScenes(host, list, optsFn) {
+    stopScene();
+    if (!host || !list.length) return Promise.resolve();
+    let stopped = false, cur = null;
+    S.scene = { stop() { stopped = true; if (cur) cur.stop(); } };
+    const handle = S.scene;
+    return (async () => {
+      for (const id of list) {
+        if (stopped || dead) break;
+        try { cur = Scenes.play(host, id, optsFn(id)); const r = await cur.done; if (r && r.skipped) break; } catch { break; }
+      }
+      if (S.scene === handle) S.scene = null;
+    })();
+  }
+  function overlayScene(id, opts) {
+    if (!doc_ || !root) return;
+    const ov = doc_.createElement('div'); ov.className = 'lsp-scene'; root.appendChild(ov);
+    playScenes(ov, [id], () => opts).then(() => { try { ov.remove(); } catch {} });
+  }
   function afterChange() {
     const nu = Shop.checkHubAch(store.d, extra());
-    if (nu.length) { let c = 0; for (const a of nu) c += a.reward; try { P.addCoins(c); } catch {} snd('level'); toast(`${nu[0].emoji} Prestatie: ${nu[0].name}! +${c} 🪙`); }
-    try { const r = P.checkAch(); if (Array.isArray(r) && r.length && !nu.length) toast(`🎖️ Nieuwe prestatie: ${r[0].name || ''}`); } catch {}
+    if (nu.length) { let c = 0; for (const a of nu) c += a.reward; try { P.addCoins(c); } catch {} snd('level'); toast(`Prestatie: ${nu[0].name}! +${c} munten`); }
+    try { const r = P.checkAch(); if (Array.isArray(r) && r.length && !nu.length) toast(`Nieuwe prestatie: ${r[0].name || ''}`); } catch {}
     store.save();
   }
 
@@ -212,34 +264,49 @@ export async function learnSpelView(ctx) {
     const p = pget(); let li = { level: 1, cur: 0, next: 100 }; try { li = P.levelInfo() || li; } catch {}
     const pct = Math.max(0, Math.min(100, Math.round(100 * (li.cur || 0) / Math.max(1, li.next || 1))));
     let streak = p.streak || 0;
-    return `<div class="lsp-head"><button class="lsp-avbtn" data-act="tab" data-v="shop" aria-label="Uiterlijk aanpassen">${Shop.avatarHTML(p.avatar, 62)}</button>
-      <div class="lsp-hmain"><div class="lsp-name">${esc(myName())}<span class="lsp-lv">Lv ${li.level}</span></div><div class="lsp-xp"><i style="width:${pct}%"></i></div><small>${fmt(li.cur || 0)} / ${fmt(li.next || 0)} XP${streak ? ` · 🔥 ${streak} ${streak === 1 ? 'dag' : 'dagen'}` : ''}</small></div>
-      <div class="lsp-coins">🪙 ${fmt(p.coins || 0)}</div></div>`;
+    const ttl = Shop.titleOf(store.d);
+    return `<div class="lsp-head"><button class="lsp-avbtn" data-act="tab" data-v="shop" aria-label="Uiterlijk aanpassen">${Shop.avatarHTML(p.avatar, 72, Shop.ringOf(store.d))}</button>
+      <div class="lsp-hmain"><div class="lsp-name">${esc(myName())}<span class="lsp-lv">Lv ${li.level}</span></div>${ttl ? `<div class="lsp-ttl">${ic('medal', 16)} ${esc(ttl)}</div>` : ''}<div class="lsp-xp"><i style="width:${pct}%"></i></div><small>${fmt(li.cur || 0)} / ${fmt(li.next || 0)} XP${streak ? ` · ${ic('flame', 16)} ${streak} ${streak === 1 ? 'dag' : 'dagen'}` : ''}</small></div>
+      <div class="lsp-coins">${ic('coin', 30)} ${fmt(p.coins || 0)}</div><button class="lsp-gear" data-act="settings" aria-label="Instellingen">⚙️</button></div>`;
   }
+  const NAV_IC = { home: 'dice', shop: 'bag', duel: 'sword', rank: 'trophy', ach: 'medal' };
   function navHTML() {
-    const tabs = [['home', '🎮 Spelen'], ['shop', '🛒 Winkel'], ['duel', '⚔️ Uitdagen'], ['rank', '🏆 Ranglijst'], ['ach', '🎖️ Prestaties']];
-    return `<div class="lsp-nav">${tabs.map(([k, l]) => `<button class="${S.screen === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('')}</div>`;
+    const tabs = [['home', 'Spelen'], ['shop', 'Winkel'], ['duel', 'Uitdagen'], ['rank', 'Ranglijst'], ['ach', 'Prestaties']];
+    return `<div class="lsp-nav">${tabs.map(([k, l]) => `<button class="${S.screen === k ? 'on' : ''}" data-act="tab" data-v="${k}">${ic(NAV_IC[k], 26)}<span>${l}</span></button>`).join('')}</div>`;
   }
   function questsHTML() {
     let qs = []; try { qs = P.quests() || []; } catch {}
     if (!qs.length) return '';
     const left = qs.filter((q) => !(q.claimed !== undefined ? q.claimed : q.done)).length;
-    return `<div class="lsp-card2"><b>📅 Dagopdrachten <small style="display:inline">· ${left ? left + ' te doen' : 'alles klaar! 🎉'}</small></b>` + qs.map((q) => {
+    return `<div class="lsp-card2"><b class="lsp-sectitle">${ic('target', 34)} Dagopdrachten <small style="display:inline">· ${left ? left + ' te doen' : 'alles klaar!'}</small></b>` + qs.map((q) => {
       const pct = Math.min(100, Math.round(100 * (q.prog || 0) / Math.max(1, q.goal || 1))), claimed = q.claimed !== undefined ? !!q.claimed : !!q.done, ready = !claimed && (q.prog || 0) >= (q.goal || 1);
-      return `<div class="lsp-q${claimed ? ' done' : ''}"><div class="lsp-q-m"><div>${claimed ? '✅ ' : ''}${esc(q.text)}</div><div class="lsp-xp s"><i style="width:${pct}%"></i></div><small>${fmt(Math.min(q.prog || 0, q.goal || 0))} / ${fmt(q.goal || 0)}</small></div>
-        ${ready ? `<button class="lsp-claim" data-act="claim" data-id="${esc(q.id)}">🪙 ${q.reward || ''}</button>` : `<small style="white-space:nowrap">${claimed ? 'klaar' : '🪙 ' + (q.reward || '')}</small>`}</div>`;
+      return `<div class="lsp-q${claimed ? ' done' : ''}"><div class="lsp-q-i">${ic(claimed ? 'medal' : ready ? 'gift' : 'star', 32)}</div><div class="lsp-q-m"><div>${esc(q.text)}</div><div class="lsp-xp s"><i style="width:${pct}%"></i></div><small>${fmt(Math.min(q.prog || 0, q.goal || 0))} / ${fmt(q.goal || 0)}</small></div>
+        ${ready ? `<button class="lsp-claim" data-act="claim" data-id="${esc(q.id)}">${ic('coin', 24)} ${q.reward || ''}</button>` : `<small style="white-space:nowrap;display:flex;align-items:center;gap:3px">${claimed ? 'klaar' : ic('coin', 18) + ' ' + (q.reward || '')}</small>`}</div>`;
     }).join('') + '</div>';
   }
+  const gameIcon = (id, m) => (m && m.icon) || GAME_ICON[id] || null;
+  function bigIcon(id, m, size) { const n = gameIcon(id, m); return n ? ic(n, size) : `<span class="lsp-emo" style="font-size:${Math.round(size * 0.8)}px">${esc(m.emoji)}</span>`; }
   function cardHTML(id) {
     const m = meta(id), st = S.avail[id], best = store.d.best[id], fav = store.d.fav.includes(id);
     const dead_ = st === 'soon' || st === 'error';
     const tag = dead_ ? 'div' : 'button';
+    const w = worldOf(id), deco = w.deco && w.deco[0];
     return `<${tag} class="lsp-gc${dead_ ? ' soon' : ''}" style="--c:${esc(m.color)}" data-act="${dead_ ? 'noop' : 'play'}" data-id="${esc(id)}">
       ${dead_ ? '' : `<span class="lsp-fav" data-act="fav" data-id="${esc(id)}">${fav ? '★' : '☆'}</span>`}
-      <span class="lsp-gc-e">${esc(m.emoji)}</span><b>${esc(m.name)}</b><small>${esc(m.desc)}</small>
-      <span class="lsp-tags">${(m.tags || []).slice(0, 3).map((t) => `<i>${esc(t)}</i>`).join('')}${m.duo ? '<i>👥 2 spelers</i>' : ''}</span>
-      <span class="lsp-gc-f">⏱ ±${m.minutes} min${best ? ` · 🏅 ${fmt(best.score)}` : ''}</span>
+      <span class="lsp-gc-ic">${bigIcon(id, m, 96)}${deco ? `<span class="lsp-gc-deco">${ic(deco, 40)}</span>` : ''}</span><b>${esc(m.name)}</b><small>${esc(m.desc)}</small>
+      <span class="lsp-tags">${(m.tags || []).slice(0, 3).map((t) => `<i>${esc(t)}</i>`).join('')}${m.duo ? '<i>2 spelers</i>' : ''}</span>
+      ${dead_ ? '' : `<span class="lsp-wchip" role="button" data-act="worlds" data-id="${esc(id)}">${esc(w.emoji)} ${esc(w.name)} ▾</span>`}
+      <span class="lsp-gc-f">⏱ ±${m.minutes} min${best ? ` · ${ic('medal', 18)} ${fmt(best.score)}` : ''}</span>
       ${st === 'soon' ? '<span class="lsp-badge">Komt binnenkort</span>' : st === 'error' ? '<span class="lsp-badge err">Even stuk</span>' : ''}</${tag}>`;
+  }
+  function worldSheetHTML() {
+    const id = S.wsheet; if (!id) return '';
+    const m = meta(id), cur = worldOf(id);
+    const wps = WORLDS.map((w) => `<button class="lsp-wp${w.id === cur.id ? ' on' : ''}" data-act="world-set" data-id="${esc(id)}" data-w="${esc(w.id)}" aria-label="${esc(w.name)}"><span class="pv" style="background:linear-gradient(180deg,${esc(w.bg.join(','))})"><i style="background:${esc(w.ground)}"></i><span class="d">${ic(w.deco[0], 44)}</span><span class="e">${esc(w.emoji)}</span></span><span class="t">${esc(w.name)}</span></button>`).join('');
+    return `<div class="lsp-sheet-bg" data-act="world-close"><div class="lsp-sheet lsp-wsheet" data-act="noop"><div class="lsp-sectitle" style="display:flex;align-items:center;gap:10px">${bigIcon(id, m, 48)}<div><b>${esc(m.name)}</b><small>Kies een wereld: zo ziet het spel eruit</small></div></div>
+      <div class="lsp-wrow">${wps}</div>
+      <button class="lsp-tog${store.d.intro === 0 ? '' : ' on'}" data-act="intro-toggle"><span>Intro-filmpje voor het spel</span><i></i></button>
+      <button class="lsp-btn big" data-act="world-play" data-id="${esc(id)}">${ic('rocket', 26)} Spelen in ${esc(cur.name)}</button><button class="lsp-btn ghost" data-act="world-close" style="margin-top:8px;width:100%">Sluiten</button></div></div>`;
   }
   function visibleIds() {
     const q = S.query.trim().toLowerCase();
@@ -261,9 +328,9 @@ export async function learnSpelView(ctx) {
     const recent = store.d.last.filter((id) => S.avail[id] === 'ok');
     const ids = visibleIds();
     let h = '';
-    if (recent.length && !S.query && !S.tag) h += `<div class="lsp-sec">🕘 Laatst gespeeld</div><div class="lsp-recent">${recent.slice(0, 5).map((id) => { const m = meta(id); return `<button class="lsp-rc" data-act="play" data-id="${esc(id)}"><span style="font-size:24px">${esc(m.emoji)}</span>${esc(m.name)}</button>`; }).join('')}</div>`;
+    if (recent.length && !S.query && !S.tag) h += `<div class="lsp-sec">${ic('hourglass', 28)} Laatst gespeeld</div><div class="lsp-recent">${recent.slice(0, 5).map((id) => { const m = meta(id); return `<button class="lsp-rc" data-act="play" data-id="${esc(id)}">${bigIcon(id, m, 36)}${esc(m.name)}</button>`; }).join('')}</div>`;
     const okN = GAME_IDS.filter((id) => S.avail[id] === 'ok').length;
-    h += `<div class="lsp-sec">🎮 Alle spellen <small>${S.probed ? `${okN} beschikbaar` : 'laden…'}</small></div>`;
+    h += `<div class="lsp-sec">${ic('dice', 28)} Alle spellen <small>${S.probed ? `${okN} beschikbaar` : 'laden…'}</small></div>`;
     h += ids.length ? `<div class="lsp-grid">${ids.map(cardHTML).join('')}</div>` : '<div class="lsp-empty">Geen spel gevonden. Probeer een ander woord.</div>';
     return h;
   }
@@ -273,7 +340,7 @@ export async function learnSpelView(ctx) {
     h += `<button class="lsp-kitbtn" data-act="kit-open"><span class="e">${esc((e && e.emoji) || '📚')}</span><span class="t"><b>${esc(e ? e.name : 'Kies een kit')}</b><small>${e ? `${e.count > 0 ? e.count + ' vragen · ' : ''}tik om een andere kit te kiezen` : 'Maak hier je eigen kit'}</small></span><span>▾</span></button>`;
     h += `<div class="lsp-chips">${[1, 2, 3].map((l) => `<button class="lsp-chip${S.level === l ? ' on' : ''}" data-act="level" data-v="${l}">${['', '🟢', '🟡', '🔴'][l]} ${Shop.LV_NAMES[l]}</button>`).join('')}</div>`;
     h += `<div class="lsp-chips"><button class="lsp-chip${S.types.size ? '' : ' on'}" data-act="type" data-v="*">Alle vragen</button>${TYPES.map(([k, l]) => `<button class="lsp-chip${S.types.has(k) ? ' on' : ''}" data-act="type" data-v="${k}">${l}</button>`).join('')}</div>`;
-    h += `<div class="lsp-tools"><input class="lsp-search" data-inp="gsearch" type="search" placeholder="Zoek een spel…" value="${esc(S.query)}"><button class="lsp-btn" data-act="surprise">🎲 Verras me</button></div>`;
+    h += `<div class="lsp-tools"><input class="lsp-search" data-inp="gsearch" type="search" placeholder="Zoek een spel…" value="${esc(S.query)}"><button class="lsp-btn" data-act="surprise">${ic('dice', 26)} Verras me</button></div>`;
     h += `<div class="lsp-chips"><button class="lsp-chip${S.tag ? '' : ' on'}" data-act="tag" data-v="">Alles</button>${allTags().map((t) => `<button class="lsp-chip${S.tag === t ? ' on' : ''}" data-act="tag" data-v="${esc(t)}">${esc(t)}</button>`).join('')}</div>`;
     h += `<div class="lsp-gridwrap">${gridSectionHTML()}</div>`;
     return h;
@@ -296,17 +363,18 @@ export async function learnSpelView(ctx) {
   }
   function rankHTML() {
     const d = store.d, s = d.stats;
-    let h = `<div class="lsp-card2"><b>📊 Jouw statistieken</b><div class="lsp-stats">
+    let h = `<div class="lsp-card2"><b class="lsp-sectitle">${ic('star', 32)} Jouw statistieken</b><div class="lsp-stats">
       <div class="lsp-stat"><b>${fmt(s.games)}</b><small>spellen</small></div><div class="lsp-stat"><b>${fmt(s.wins)}</b><small>gewonnen</small></div><div class="lsp-stat"><b>${s.answers ? Math.round(100 * s.correct / s.answers) : 0}%</b><small>goed</small></div>
       <div class="lsp-stat"><b>${fmt(s.correct)}</b><small>goede antwoorden</small></div><div class="lsp-stat"><b>${s.bestStreak}</b><small>beste reeks</small></div><div class="lsp-stat"><b>${s.duelWins}/${s.duels}</b><small>duels gewonnen</small></div></div></div>`;
     const rows = GAME_IDS.map((id) => [id, d.best[id]]).sort((a, b) => ((b[1] && b[1].score) || -1) - ((a[1] && a[1].score) || -1));
-    h += `<div class="lsp-card2"><b>🏅 Beste scores op dit toestel</b>` + rows.map(([id, b], i) => { const m = meta(id); return `<div class="lsp-rank"><span class="e">${esc(m.emoji)}</span><div class="m"><b>${esc(m.name)}</b><small>${b ? `${esc(b.kit || '')} · ${Shop.LV_NAMES[b.level] || ''} · ${new Date(b.t).toLocaleDateString('nl-NL')}` : 'nog niet gespeeld'}</small></div><span class="s">${b ? fmt(b.score) : '–'}${i === 0 && b ? ' 👑' : ''}</span></div>`; }).join('') + '</div>';
+    h += `<div class="lsp-card2"><b class="lsp-sectitle">${ic('medal', 32)} Beste scores op dit toestel</b>` + rows.map(([id, b], i) => { const m = meta(id); return `<div class="lsp-rank"><span class="e">${bigIcon(id, m, 40)}</span><div class="m"><b>${esc(m.name)}</b><small>${b ? `${esc(b.kit || '')} · ${Shop.LV_NAMES[b.level] || ''} · ${new Date(b.t).toLocaleDateString('nl-NL')}` : 'nog niet gespeeld'}</small></div><span class="s">${b ? fmt(b.score) : '–'}${i === 0 && b ? ' ' + ic('crown', 24) : ''}</span></div>`; }).join('') + '</div>';
+    h += `<div class="lsp-card2"><b class="lsp-sectitle">${ic('rainbow', 32)} Werelden</b><small>${store.d.wl.length} van ${WORLDS.length} werelden gespeeld</small><div class="lsp-xp"><i style="width:${Math.round(100 * store.d.wl.length / WORLDS.length)}%"></i></div></div>`;
     const st = S.duels ? Duel.standings(S.duels) : null;
-    h += `<div class="lsp-card2"><b>⚔️ Uitdagingen</b>`;
+    h += `<div class="lsp-card2"><b class="lsp-sectitle">${ic('sword', 32)} Uitdagingen</b>`;
     if (!ctx.db) h += '<small>Geen verbinding met de cloud.</small>';
     else if (!st) h += `<small>${S.duelBusy ? 'Laden…' : 'Nog niet geladen.'}</small><button class="lsp-btn ghost" data-act="duel-refresh">Laden</button>`;
     else if (!st.length) h += '<small>Nog geen afgeronde uitdagingen. Daag je broer uit!</small>';
-    else h += st.map((r, i) => `<div class="lsp-rank"><span class="e">${['🥇', '🥈', '🥉'][i] || '🎖️'}</span><div class="m"><b>${esc(r.name)}${r.uid === uid ? ' (jij)' : ''}</b><small>${r.games} uitdagingen</small></div><span class="s">${r.wins} ✔</span></div>`).join('');
+    else h += st.map((r, i) => `<div class="lsp-rank"><span class="e">${ic(['trophy', 'medal', 'medal'][i] || 'star', 34)}</span><div class="m"><b>${esc(r.name)}${r.uid === uid ? ' (jij)' : ''}</b><small>${r.games} uitdagingen</small></div><span class="s">${r.wins} ${ic('trophy', 20)}</span></div>`).join('');
     return h + '</div>';
   }
 
@@ -314,15 +382,17 @@ export async function learnSpelView(ctx) {
   function render() {
     if (dead || !root) return;
     if (S.screen === 'play' || S.screen === 'err') return;
+    stopScene();
     let y = 0; try { y = window.scrollY || 0; } catch {}
-    if (S.screen === 'result') { root.innerHTML = `<div class="lsp">${resultHTML()}</div>`; try { window.scrollTo(0, 0); } catch {} return; }
+    const cls = `lsp q${GFX.q | 0}${GFX.reduce ? ' rm' : ''}`;
+    if (S.screen === 'result') { root.innerHTML = `<div class="${cls}">${resultHTML()}${worldSheetHTML()}</div>`; try { window.scrollTo(0, 0); } catch {} return; }
     let body = '';
-    if (S.screen === 'home') body = homeHTML() + (S.picker ? pickerHTML() : '');
+    if (S.screen === 'home') body = homeHTML() + (S.picker ? pickerHTML() : '') + worldSheetHTML();
     else if (S.screen === 'shop') body = Shop.shopHTML(api);
     else if (S.screen === 'duel') body = Duel.duelsHTML(api);
     else if (S.screen === 'rank') body = rankHTML();
     else if (S.screen === 'ach') body = Shop.achHTML(api);
-    root.innerHTML = `<div class="lsp">${headerHTML()}${navHTML()}<div class="lsp-body">${body}</div></div>`;
+    root.innerHTML = `<div class="${cls}">${headerHTML()}${navHTML()}<div class="lsp-body">${body}</div></div>`;
     try { window.scrollTo(0, y); } catch {}
   }
   function updateGrid() {
@@ -354,16 +424,23 @@ export async function learnSpelView(ctx) {
       store.d.lastKit = kit.id; store.d.level = level; store.d.types = [...S.types]; store.save();
     }
     const m = meta(id);
-    root.innerHTML = `<div class="lsp"><div class="lsp-play"><div class="lsp-bar"><button data-act="stop" aria-label="Stoppen">✕</button><b class="lsp-tt">${esc(m.emoji)} ${esc(m.name)}${duel ? ' · ⚔️' : ''}</b><span class="lsp-cnt">✓ 0</span><button data-act="snd" aria-label="Geluid">${Snd.on === false ? '🔇' : '🔊'}</button>${TTS.supported && TTS.supported() ? `<button data-act="tts" aria-label="Voorlezen">${TTS.on ? '🗣️' : '🤐'}</button>` : ''}</div><div class="lsp-host"></div></div></div>`;
+    const world = worldOf(id);
+    root.innerHTML = `<div class="lsp q${GFX.q | 0}${GFX.reduce ? ' rm' : ''}"><div class="lsp-play"><div class="lsp-bar"><button data-act="stop" aria-label="Stoppen">✕</button><b class="lsp-tt">${bigIcon(id, m, 28)} ${esc(m.name)}${duel ? ' · ' + ic('sword', 22) : ''} <small style="display:inline">${esc(world.emoji)} ${esc(world.name)}</small></b><span class="lsp-cnt">✓ 0</span><button data-act="snd" aria-label="Geluid">${Snd.on === false ? '🔇' : '🔊'}</button>${TTS.supported && TTS.supported() ? `<button data-act="tts" aria-label="Voorlezen">${TTS.on ? '🗣️' : '🤐'}</button>` : ''}</div><div class="lsp-host"></div></div></div>`;
     try { window.scrollTo(0, 0); } catch {}
     const host = root.querySelector('.lsp-host');
     const sz = hostSize(host);
-    const R = S.run = { id, kit, level, seed, duel, answers: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, misses: [], seen: new Set(), ended: false, inst: null, fx: null, t0: Date.now(), host };
+    const introId = introFor(world.id);
+    const R = S.run = { id, kit, level, seed, duel, world, answers: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, misses: [], seen: new Set(), ended: false, inst: null, fx: null, t0: Date.now(), host };
     let fx = {}; try { fx = P.effects() || {}; } catch {}
     R.fx = fx;
-    const env = makeEnv({ kit, uid, name: myName(), seed, level, fx, fixed: duel ? fixed : null, types: duel ? [] : [...S.types], snd: Snd, tts: TTS, w: sz.w, h: sz.h, askFn,
+    const env = makeEnv({ kit, uid, name: myName(), seed, level, fx, world, scene: introId, gfx: { q: GFX.q | 0, reduce: !!GFX.reduce }, fixed: duel ? fixed : null, types: duel ? [] : [...S.types], snd: Snd, tts: TTS, w: sz.w, h: sz.h, askFn,
       onReport: (rep) => onReport(R, rep), onEnd: (res) => { if (R.ended) return; R.ended = true; later(() => finish(R, res), 450); } });
     R.env = env;
+    if (store.d.intro !== 0 && !o.noIntro) {
+      const tip = TIPS[(seed >>> 3) % TIPS.length];
+      await playScenes(host, [introId], () => ({ theme: world.id, title: m.name, sub: tip }));
+      if (dead || S.run !== R) return;
+    }
     try { R.inst = r.def.create(host, env); } catch (e) { destroyRun(); errorCard('Het spel crashte bij het starten', String(e && e.message || e)); return; }
   }
   function hostSize(host) {
@@ -380,6 +457,7 @@ export async function learnSpelView(ctx) {
   }
   function destroyRun() {
     const R = S.run; if (!R) return; S.run = null;
+    stopScene();
     try { R.inst && R.inst.destroy && R.inst.destroy(); } catch {}
     try { TTS.stop(); } catch {}
     try { if (R.host) R.host.innerHTML = ''; } catch {}
@@ -396,7 +474,7 @@ export async function learnSpelView(ctx) {
     const bestStreak = Math.max(R.bestStreak, num(st.bestStreak ?? st['best streak'] ?? st.beststreak ?? st.streak));
     const score = Math.max(0, Math.round(num(res.score)));
     const win = res.win === true ? true : res.win === false ? false : null;
-    const d = store.d, prev = d.best[R.id], newRecord = score > 0 && (!prev || score > prev.score);
+    const d = store.d, prev = d.best[R.id], wid = R.world ? R.world.id : '', newWorld = !!wid && !(d.wp[R.id] || []).includes(wid), newRecord = score > 0 && (!prev || score > prev.score);
     const rw = Shop.calcReward({ correct, wrong, win, level: R.level, newRecord }, R.fx);
     let before = 1, after = 1; try { before = P.levelInfo().level; } catch {}
     let xr = null;
@@ -412,17 +490,19 @@ export async function learnSpelView(ctx) {
       if (!wrong && correct >= 5) P.bumpQuest('perfect', 1);
       if (bestStreak > 0) P.bumpQuest('streak', bestStreak);
     } catch {}
-    Shop.applyResult(d, { game: R.id, kitId: R.kit.id, kitName: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, coins: rw.coins });
+    Shop.applyResult(d, { game: R.id, kitId: R.kit.id, kitName: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, coins: rw.coins, world: wid });
     if (R.duel) d.stats.duels++;
     const nu = Shop.checkHubAch(d, extra()); let achCoins = 0; for (const a of nu) achCoins += a.reward;
     if (achCoins) { try { P.addCoins(achCoins); } catch {} }
     let coreNew = []; try { const r = P.checkAch(); if (Array.isArray(r)) coreNew = r; } catch {}
     store.save();
     const m = meta(R.id);
-    S.result = { id: R.id, name: m.name, emoji: m.emoji, kit: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, summary: String(res.summary || ''), coins: rw.coins, xp: rw.xp, newRecord, prevBest: prev ? prev.score : 0, lvUps, ach: nu, coreAch: coreNew, misses: R.misses.slice(0, 12), duel: R.duel, duelNote: R.duel ? 'Score wordt verstuurd…' : '', kitObj: R.kit, saved: false };
+    S.result = { id: R.id, name: m.name, emoji: m.emoji, kit: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, summary: String(res.summary || ''), coins: rw.coins, xp: rw.xp, newRecord, prevBest: prev ? prev.score : 0, lvUps, ach: nu, coreAch: coreNew, misses: R.misses.slice(0, 12), world: R.world || null, newWorld, duel: R.duel, duelNote: R.duel ? 'Score wordt verstuurd…' : '', kitObj: R.kit, saved: false };
     destroyRun();
     S.screen = 'result'; S.reviewOpen = false; render();
     snd(win === false ? 'lose' : 'win'); if (win === true || newRecord || lvUps.length) confetti();
+    const hero = root.querySelector('.lsp-hero');
+    if (hero && !R.duel) playScenes(hero, resultScenes(S.result), (sid) => ({ value: '+' + rw.coins, title: sid === 'levelup' && lvUps.length ? 'Level ' + lvUps[lvUps.length - 1].level + '!' : undefined, sub: sid === 'new-record' ? fmt(score) + ' punten' : undefined })).then(() => { const hh = root && root.querySelector('.lsp-hero'); if (hh && S.screen === 'result' && lvUps.length) snd('level'); });
     if (R.duel) {
       Duel.submitScore(api, R.duel, score).then(() => {
         const w = Duel.duelWinner(R.duel, uid); if (w && w.me) { d.stats.duelWins++; afterChange(); }
@@ -433,30 +513,32 @@ export async function learnSpelView(ctx) {
   }
   function resultHTML() {
     const r = S.result; if (!r) return '<div class="lsp-empty">Geen resultaat.</div>';
-    const big = r.win === true ? '🏆' : r.win === false ? '💪' : (r.correct >= r.wrong ? '😄' : '🙂');
+    const big = r.win === true ? 'trophy' : r.win === false ? 'shield' : (r.correct >= r.wrong ? 'star' : 'medal');
     const title = r.win === true ? 'Gewonnen!' : r.win === false ? 'Bijna! Volgende keer beter' : 'Goed gespeeld!';
     const acc = r.correct + r.wrong ? Math.round(100 * r.correct / (r.correct + r.wrong)) : 0;
     let li = { level: 1, cur: 0, next: 100 }; try { li = P.levelInfo() || li; } catch {}
     const pct = Math.max(0, Math.min(100, Math.round(100 * (li.cur || 0) / Math.max(1, li.next || 1))));
-    let h = `<div class="lsp-res"><div class="lsp-big">${big}</div><h2>${title}</h2><small>${esc(r.emoji)} ${esc(r.name)} · ${esc(r.kit)} · ${Shop.LV_NAMES[r.level]}</small>
-      <div class="lsp-score">${fmt(r.score)}</div>${r.newRecord ? `<div class="lsp-ribbon">🌟 Nieuw record!${r.prevBest ? ` (was ${fmt(r.prevBest)})` : ''}</div>` : ''}
+    const m = meta(r.id);
+    let h = `<div class="lsp-res"><div class="lsp-hero" style="--rc:${esc(m.color)}"><div class="lsp-big">${ic(big, 150)}</div></div><h2>${title}</h2><small style="display:flex;justify-content:center;align-items:center;gap:6px">${bigIcon(r.id, m, 24)} ${esc(r.name)} · ${esc(r.kit)} · ${Shop.LV_NAMES[r.level]}${r.world ? ` · ${esc(r.world.emoji)} ${esc(r.world.name)}` : ''}</small>
+      <div class="lsp-score">${fmt(r.score)}</div>${r.newRecord ? `<div class="lsp-ribbon">${ic('star', 24)} Nieuw record!${r.prevBest ? ` (was ${fmt(r.prevBest)})` : ''}</div>` : ''}
+      ${r.newWorld ? `<div class="lsp-note" style="display:flex;align-items:center;gap:8px;justify-content:center">${ic('rainbow', 30)} Nieuwe wereld voor dit spel: <b>${esc(r.world.name)}</b></div>` : ''}
       ${r.summary ? `<div class="lsp-note">${esc(r.summary)}</div>` : ''}
       <div class="lsp-stats"><div class="lsp-stat"><b>${r.correct}</b><small>goed</small></div><div class="lsp-stat"><b>${r.wrong}</b><small>fout</small></div><div class="lsp-stat"><b>${r.bestStreak}</b><small>beste reeks</small></div></div>
       <small>${acc}% goed</small>
-      <div class="lsp-rew"><div>🪙 +${r.coins}</div><div>⭐ +${r.xp} XP</div></div>
+      <div class="lsp-rew"><div>${ic('coin', 36)} +${r.coins}</div><div>${ic('star', 36)} +${r.xp} XP</div></div>
       <div class="lsp-xp"><i style="width:${pct}%"></i></div><small>Level ${li.level} · ${fmt(li.cur || 0)} / ${fmt(li.next || 0)} XP</small>`;
-    for (const u of r.lvUps) h += `<div class="lsp-lvup">🎉 Level ${u.level}! Bonus +${u.coins} 🪙</div>`;
-    for (const a of r.ach) h += `<div class="lsp-new">${esc(a.emoji)} <b>Prestatie: ${esc(a.name)}</b> <small style="display:inline">+${a.reward} 🪙</small></div>`;
-    for (const a of r.coreAch) h += `<div class="lsp-new">${esc(a.emoji || '🎖️')} <b>Prestatie: ${esc(a.name || '')}</b></div>`;
-    if (r.duel) h += `<div class="lsp-note">⚔️ ${esc(r.duelNote)}</div>`;
+    for (const u of r.lvUps) h += `<div class="lsp-lvup">${ic('medal', 40)} Level ${u.level}! Bonus +${u.coins} ${ic('coin', 22)}</div>`;
+    for (const a of r.ach) h += `<div class="lsp-new">${emo(a.emoji, 40)} <div><b>Prestatie: ${esc(a.name)}</b> <small style="display:inline">+${a.reward} munten</small></div></div>`;
+    for (const a of r.coreAch) h += `<div class="lsp-new">${emo(a.emoji || '🎖️', 40)} <div><b>Prestatie: ${esc(a.name || '')}</b></div></div>`;
+    if (r.duel) h += `<div class="lsp-note">${ic('sword', 22)} ${esc(r.duelNote)}</div>`;
     if (r.misses.length) {
       h += `<div class="lsp-row" style="justify-content:center"><button class="lsp-btn ghost" data-act="review">${S.reviewOpen ? '▲ Verberg' : '▼ Fouten doornemen'} (${r.misses.length})</button></div>`;
       if (S.reviewOpen) {
         h += '<div class="lsp-card2" style="text-align:left;margin-top:8px">' + r.misses.map((q) => `<div class="lsp-miss"><b>${esc(String(q.e || '') + ' ' + String(q.q || '').slice(0, 160))}</b><br><small>Goed antwoord: <b>${esc(Shop.displayAnswer(q))}</b>${q.x ? ' · ' + esc(q.x) : ''}</small></div>`).join('');
-        h += `<small style="margin-top:8px">Tip: oefen deze vragen ook in Learn Study (🎓 Leren) zodat ze er vanzelf in komen.</small><button class="lsp-btn ghost" data-act="save-misses" ${r.saved ? 'disabled' : ''} style="margin-top:6px">${r.saved ? '✔ Opgeslagen als kit' : '💾 Bewaar als kit "Mijn fouten"'}</button></div>`;
+        h += `<small style="margin-top:8px">Tip: oefen deze vragen ook in Learn Study zodat ze er vanzelf in komen.</small><button class="lsp-btn ghost" data-act="save-misses" ${r.saved ? 'disabled' : ''} style="margin-top:6px">${r.saved ? '✔ Opgeslagen als kit' : '💾 Bewaar als kit "Mijn fouten"'}</button></div>`;
       }
     }
-    h += `<div class="lsp-row" style="justify-content:center;margin-top:14px">${r.duel ? '' : '<button class="lsp-btn" data-act="again">🔁 Nog een keer</button>'}<button class="lsp-btn ghost" data-act="home">🎮 Ander spel</button>${r.duel ? '<button class="lsp-btn ghost" data-act="tab" data-v="duel">⚔️ Naar uitdagingen</button>' : ''}</div></div>`;
+    h += `<div class="lsp-row" style="justify-content:center;margin-top:14px">${r.duel ? '' : `<button class="lsp-btn" data-act="again">${ic('rocket', 26)} Nog een keer</button><button class="lsp-btn ghost" data-act="worlds" data-id="${esc(r.id)}">${ic('rainbow', 26)} Andere wereld</button>`}<button class="lsp-btn ghost" data-act="home">${ic('dice', 26)} Ander spel</button>${r.duel ? `<button class="lsp-btn ghost" data-act="tab" data-v="duel">${ic('sword', 26)} Naar uitdagingen</button>` : ''}</div></div>`;
     return h;
   }
 
@@ -480,9 +562,11 @@ export async function learnSpelView(ctx) {
       let out = false; try { out = P.claimQuest(d.id); } catch {}
       if (!out) { toast('Nog niet af.'); return; }
       store.d.stats.claimed++; snd('munt');
-      toast(out.bonus ? 'Alle opdrachten klaar! Bonus +50 🪙 en een ster ⭐' : `Beloning opgehaald! +${out.coins || ''} 🪙`.replace('+ ', ''));
-      if (out.bonus || (out.levels && out.levels.length)) confetti(18);
+      toast(out.bonus ? 'Alle opdrachten klaar! Bonus +50 munten en een ster' : `Beloning opgehaald! +${out.coins || ''} munten`.replace('+ ', ''));
+      confetti(out.bonus ? 30 : 12);
       afterChange(); render();
+      if (out.bonus) overlayScene('daily-bonus', { value: '+' + ((out.coins || 0) + 50), title: 'Alle opdrachten klaar!' });
+      else if (out.levels && out.levels.length) overlayScene('levelup', { title: 'Level ' + out.levels[out.levels.length - 1].level + '!' });
     },
     'kit-open'() { S.picker = true; S.kq = ''; render(); loadKitList().then(() => { if (S.picker && !dead) render(); }); },
     'kit-close'() { S.picker = false; render(); },
@@ -504,6 +588,19 @@ export async function learnSpelView(ctx) {
       render();
     },
     again() { if (S.result && !S.result.duel) startGame(S.result.id); },
+    settings() { try { openSettingsPanel({ title: 'Instellingen', toast }); } catch (e) { toast('Instellingen openen lukt niet'); } },
+    worlds(d) { S.wsheet = d.id; render(); },
+    'world-close'() { S.wsheet = ''; render(); },
+    'world-set'(d) {
+      try { Themes.setForGame(d.id, d.w); } catch {}
+      snd('klik');
+      const sc = root.querySelector('.lsp-wrow'), x = sc ? sc.scrollLeft : 0, y = (() => { try { return window.scrollY || 0; } catch { return 0; } })();
+      render();
+      const nr = root.querySelector('.lsp-wrow'); if (nr) nr.scrollLeft = x;
+      try { window.scrollTo(0, y); } catch {}
+    },
+    'world-play'(d) { S.wsheet = ''; startGame(d.id); },
+    'intro-toggle'() { store.d.intro = store.d.intro === 0 ? 1 : 0; store.save(); const b = root.querySelector('[data-act="intro-toggle"]'); if (b) b.className = 'lsp-tog' + (store.d.intro === 0 ? '' : ' on'); },
     noop() {},
   };
   const api = {
@@ -537,12 +634,15 @@ export async function learnSpelView(ctx) {
   /* --- starten --- */
   let styleEl = null;
   if (doc_) { styleEl = doc_.createElement('style'); styleEl.id = 'lsp-css'; styleEl.textContent = Shop.CSS; (doc_.head || doc_.body || root).appendChild(styleEl); }
+  let offSettings = null;
+  try { offSettings = Settings.onChange(() => { if (!dead && S.screen !== 'play' && S.screen !== 'err' && S.screen !== 'result') render(); }); } catch {}
   root.addEventListener('click', onClick);
   root.addEventListener('input', onInput);
   if (typeof window !== 'undefined' && window.addEventListener) window.addEventListener('resize', onResize);
   const destroy = () => {
     if (dead) return; dead = true;
-    destroyRun();
+    destroyRun(); stopScene();
+    try { offSettings && offSettings(); } catch {}
     for (const t of timers) clearTimeout(t); timers.clear();
     try { root.removeEventListener('click', onClick); root.removeEventListener('input', onInput); } catch {}
     try { window.removeEventListener('resize', onResize); } catch {}

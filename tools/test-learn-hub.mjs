@@ -19,8 +19,8 @@ globalThis.__kits = [
 ];
 
 const core = await import('../docs/learn/core.js?v=1');
-const Shop = await import('../docs/learn/games-shop.js?v=1');
-const Duel = await import('../docs/learn/games-duel.js?v=1');
+const Shop = await import('../docs/learn/games-shop.js?v=2');
+const Duel = await import('../docs/learn/games-duel.js?v=2');
 const Hub = await import('../docs/learn/games.js?v=1');
 const { Profile, Prog, Snd } = core;
 

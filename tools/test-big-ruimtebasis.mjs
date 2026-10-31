@@ -134,6 +134,40 @@ await ta('store: lokaal + cloud, velden, nieuwste wint, 60s throttle', async () 
 t('opmaak', () => { assert.equal(G.fmt(0), '0'); assert.equal(G.fmt(1234), '1,23k'); assert.equal(G.fmt(2.5e6), '2,5M'); assert.equal(G.fmtT(3700), '1u 01m'); assert.equal(G.fmtT(75), '1m 15s'); });
 
 
+/* ---------- fase 2: nieuwe inhoud ---------- */
+t('nieuwe inhoud: aantallen en samenhang', () => {
+  assert.ok(G.MODS.length >= 11 + 13 && G.RESEARCH.length >= 18 + 15 && G.WORLDS.length >= 15 && G.QUESTS.length >= 23 + 10 && G.ACHS.length >= 26 + 12 && G.PU.length >= 10);
+  const ids = new Set(); for (const m of G.MODS) { assert.ok(!ids.has(m.id)); ids.add(m.id); if (m.req) assert.ok(G.RES[m.req], 'onderzoek ontbreekt ' + m.req); }
+  for (const r of G.RESEARCH) if (r.req) assert.ok(G.RES[r.req], r.req);
+  for (const w of G.WORLDS) assert.ok(G.RES[w.req], w.id);
+  for (const r of G.RESEARCH) for (const k of Object.keys(r.c)) assert.ok(k === 'kennis' || G.WORLDS.some((w) => w.rare === k), k);
+  for (const m of G.MODS) for (const k of Object.keys(m.c)) assert.ok(k === 'erts' || k === 'cred' || G.WORLDS.some((w) => w.rare === k), k);
+});
+t('nieuwe modules geven wat ze beloven en terugverdientijd is redelijk', () => {
+  for (const m of G.MODS.filter((x) => x.x)) {
+    const s = G.newState(NOW); s.res = G.RESEARCH.map((r) => r.id); s.b = { solar: 60, mijn: 20, oxy: 10, kas: 10, wonen: 5, reactor: 20 };
+    const before = G.rates(s, NOW); s.b[m.id] = 1; const after = G.rates(s, NOW);
+    const gain = (after.erts - before.erts) + (after.kennis - before.kennis) * 3 + (after.cred - before.cred) * 10 + (after.house - before.house) * 3 + (after.o2S - before.o2S) + (after.foS - before.foS) + (after.pSup - before.pSup) * 0.5;
+    assert.ok(gain > 0, m.id + ' levert niets');
+    const cost = m.c.erts, pay = cost / gain;
+    assert.ok(pay > 3 && pay < 1500, `${m.id} terugverdientijd ${pay.toFixed(0)} s`);
+  }
+});
+t('nieuwe werelden en upgrades en prestige-winkel werken', () => {
+  const s = G.newState(NOW); s.res = G.RESEARCH.map((r) => r.id); s.b = { hangaar: 3 }; s.r.erts = 1e12;
+  const i = G.WORLDS.findIndex((w) => w.id === 'zwart'); assert.ok(i >= 11);
+  assert.ok(G.launch(s, i, NOW, () => 0.99)); const r = G.collect(s, 0, NOW + 1e8, () => 0.5); assert.ok(r && r.first && s.r.donker >= 1 && s.wd.includes('zwart'));
+  assert.ok(G.sell(s, 'donker', 'all', NOW) > 0);
+  for (const id of ['steen', 'sat', 'bank', 'zontoren']) { assert.ok(G.UPS.includes(id)); s.b[id] = 1; for (const w of G.WORLDS) s.r[w.rare] = 100; s.r.cred = 1e9; assert.ok(G.upgrade(s, id) && G.upMul(s, id) > 1.79); }
+  const a = G.newState(NOW); a.sd = 50; a.sdt = 50; const h0 = G.rates(a, NOW).house, c0 = G.rates(a, NOW).cred;
+  assert.ok(G.buyPU(a, 'hui') && G.rates(a, NOW).house === h0 + 2); assert.ok(G.buyPU(a, 'cre') && G.rates(a, NOW).cred > c0); assert.ok(G.buyPU(a, 'solw') && G.buyPU(a, 'dag'));
+  const old = G.migrate({ v: 1, r: { erts: 5 }, b: { mijn: 2 }, set: { snd: 1, mus: 0 } }, NOW); assert.deepEqual(old.set.seen, []); assert.equal(old.set.skin, 'maan');
+});
+t('nieuwe doelen en prestaties zijn haalbaar', () => {
+  const s = G.newState(NOW); s.b = { hotel: 1, sat: 1, bank: 1, alien: 1 }; s.st.bld = 100; s.res = G.RESEARCH.slice(0, 15).map((r) => r.id); s.wd = G.WORLDS.map((w) => w.id); s.np = 10; s.st.all = 2e9; s.q = 23;
+  const done = G.checkProgress(s, NOW); assert.ok(done.filter((d) => d.kind === 'q').length >= 8 && s.q >= 31);
+});
+
 /* ---------- rooktest van de hele view met een nep-DOM (geen echte browser nodig) ---------- */
 await ta('view: draait met nep-DOM, alle tabs en acties zonder fouten', async () => {
   const ctxProxy = () => new Proxy(function () {}, { get: (t, p) => (p === 'createLinearGradient' || p === 'createRadialGradient' ? () => ({ addColorStop() {} }) : p === Symbol.toPrimitive ? () => 0 : () => {}), set: () => true });

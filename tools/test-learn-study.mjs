@@ -226,6 +226,37 @@ const eq = (a, b, m) => ok(JSON.stringify(a) === JSON.stringify(b), `${m}\n  kre
   eq(L.givenText({ t: 'tf' }, true), 'Waar', 'givenText'); eq(L.givenText({}, undefined), '—', 'givenText leeg'); eq(L.givenText({}, [['a', 'b']]), 'a → b', 'givenText paren'); eq(L.typesIn([{ t: 'mc' }, { t: 'mc' }, { t: 'tf' }]), { mc: 2, tf: 1 }, 'typesIn');
 }
 
+/* ---------- Dagelijkse 10 / Snel-ronde (logica) ---------- */
+{
+  eq(L.dayKey(new Date(2026, 9, 5)), '2026-10-05', 'dayKey');
+  eq(L.dailyAdvance(null, '2026-10-31'), { last: '2026-10-31', streak: 1, best: 1, already: false }, 'daily: eerste keer');
+  eq(L.dailyAdvance({ last: '2026-10-30', streak: 3, best: 5 }, '2026-10-31').streak, 4, 'daily: reeks gaat door');
+  eq(L.dailyAdvance({ last: '2026-10-30', streak: 5, best: 5 }, '2026-10-31').best, 6, 'daily: beste reeks');
+  eq(L.dailyAdvance({ last: '2026-10-20', streak: 9, best: 9 }, '2026-10-31').streak, 1, 'daily: reeks gebroken');
+  ok(L.dailyAdvance({ last: '2026-10-31', streak: 2, best: 2 }, '2026-10-31').already === true, 'daily: dezelfde dag telt niet dubbel');
+  ok(L.dailyAdvance({ last: '2026-02-28', streak: 2, best: 2 }, '2026-03-01').streak === 3, 'daily: maandwissel');
+  ok(L.dailyAlive({ last: '2026-10-30', streak: 2 }, '2026-10-31') && !L.dailyAlive({ last: '2026-10-29', streak: 2 }, '2026-10-31') && !L.dailyAlive(null, '2026-10-31'), 'dailyAlive');
+  const items = Array.from({ length: 30 }, (_, i) => ({ q: { t: i < 20 ? 'mc' : 'tf', q: 'v' + i, a: 'x' }, box: i % 4 }));
+  const p1 = L.dailyPick(items, 10, 42), p2 = L.dailyPick(items, 10, 42), p3 = L.dailyPick(items, 10, 43);
+  eq(p1.length, 10, 'dailyPick: 10 vragen'); eq(p1.map((q) => q.q), p2.map((q) => q.q), 'dailyPick: deterministisch per seed'); ok(new Set(p1.map((q) => q.q)).size === 10, 'dailyPick: geen dubbele'); ok(JSON.stringify(p1) !== JSON.stringify(p3), 'dailyPick: andere dag, andere mix');
+  ok(p1.some((q) => q.t === 'tf'), 'dailyPick: mix van soorten'); eq(L.dailyPick(items.slice(0, 4), 10, 1).length, 4, 'dailyPick: kleine kit');
+  eq(L.snelScore([true, true, true, true, true, false, true]), { pts: 80, ok: 6, wrong: 1, best: 5 }, 'snelScore met reeksbonus'); eq(L.snelScore([]), { pts: 0, ok: 0, wrong: 0, best: 0 }, 'snelScore leeg');
+}
+
+/* ---------- study-art ---------- */
+{
+  const A = await import('../docs/learn/study-art.js');
+  eq(A.iconNameFor('🐶'), 'dog', 'kitIcon: hond'); eq(A.iconNameFor('🚀'), 'rocket', 'kitIcon: raket'); eq(A.iconNameFor('🍎'), 'apple', 'kitIcon: appel'); eq(A.iconNameFor('🌍'), 'earth', 'kitIcon: aarde'); eq(A.iconNameFor('🛡️'), 'shield', 'kitIcon: FE0F wordt genegeerd');
+  ok(['dice', 'gear'].includes(A.iconNameFor('🧮')) && ['dice', 'gear'].includes(A.iconNameFor('🔢')), 'kitIcon: rekenen -> dobbelsteen of tandwiel'); eq(A.iconNameFor('🇳🇱'), null, 'vlag blijft emoji'); eq(A.iconNameFor(''), null, 'leeg');
+  ok(/<img|<span/.test(A.kitIcon('🐶', 40)) && A.kitIcon('<b>x</b>', 20).includes('&lt;b&gt;') && !A.kitIcon('<b>x</b>', 20).includes('<b>'), 'kitIcon: HTML-string en escaping');
+  ok(A.kitIcon('🇳🇱', 30).includes('🇳🇱'), 'kitIcon: vlag als emoji');
+  eq(A.kitTheme({ group: 'Talen' }, null).id, 'blauw', 'thema per groep'); eq(A.kitTheme({ group: 'Talen' }, 'roze').id, 'roze', 'gekozen thema wint'); eq(A.kitTheme({ src: 'user' }, null).id, 'indigo', 'eigen kit = indigo'); ok(A.PALETTE.length >= 8, 'palet');
+  eq(A.celebrationFor({ pct: 100, perfect: true, q: 1 }), { scene: 'victory', confetti: 70 }, 'feest: perfect');
+  eq(A.celebrationFor({ pct: 100, record: true, q: 0 }), { scene: 'new-record', confetti: 0 }, 'feest Normaal: scene wel, confetti niet'); eq(A.celebrationFor({ pct: 100, perfect: true, reduce: true, q: 2 }), { scene: null, confetti: 0 }, 'feest: reduce = niets');
+  eq(A.celebrationFor({ pct: 40, q: 2 }), { scene: null, confetti: 0 }, 'feest: laag cijfer geen feest'); eq(A.celebrationFor({ pct: 70, levelUp: true, q: 1 }).scene, 'levelup', 'feest: levelup'); eq(A.celebrationFor({ pct: 80, daily: true, q: 1 }).scene, 'daily-bonus', 'feest: dagelijks');
+  ok(A.confetti(null, 10) === null && A.playScene(null, 'victory') === null, 'effecten doen niets zonder canvas');
+}
+
 /* ---------- rooktest van de hele app met stubs ---------- */
 import * as HK from './learn-stubs/study/hooks.mjs';
 if (registerHooks) registerHooks({ resolve: HK.resolve }); else register('./learn-stubs/study/hooks.mjs', import.meta.url);
@@ -338,6 +369,25 @@ await (async () => {
   ta3.value = 'LK2.kapot'; ta3.dispatch('input');
   // niet-opgeslagen waarschuwing
   click(view, /Nieuwe kit/); await tick(2); const s2 = sess(); const n2 = dom.findAll(s2, (e) => e.tagName === 'INPUT' && /Naam/.test(e.attrs.placeholder || ''))[0]; n2.value = 'X'; n2.dispatch('input'); click(s2, /✕/); ok(!!sess(), 'niet-opgeslagen: eerste ✕ waarschuwt'); click(sess(), /✕/); await tick(3); ok(!sess(), 'tweede ✕ sluit');
+})();
+
+// DAGELIJKSE 10 en SNEL-RONDE
+await (async () => {
+  const lt = dom.findAll(view, (e) => e.classList.contains('ls-tab') && e.textContent.includes('Leren'))[0]; lt.click(); await tick(2);
+  ok(btns(view, /Dagelijkse 10/).length === 1 && btns(view, /Snel-ronde/).length === 1, 'Leren-tab toont Dagelijkse 10 en Snel-ronde');
+  globalThis.__ASK = { mode: 'mix' }; globalThis.__ASKED = [];
+  click(view, /Dagelijkse 10/); await tick(3); ok(sess() && sess().textContent.includes('dagen reeks'), 'dagelijks: start-scherm'); click(sess(), /Start de Dagelijkse 10/); await tick();
+  const r = await drive(/Doorgaan/, /Dagelijkse 10 klaar|Weer geoefend/, 300); eq(r, 'klaar', 'dagelijks eindigt'); eq(globalThis.__ASKED.length, 10, 'dagelijks: precies 10 vragen');
+  const d = JSON.parse(localStorage.getItem('learn:u1:study-daily')); eq(d.streak, 1, 'dagelijks: reeks opgeslagen'); eq(d.last, L.dayKey(), 'dagelijks: datum opgeslagen'); ok(sess().textContent.includes('bonus munten'), 'dagelijks: bonus getoond');
+  click(sess(), /^Klaar|Oefen mijn fouten/); await tick(3); for (const x of document.body.childNodes.filter((c) => c.nodeType === 1 && c.classList.contains('ls-sess'))) { click(x, /✕/); } await tick(2);
+  click(view, /Dagelijkse 10/); await tick(3); ok(sess().textContent.includes('Vandaag al gedaan'), 'dagelijks: tweede keer zonder bonus'); click(sess(), /✕/); await tick(2);
+  globalThis.__ASK = { mode: 'correct' }; globalThis.__ASKED = [];
+  click(view, /Snel-ronde/); await tick(3); ok(sess() && sess().textContent.includes('Tijd') && sess().textContent.includes('record'), 'snel: setup'); click(sess(), /30 sec/); click(sess(), /Start de klok/); await tick(3);
+  for (let i = 0; i < 8 && sess() && !/Tijd om|Nieuw record/.test(sess().textContent); i++) await tick(10);
+  // de klok loopt op echte seconden (setTimeout is versneld in de stub, setInterval niet): sluit af via sluiten als het nog loopt
+  if (sess() && !/Tijd om|Nieuw record/.test(sess().textContent)) { ok(globalThis.__ASKED.length > 3, 'snel: veel vragen snel achter elkaar: ' + globalThis.__ASKED.length); click(sess(), /✕/); await tick(3); }
+  else { ok(true, 'snel: klaar'); click(sess(), /^Klaar/); await tick(3); }
+  ok(!sess(), 'snel: sessie gesloten');
 })();
 
 // Voorlezen-instellingen

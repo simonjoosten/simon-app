@@ -1,7 +1,8 @@
 // Learn Study: de leermodi (Leren, Oefenen, Toets, Levens, Talen, Flitskaarten).
 // Elke start*-functie krijgt S (de gedeelde app-toestand uit study.js) en tekent in een schermvullend sessie-scherm.
-import { h, mount, clear } from './study-ui.js?v=1';
-import * as L from './study-logic.js?v=1';
+import { h, mount, clear } from './study-ui.js?v=2';
+import * as L from './study-logic.js?v=2';
+import * as A from './study-art.js?v=2';
 
 const rnd = (S) => S.rand;
 
@@ -44,18 +45,26 @@ export async function feedback(S, scr, host, q, r, { quick = true } = {}) {
   S.speakAnswer(q, ok);
   await waitTap(scr, btn, 0);
 }
-export function resultView(S, scr, { emoji = '🎉', title = 'Klaar!', big = '', stats = [], wrongs = [], rewardRes = null, buttons = [], extra = null }) {
+export function resultView(S, scr, { emoji = '🎉', title = 'Klaar!', big = '', stats = [], wrongs = [], rewardRes = null, buttons = [], extra = null, pct = null, record = false, perfect = false, daily = false, sub = '' }) {
   const body = scr.body; clear(body);
+  const good = pct != null && pct >= 60;
+  const medal = h('div', { class: 'ls-medal' + (good ? ' good' : '') }, A.kitIconEl(emoji, 92));
   const box = h('div', { class: 'ls-pop' },
-    h('div', { style: { textAlign: 'center', fontSize: '56px' } }, emoji),
-    h('h2', { style: { textAlign: 'center', margin: '4px 0' } }, title),
+    medal,
+    h('h2', { style: { textAlign: 'center', margin: '6px 0', fontSize: 'calc(28px*var(--ls-f))' } }, title),
     big && h('div', { class: 'ls-big' }, big),
     stats.length && h('div', { class: 'ls-stat' }, stats.map((s) => h('div', null, h('b', null, String(s[0])), h('span', null, s[1])))),
-    rewardRes && (rewardRes.xp || rewardRes.coins) ? h('div', { class: 'ls-card', style: { textAlign: 'center' } }, `+${rewardRes.xp} XP   +${rewardRes.coins} 🪙`) : null,
+    rewardRes && (rewardRes.xp || rewardRes.coins) ? h('div', { class: 'ls-card ls-reward' }, h('span', null, '+' + rewardRes.xp + ' XP'), h('span', { class: 'ls-reward-c' }, '+' + rewardRes.coins, A.iconEl('coin', 26, '🪙')), rewardRes.levelUp ? h('span', null, 'Level omhoog!') : null) : null,
     extra,
     wrongs.length ? h('div', { class: 'ls-card' }, h('h3', null, 'Om nog even te oefenen'), wrongs.slice(0, 30).map((w) => h('div', { class: 'ls-li' }, h('span', null, '❌'), h('div', { class: 'ls-grow' }, h('div', null, w.q.q), h('div', { class: 'ls-muted' }, 'Goed: ' + w.correct + (w.given !== undefined && w.given !== '' ? ' · jij: ' + L.givenText(w.q, w.given) : '')))))) : null,
     h('div', { class: 'ls-row', style: { marginTop: '8px' } }, buttons.map((b) => h('button', { class: 'ls-btn ' + (b.p ? 'p' : ''), style: { flex: 1 }, onclick: b.fn }, b.text))));
   body.appendChild(box); scr.prog(100); S.snd('win');
+  // feest naar kwaliteit: scene (Normaal: alleen de grote), confetti (vanaf Hoog); niets bij GFX.reduce
+  try {
+    const c = A.celebrationFor({ pct: pct == null ? 0 : pct, record, perfect, levelUp: !!(rewardRes && rewardRes.levelUp), coins: (rewardRes && rewardRes.coins) || 0, daily, q: A.gfxQ(), reduce: A.gfxReduce() });
+    if (c.confetti) { const cf = A.confetti(scr.el, c.confetti, { delay: c.scene ? 2.2 : 0 }); if (cf) scr.onClose(cf.stop); }
+    if (c.scene) { const sc = A.playScene(scr.el, c.scene, { title: title, sub: sub || big || '' }); if (sc) scr.onClose(sc.stop); }
+  } catch (e) { /* feest is bijzaak */ }
 }
 function toTypeQ(S, q) { try { if (S.C.toTypeQ) { const r = S.C.toTypeQ(q); if (r) return r; } } catch (e) { /* eigen versie */ } if (q.t !== 'mc') return q; const r = { ...q, t: 'type' }; delete r.o; return r; }
 function setupRow(label, chips, cur, onPick) {
@@ -75,7 +84,7 @@ function doReward(S, p) { try { return S.reward(p); } catch (e) { return null; }
 /* ---------- LEREN (Leitner) ---------- */
 export async function startLeren(S, kit, o = {}) {
   const C = S.C; try { await C.Prog.load(); } catch (e) { /* ok */ }
-  const scr = S.screen(`${kit.emoji || '📘'} Leren`);
+  const scr = S.screen('Leren', kit);
   const n = o.n || 10; const rand = rnd(S);
   let ordered; try { ordered = C.Prog.dueFirst(kit) || kit.qs; } catch (e) { ordered = kit.qs; }
   if (o.qs) ordered = o.qs;
@@ -93,7 +102,7 @@ export async function startLeren(S, kit, o = {}) {
       const c = L.cardText(q); S.speak(q.say || q.q, q.lang, false);
       const btn = h('button', { class: 'ls-btn p big' }, 'Snap ik, volgende →');
       body.appendChild(h('div', null, h('div', { class: 'ls-muted', style: { textAlign: 'center' } }, '🆕 Nieuwe kaart · bekijk goed'),
-        h('div', { class: 'ls-learncard ls-pop' }, c.e && h('div', { class: 'e' }, c.e), h('div', { class: 'f' }, c.front), h('div', { class: 'b' }, c.back), c.x && h('div', { class: 'ls-muted' }, '💡 ' + c.x)),
+        h('div', { class: 'ls-learncard ls-pop' }, c.e && h('div', { class: 'e' }, A.kitIconEl(c.e, 96)), h('div', { class: 'f' }, c.front), h('div', { class: 'b' }, c.back), c.x && h('div', { class: 'ls-muted' }, '💡 ' + c.x)),
         h('div', { class: 'ls-row' }, h('button', { class: 'ls-btn', onclick: () => S.speak(q.say || q.q + '. ' + c.back, q.lang, true) }, '🔊 Voorlezen'), h('div', { class: 'ls-grow' }, btn))));
       await waitTap(scr, btn); if (scr.closed) break; queue.advance(true); continue;
     }
@@ -112,14 +121,14 @@ export async function startLeren(S, kit, o = {}) {
   if (scr.closed) return scr;
   const rw = doReward(S, { correct: nCorrect, wrong: nWrong, mode: 'leren' });
   const pm = (() => { try { return C.Prog.mastery(kit.id, kit); } catch (e) { return null; } })();
-  resultView(S, scr, { emoji: nWrong === 0 ? '🌟' : '🎉', title: 'Sessie klaar!', big: pm ? `Je kent ${Math.round(pm.pct)}% van deze kit` : '', stats: [[nCorrect, 'goed'], [nWrong, 'fout'], [queue.total, 'kaarten']], wrongs: [...missed.values()], rewardRes: rw,
+  resultView(S, scr, { emoji: nWrong === 0 ? '🌟' : '🎉', title: 'Sessie klaar!', pct: Math.round((nCorrect / Math.max(1, nCorrect + nWrong)) * 100), perfect: nWrong === 0, big: pm ? `Je kent ${Math.round(pm.pct)}% van deze kit` : '', stats: [[nCorrect, 'goed'], [nWrong, 'fout'], [queue.total, 'kaarten']], wrongs: [...missed.values()], rewardRes: rw,
     buttons: [{ text: '🎓 Nog een ronde', p: 1, fn: () => { scr.close(); startLeren(S, kit, { n }); } }, { text: 'Klaar', fn: () => scr.close() }] });
   return scr;
 }
 
 /* ---------- OEFENEN ---------- */
 export function startOefenen(S, kit, o = {}) {
-  const scr = S.screen(`${kit.emoji || '📘'} Oefenen`);
+  const scr = S.screen('Oefenen', kit);
   if (o.qs && o.qs.length) { runOefen(S, scr, kit, o.qs, o); return scr; }
   const types = new Set(Object.keys(L.typesIn(kit.qs))); const cn = { v: 10 }, cd = { v: 0 }, cw = { v: 0 };
   const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => {
@@ -150,13 +159,13 @@ async function runOefen(S, scr, kit, qs, o) {
   }
   if (scr.closed) return;
   const rw = doReward(S, { correct: ok, wrong: bad, mode: 'oefen' });
-  resultView(S, scr, { emoji: bad === 0 ? '🏆' : '💪', title: bad === 0 ? 'Foutloos!' : 'Goed geoefend', big: `${ok} van ${total} goed`, stats: [[ok, 'goed'], [bad, 'fout'], [Math.round((ok / Math.max(1, total)) * 100) + '%', 'score']], wrongs, rewardRes: rw,
+  resultView(S, scr, { emoji: bad === 0 ? '🏆' : '💪', title: bad === 0 ? 'Foutloos!' : 'Goed geoefend', pct: Math.round((ok / Math.max(1, total)) * 100), perfect: bad === 0, big: `${ok} van ${total} goed`, stats: [[ok, 'goed'], [bad, 'fout'], [Math.round((ok / Math.max(1, total)) * 100) + '%', 'score']], wrongs, rewardRes: rw,
     buttons: [wrongs.length && { text: '🔁 Oefen mijn fouten', p: 1, fn: () => { scr.close(); startOefenen(S, kit, { qs: wrongs.map((w) => w.q) }); } }, { text: 'Opnieuw', p: !wrongs.length, fn: () => { scr.close(); startOefenen(S, kit); } }, { text: 'Klaar', fn: () => scr.close() }].filter(Boolean) });
 }
 
 /* ---------- TOETS ---------- */
 export function startToets(S, kit) {
-  const C = S.C; const scr = S.screen(`${kit.emoji || '📘'} Toets`);
+  const C = S.C; const scr = S.screen('Toets', kit);
   const types = new Set(Object.keys(L.typesIn(kit.qs))); const cn = { v: 10 }, ct = { v: 0 };
   const hist = (() => { try { return C.Prog.history(kit.id) || []; } catch (e) { return []; } })();
   const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => {
@@ -199,14 +208,14 @@ async function runToets(S, scr, kit, qs, limit) {
   const wrongs = rec.filter((x) => !x.ok);
   const overview = h('div', { class: 'ls-card' }, h('h3', null, 'Alle vragen'), rec.map((x, i) => h('div', { class: 'ls-li' }, h('span', null, x.ok ? '✅' : '❌'), h('div', { class: 'ls-grow' }, h('div', null, `${i + 1}. ${x.q.q}`), h('div', { class: 'ls-muted' }, 'Goed: ' + x.correct + (x.ok ? '' : x.skipped ? ' · niet beantwoord' : ' · jij: ' + L.givenText(x.q, x.given)))))));
   let hist = []; try { hist = C.Prog.history(kit.id) || []; } catch (e) { /* ok */ }
-  resultView(S, scr, { emoji: grade >= 5.5 ? '🎓' : '🌱', title: L.gradeLabel(grade), big: '', stats: [[good, 'goed'], [total - good, 'fout'], [Math.round((score / total) * 100) + '%', 'score']], rewardRes: rw,
+  resultView(S, scr, { emoji: grade >= 5.5 ? '🏆' : '🌱', title: L.gradeLabel(grade), big: '', pct: Math.round((score / total) * 100), perfect: good === total, stats: [[good, 'goed'], [total - good, 'fout'], [Math.round((score / total) * 100) + '%', 'score']], rewardRes: rw,
     extra: h('div', null, h('div', { class: 'ls-card' }, h('div', { class: 'ls-muted', style: { textAlign: 'center' } }, 'Jouw cijfer'), h('div', { class: 'ls-grade' }, String(grade).replace('.', ',')), timedOut ? h('div', { class: 'ls-muted', style: { textAlign: 'center' } }, '⏱ De tijd was om') : null), overview, historyCard(hist)),
     buttons: [wrongs.length && { text: '🔁 Oefen mijn fouten', p: 1, fn: () => { scr.close(); startOefenen(S, kit, { qs: wrongs.map((w) => w.q) }); } }, { text: 'Nieuwe toets', fn: () => { scr.close(); startToets(S, kit); } }, { text: 'Klaar', fn: () => scr.close() }].filter(Boolean) });
 }
 
 /* ---------- LEVENS-MODUS ---------- */
 export function startLevens(S, kit) {
-  const C = S.C; const scr = S.screen(`${kit.emoji || '📘'} Levens-modus`);
+  const C = S.C; const scr = S.screen('Levens-modus', kit);
   const fx = S.fx(); const hi = S.store.get('hi:' + kit.id, 0); const ct = { v: 0 };
   const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => runLevens(S, scr, kit, +ct.v, fx) }, '▶ Start');
   mount(scr.body, h('div', { class: 'ls-card' }, h('h3', null, '❤️ Levens-modus'), h('div', { class: 'ls-muted' }, `Je hebt ${3 + (fx.extraLives || 0)} levens${fx.shield ? ` en ${fx.shield} schild${fx.shield > 1 ? 'en' : ''} 🛡️` : ''}. Elk foutje kost een leven. Hoe lang kom je? Elke 10 goede antwoorden op rij geeft een extra leven.`), h('div', { style: { marginTop: '6px' } }, '🏆 Jouw record: ', h('b', null, String(hi))),
@@ -234,14 +243,14 @@ async function runLevens(S, scr, kit, secs, fx) {
   if (scr.closed) return;
   const hi = S.store.get('hi:' + kit.id, 0); const record = st.score > hi; if (record) S.store.set('hi:' + kit.id, st.score);
   const rw = doReward(S, { correct: st.correct, wrong: st.wrong, mode: 'levens', best: st.best });
-  resultView(S, scr, { emoji: record ? '🏆' : '💔', title: record ? 'Nieuw record!' : 'Alle levens op', big: `${st.score} punten`, stats: [[st.correct, 'goed'], [st.best, 'beste reeks'], [record ? 'NIEUW' : hi, 'record']], wrongs: wrongs.slice(-8), rewardRes: rw,
+  resultView(S, scr, { emoji: record ? '🏆' : '💔', title: record ? 'Nieuw record!' : 'Alle levens op', record, pct: record ? 100 : 50, big: `${st.score} punten`, stats: [[st.correct, 'goed'], [st.best, 'beste reeks'], [record ? 'NIEUW' : hi, 'record']], wrongs: wrongs.slice(-8), rewardRes: rw,
     buttons: [{ text: '❤️ Nog een keer', p: 1, fn: () => { scr.close(); startLevens(S, kit); } }, { text: 'Klaar', fn: () => scr.close() }] });
 }
 
 /* ---------- TALEN ---------- */
 export function startTalen(S, kit, o = {}) {
   const words = L.wordsOf(kit);
-  const scr = S.screen('🗣 Woordjes leren');
+  const scr = S.screen('Woordjes leren', kit);
   if (words.length < 3) { mount(scr.body, h('div', { class: 'ls-card' }, 'Deze kit heeft geen woordjes in een andere taal. Kies een taalkit (bijvoorbeeld Engels of Frans) of maak er een met plak-import.'), h('button', { class: 'ls-btn', onclick: () => scr.close() }, 'Terug')); return scr; }
   const cd = { v: o.dir || 'nl2xx' }, cn = { v: 10 };
   const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => runTalen(S, scr, kit, words, cd.v, +cn.v) }, '▶ Start');
@@ -267,7 +276,7 @@ async function runTalen(S, scr, kit, words, dir, n) {
       S.speak(w.fo, w.lang, false);
       const btn = h('button', { class: 'ls-btn p big' }, 'Volgende →');
       body.appendChild(h('div', null, h('div', { class: 'ls-muted', style: { textAlign: 'center' } }, `${L.PHASE_NAMES.see} · ${S.C.LANGS && S.C.LANGS[w.lang] ? S.C.LANGS[w.lang].name : w.lang}`),
-        h('div', { class: 'ls-learncard ls-pop' }, w.e && h('div', { class: 'e' }, w.e), h('div', { class: 'f' }, d === 'xx2nl' ? w.fo : w.nl), h('div', { class: 'b' }, d === 'xx2nl' ? w.nl : w.fo), w.x && h('div', { class: 'ls-muted' }, '💡 ' + w.x)),
+        h('div', { class: 'ls-learncard ls-pop' }, w.e && h('div', { class: 'e' }, A.kitIconEl(w.e, 96)), h('div', { class: 'f' }, d === 'xx2nl' ? w.fo : w.nl), h('div', { class: 'b' }, d === 'xx2nl' ? w.nl : w.fo), w.x && h('div', { class: 'ls-muted' }, '💡 ' + w.x)),
         h('div', { class: 'ls-row' }, h('button', { class: 'ls-btn', onclick: () => S.speak(w.fo, w.lang, true) }, '🔊 Hoor het'), h('div', { class: 'ls-grow' }, btn))));
       await waitTap(scr, btn); if (scr.closed) break; queue.advance(true); continue;
     }
@@ -284,13 +293,13 @@ async function runTalen(S, scr, kit, words, dir, n) {
   }
   if (scr.closed) return;
   const rw = doReward(S, { correct: nOk, wrong: nBad, mode: 'leren' });
-  resultView(S, scr, { emoji: '🗣', title: 'Woordjes gedaan!', big: `${queue.total} woordjes geoefend`, stats: [[nOk, 'goed'], [nBad, 'fout'], [queue.total, 'woordjes']], wrongs: [...missed.values()], rewardRes: rw,
+  resultView(S, scr, { emoji: '🌐', title: 'Woordjes gedaan!', pct: Math.round((nOk / Math.max(1, nOk + nBad)) * 100), perfect: nBad === 0, big: `${queue.total} woordjes geoefend`, stats: [[nOk, 'goed'], [nBad, 'fout'], [queue.total, 'woordjes']], wrongs: [...missed.values()], rewardRes: rw,
     buttons: [{ text: '🗣 Nog een ronde', p: 1, fn: () => { scr.close(); startTalen(S, kit, { dir }); } }, { text: 'Klaar', fn: () => scr.close() }] });
 }
 
 /* ---------- FLITSKAARTEN ---------- */
 export function startFlits(S, kit) {
-  const scr = S.screen(`${kit.emoji || '📘'} Flitskaarten`);
+  const scr = S.screen('Flitskaarten', kit);
   const cn = { v: 20 }, cs = { v: 'q' };
   const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => runFlits(S, scr, kit, cs.v, +cn.v) }, '▶ Start');
   mount(scr.body, h('div', { class: 'ls-card' }, h('h3', null, 'Flitskaarten'), h('div', { class: 'ls-muted' }, 'Tik op de kaart om om te draaien. Sleep naar rechts als je het wist, naar links als nog niet.'),
@@ -307,7 +316,7 @@ async function runFlits(S, scr, kit, side, n) {
       const q = deck.current(); const c = L.cardText(q); const rev = side === 'a';
       scr.prog((deck.i / deck.items.length) * 100); scr.title(`Kaart ${deck.i + 1}/${deck.items.length}${deck.round > 1 ? ' · ronde ' + deck.round : ''}`);
       const flip = h('div', { class: 'ls-flip' }, h('div', { class: 'ls-flip-in' },
-        h('div', { class: 'ls-face' }, c.e && !rev ? h('div', { class: 'e' }, c.e) : null, rev ? c.back : c.front, h('small', null, 'tik om om te draaien')),
+        h('div', { class: 'ls-face' }, c.e && !rev ? h('div', { class: 'e' }, A.kitIconEl(c.e, 84)) : null, rev ? c.back : c.front, h('small', null, 'tik om om te draaien')),
         h('div', { class: 'ls-face bk' }, rev ? c.front : c.back, c.x ? h('small', null, '💡 ' + c.x) : null)));
       const bNo = h('button', { class: 'ls-btn', style: { flex: 1 } }, '🤔 Nog niet'), bYes = h('button', { class: 'ls-btn p', style: { flex: 1 } }, '😎 Ik wist het');
       const bSay = h('button', { class: 'ls-btn', onclick: () => S.speak((flip.classList.contains('f') ? (rev ? c.front : c.back) : (rev ? c.back : c.front)).replace(/\n/g, ', '), flip.classList.contains('f') === rev ? 'nl' : (q.lang || kitLang || 'nl'), true) }, '🔊');
@@ -334,7 +343,7 @@ async function runFlits(S, scr, kit, side, n) {
     const unk = deck.unknown.length;
     const rw = unk === 0 ? doReward(S, { correct: deck.known.length, wrong: 0, mode: 'oefen' }) : null;
     await new Promise((res) => {
-      resultView(S, scr, { emoji: unk ? '🔄' : '🎉', title: unk ? `Nog ${unk} om te oefenen` : 'Alle kaarten gekend!', big: `${deck.known.length} gekend`, stats: [[deck.known.length, 'gekend'], [unk, 'nog niet'], [deck.round, 'ronde']], rewardRes: rw,
+      resultView(S, scr, { emoji: unk ? '🔄' : '🌟', title: unk ? `Nog ${unk} om te oefenen` : 'Alle kaarten gekend!', pct: Math.round((deck.known.length / Math.max(1, deck.known.length + unk)) * 100), perfect: !unk, big: `${deck.known.length} gekend`, stats: [[deck.known.length, 'gekend'], [unk, 'nog niet'], [deck.round, 'ronde']], rewardRes: rw,
         buttons: [unk && { text: '🔁 Alleen de moeilijke', p: 1, fn: () => { deck.nextRound(); res(); } }, { text: '🔀 Opnieuw schudden', fn: () => { scr.close(); startFlits(S, kit); res(); } }, { text: 'Klaar', fn: () => { scr.close(); res(); } }].filter(Boolean) });
       scr.onClose(res);
     });
@@ -342,11 +351,91 @@ async function runFlits(S, scr, kit, side, n) {
   }
 }
 
+/* ---------- DAGELIJKSE 10 ---------- */
+// Elke dag 10 vragen uit de gekozen kit: eerst wat je bijna vergeet, met een mix van vraagsoorten. De reeks telt dagen op rij.
+export function dailyState(S) { return S.store.get('daily', { last: null, streak: 0, best: 0 }); }
+export function startDagelijks(S, kit) {
+  const scr = S.screen('Dagelijkse 10', kit); const st = dailyState(S); const today = L.dayKey();
+  const done = st.last === today; const alive = L.dailyAlive(st, today);
+  const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => runDagelijks(S, scr, kit) }, done ? '🔁 Nog een keer (zonder bonus)' : '▶ Start de Dagelijkse 10');
+  mount(scr.body, h('div', { class: 'ls-card' }, h('div', { class: 'ls-row' }, A.iconEl('gift', 56, '🎁'), h('div', { class: 'ls-grow' }, h('h3', { style: { margin: 0 } }, 'Dagelijkse 10'), h('div', { class: 'ls-muted' }, done ? 'Vandaag al gedaan. Goed bezig!' : 'Tien vragen, elke dag een andere mix. Doe het elke dag voor een lange reeks en een bonus.'))),
+    h('div', { class: 'ls-stat', style: { marginTop: '10px' } }, h('div', null, h('b', null, A.iconEl('flame', 28, '🔥'), String(alive ? st.streak : 0)), h('span', null, 'dagen reeks')), h('div', null, h('b', null, String(st.best || 0)), h('span', null, 'beste reeks')), h('div', null, h('b', null, done ? '✓' : '10'), h('span', null, done ? 'klaar' : 'vragen'))), ttsToggle(S), start));
+  return scr;
+}
+async function runDagelijks(S, scr, kit) {
+  const C = S.C; try { await C.Prog.load(); } catch (e) { /* ok */ }
+  let ordered; try { ordered = C.Prog.dueFirst(kit) || kit.qs; } catch (e) { ordered = kit.qs; }
+  const withBox = ordered.map((q) => { let b = 0; try { b = C.Prog.box(kit.id, q) || 0; } catch (e) { /* 0 */ } return { q, box: b }; });
+  const today = L.dayKey(); const qs = L.dailyPick(withBox, 10, L.hashStr(kit.id + today));
+  const body = scr.body; let ok = 0, bad = 0; const wrongs = []; const total = qs.length;
+  for (let i = 0; i < total && !scr.closed; i++) {
+    scr.prog((i / total) * 100); scr.title(`Vraag ${i + 1}/${total}`);
+    clear(body); const host = h('div'); const fb = h('div'); body.appendChild(host); body.appendChild(fb);
+    const q = qs[i]; const r = await askOne(S, scr, host, q, {});
+    if (scr.closed) return;
+    if (r.ok) ok++; else { bad++; wrongs.push({ q, correct: correctOf(S, q, r.given), given: r.given }); }
+    try { C.Prog.record(kit.id, q, !!r.ok, r.ms || 0); } catch (e) { /* ok */ }
+    await feedback(S, scr, fb, q, r);
+  }
+  if (scr.closed) return;
+  const prev = dailyState(S); const next = L.dailyAdvance(prev, today); const first = !next.already;
+  if (first) S.store.set('daily', { last: next.last, streak: next.streak, best: next.best });
+  const rw = doReward(S, { correct: ok, wrong: bad, mode: 'oefen' });
+  let bonus = 0;
+  if (first) { bonus = 10 + Math.min(20, next.streak * 2); try { const P = S.C.Profile || {}; P.addCoins && P.addCoins(bonus); if (rw) rw.coins += bonus; } catch (e) { /* ok */ } }
+  const sNow = first ? next.streak : prev.streak;
+  resultView(S, scr, { emoji: first ? '🎁' : '🎉', title: first ? `Dagelijkse 10 klaar!` : 'Weer geoefend', daily: first, sub: first ? `${sNow} dagen op rij` : '', pct: Math.round((ok / Math.max(1, total)) * 100), perfect: bad === 0, big: `${ok} van ${total} goed`,
+    stats: [[ok, 'goed'], [sNow, 'dagen reeks'], [first ? '+' + bonus : '–', 'bonus munten']], wrongs, rewardRes: rw,
+    buttons: [wrongs.length && { text: '🔁 Oefen mijn fouten', p: 1, fn: () => { scr.close(); startOefenen(S, kit, { qs: wrongs.map((w) => w.q) }); } }, { text: 'Klaar', p: !wrongs.length, fn: () => scr.close() }].filter(Boolean) });
+}
+
+/* ---------- SNEL-RONDE ---------- */
+// Zoveel mogelijk goede antwoorden binnen de tijd (standaard 60 seconden). Reeksen geven bonuspunten.
+export function startSnel(S, kit) {
+  const scr = S.screen('Snel-ronde', kit); const hi = S.store.get('snel:' + kit.id, 0); const cs = { v: 60 };
+  const start = h('button', { class: 'ls-btn p big', style: { marginTop: '12px' }, onclick: () => runSnel(S, scr, kit, +cs.v || 60) }, '⚡ Start de klok');
+  mount(scr.body, h('div', { class: 'ls-card' }, h('div', { class: 'ls-row' }, A.iconEl('bolt', 56, '⚡'), h('div', { class: 'ls-grow' }, h('h3', { style: { margin: 0 } }, 'Snel-ronde'), h('div', { class: 'ls-muted' }, 'Beantwoord zoveel mogelijk vragen voor de klok afloopt. Elk goed antwoord is 10 punten, elke 5 op rij geeft 20 extra.'))),
+    h('div', { style: { marginTop: '8px' } }, '🏆 Jouw record: ', h('b', null, String(hi))), setupRow('Tijd', [{ v: 30, l: '30 sec' }, { v: 60, l: '60 sec' }, { v: 90, l: '90 sec' }], cs), ttsToggle(S), start));
+  return scr;
+}
+async function runSnel(S, scr, kit, secs) {
+  const C = S.C; const body = scr.body; const rand = rnd(S); const fx = S.fx();
+  let pool = kit.qs.filter((q) => ['mc', 'tf', 'num', 'fill', 'type'].includes(q.t)); if (pool.length < 5) pool = kit.qs.slice();
+  pool = L.shuf(pool, rand); let left = secs + (fx.extraTime || 0); const total = left; let timedOut = false; const results = []; const wrongs = [];
+  const timer = h('div', { class: 'ls-timer' }, h('i')); const bar = timer.firstChild; let iv = null;
+  const tick = () => { left--; scr.title(`⏱ ${L.fmtTime(left)}`); bar.style.width = Math.max(0, (left / total) * 100) + '%'; if (left <= 0) { timedOut = true; clearInterval(iv); scr.abortAll(); } };
+  iv = setInterval(tick, 1000); S.track(() => clearInterval(iv)); scr.onClose(() => clearInterval(iv)); scr.title(`⏱ ${L.fmtTime(left)}`);
+  let i = 0;
+  while (!timedOut && !scr.closed) {
+    const q = pool[i % pool.length]; i++;
+    scr.prog((1 - left / total) * 100); clear(body);
+    const sc = L.snelScore(results); const hud = h('div', { class: 'ls-row sp' }, h('b', null, A.iconEl('flame', 24, '🔥'), ' ' + streakNow(results)), h('span', { class: 'ls-muted' }, `${sc.pts} punten`));
+    body.appendChild(timer); body.appendChild(hud); const host = h('div'); const fb = h('div'); body.appendChild(host); body.appendChild(fb);
+    const r = await askOne(S, scr, host, q, { hints: 0, feedback: false });
+    if (scr.closed) return;
+    if (r.aborted || timedOut) break;
+    results.push(!!r.ok); try { C.Prog.record(kit.id, q, !!r.ok, r.ms || 0); } catch (e) { /* ok */ }
+    S.snd(r.ok ? 'goed' : 'fout');
+    if (!r.ok) { wrongs.push({ q, correct: correctOf(S, q, r.given), given: r.given }); fb.appendChild(h('div', { class: 'ls-fb no ls-pop' }, h('h3', null, 'Helaas'), h('div', null, 'Goed: ', h('b', null, correctOf(S, q, r.given))))); await waitTap(scr, null, 1300); }
+    else await waitTap(scr, null, 250);
+  }
+  clearInterval(iv);
+  if (scr.closed) return;
+  const sc = L.snelScore(results); const hiOld = S.store.get('snel:' + kit.id, 0); const record = sc.pts > hiOld && sc.pts > 0; if (record) S.store.set('snel:' + kit.id, sc.pts);
+  const rw = doReward(S, { correct: sc.ok, wrong: sc.wrong, mode: 'levens', best: sc.best });
+  resultView(S, scr, { emoji: record ? '🏆' : '⚡', title: record ? 'Nieuw record!' : 'Tijd om!', record, sub: `${sc.pts} punten`, pct: record ? 100 : (results.length ? Math.round((sc.ok / results.length) * 100) : 0), perfect: results.length >= 5 && sc.wrong === 0, big: `${sc.pts} punten`,
+    stats: [[sc.ok, 'goed'], [sc.best, 'beste reeks'], [record ? 'NIEUW' : hiOld, 'record']], wrongs: wrongs.slice(-8), rewardRes: rw,
+    buttons: [{ text: '⚡ Nog een ronde', p: 1, fn: () => { scr.close(); startSnel(S, kit); } }, { text: 'Klaar', fn: () => scr.close() }] });
+}
+function streakNow(results) { let n = 0; for (let i = results.length - 1; i >= 0 && results[i]; i--) n++; return n; }
+
 export const MODES = [
-  { id: 'leren', name: 'Leren', emoji: '🎓', desc: 'Slim herhalen: nieuwe kaarten en wat je bijna vergeet.', fn: startLeren },
-  { id: 'oefenen', name: 'Oefenen', emoji: '🏋️', desc: 'Vrij oefenen met uitleg.', fn: startOefenen },
-  { id: 'toets', name: 'Toets', emoji: '✍️', desc: 'Echte toets met cijfer.', fn: startToets },
-  { id: 'levens', name: 'Levens', emoji: '❤️', desc: 'Hoe ver kom je met 3 levens?', fn: startLevens },
-  { id: 'flits', name: 'Flitskaarten', emoji: '🃏', desc: 'Omdraaien en sorteren.', fn: startFlits },
-  { id: 'talen', name: 'Woordjes', emoji: '🗣', desc: 'Talen leren in fasen.', fn: startTalen },
+  { id: 'dagelijks', name: 'Dagelijkse 10', emoji: '🎁', icon: 'gift', desc: 'Elke dag 10 vragen, bouw een reeks.', fn: startDagelijks, hot: true },
+  { id: 'snel', name: 'Snel-ronde', emoji: '⚡', icon: 'bolt', desc: 'Zoveel mogelijk in 60 seconden.', fn: startSnel, hot: true },
+  { id: 'leren', name: 'Leren', emoji: '🎓', icon: 'lightbulb', desc: 'Slim herhalen: nieuwe kaarten en wat je bijna vergeet.', fn: startLeren },
+  { id: 'oefenen', name: 'Oefenen', emoji: '🏋️', icon: 'target', desc: 'Vrij oefenen met uitleg.', fn: startOefenen },
+  { id: 'toets', name: 'Toets', emoji: '✍️', icon: 'pencil', desc: 'Echte toets met cijfer.', fn: startToets },
+  { id: 'levens', name: 'Levens', emoji: '❤️', icon: 'heart', desc: 'Hoe ver kom je met 3 levens?', fn: startLevens },
+  { id: 'flits', name: 'Flitskaarten', emoji: '🃏', icon: 'scroll', desc: 'Omdraaien en sorteren.', fn: startFlits },
+  { id: 'talen', name: 'Woordjes', emoji: '🗣', icon: 'globe', desc: 'Talen leren in fasen.', fn: startTalen },
 ];

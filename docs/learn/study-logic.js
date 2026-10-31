@@ -669,3 +669,35 @@ export function givenText(q, given) {
   return String(given);
 }
 export function typesIn(qs) { const c = {}; for (const q of qs) c[q.t] = (c[q.t] || 0) + 1; return c; }
+
+/* ---------- Dagelijkse 10 en Snel-ronde (pure logica) ---------- */
+export const dayKey = (d = new Date()) => { const x = d instanceof Date ? d : new Date(d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+const dayDiff = (a, b) => Math.round((new Date(b + 'T12:00:00') - new Date(a + 'T12:00:00')) / 86400000);
+// daily = { last: 'YYYY-MM-DD'|null, streak: n, best: n }; geeft de nieuwe stand na het afronden van de Dagelijkse 10 op dag `today`
+export function dailyAdvance(daily, today) {
+  const d = { last: null, streak: 0, best: 0, ...(daily || {}) };
+  if (d.last === today) return { ...d, already: true };
+  const gap = d.last ? dayDiff(d.last, today) : null;
+  const streak = gap === 1 ? (d.streak || 0) + 1 : 1;
+  return { last: today, streak, best: Math.max(d.best || 0, streak), already: false };
+}
+// is de reeks nog levend (gisteren of vandaag gedaan)?
+export function dailyAlive(daily, today) { if (!daily || !daily.last) return false; const g = dayDiff(daily.last, today); return g === 0 || g === 1; }
+// 10 vragen voor de dag: eerst wat je bijna vergeet (lage box), dan nieuw, met een mix van vraagsoorten; deterministisch per dag+kit
+export function dailyPick(items, n = 10, seed = 1) {
+  // items: [{ q, box }] (volgorde = gewenste prioriteit)
+  const rand = mulberry(seed >>> 0); const out = []; const used = new Set();
+  const pool = items.map((it, i) => ({ ...it, i }));
+  const byType = {};
+  for (const it of pool) (byType[it.q.t] = byType[it.q.t] || []).push(it);
+  const types = Object.keys(byType);
+  // eerste helft: op prioriteit, maar niet meer dan 4 van hetzelfde type
+  const cnt = {};
+  for (const it of pool) { if (out.length >= Math.ceil(n * 0.6)) break; if ((cnt[it.q.t] || 0) >= 4 && types.length > 1) continue; out.push(it); used.add(it.i); cnt[it.q.t] = (cnt[it.q.t] || 0) + 1; }
+  const rest = shuf(pool.filter((it) => !used.has(it.i)), rand);
+  for (const it of rest) { if (out.length >= n) break; out.push(it); }
+  return shuf(out, rand).map((it) => it.q);
+}
+// punten voor de Snel-ronde: 10 per goed, bonus bij reeksen (elke 5 op rij +20)
+export function snelScore(results) { let pts = 0, streak = 0, best = 0, ok = 0; for (const r of results) { if (r) { ok++; streak++; best = Math.max(best, streak); pts += 10 + (streak % 5 === 0 ? 20 : 0); } else streak = 0; } return { pts, ok, wrong: results.length - ok, best }; }
+export const KIT_CARD_STYLES = [{ v: 'glas', l: 'Glanzend' }, { v: 'vlak', l: 'Strak' }, { v: 'speels', l: 'Speels' }];

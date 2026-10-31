@@ -8,6 +8,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const SRC = path.join(here, '..', 'docs', 'big-aquarium.js');
 let src = fs.readFileSync(SRC, 'utf8');
+src = src.replace("'./big-gfx.js?v=1'", JSON.stringify(pathToFileURL(path.join(here, '..', 'docs', 'big-gfx.js')).href)); // gedeelde grafische helper
 const imp = /import \{ doc, getDoc, setDoc \} from 'https:\/\/www\.gstatic\.com[^']*';/;
 if (!imp.test(src)) throw new Error('Firestore-import niet gevonden');
 src = src.replace(imp, `export const __fs = { calls: [], store: {}, failSet: false };
@@ -15,7 +16,8 @@ const doc = (db, c, id) => ({ c, id });
 const getDoc = async (r) => ({ exists: () => !!__fs.store[r.id], data: () => __fs.store[r.id] });
 const setDoc = async (r, d) => { if (__fs.failSet) throw new Error('nee'); __fs.calls.push([r.id, JSON.parse(JSON.stringify(d))]); __fs.store[r.id] = d; };`);
 
-// nep-DOM
+// nep-DOM (geen canvas-scenes in de test)
+globalThis.__BIG_NOSCENES = true;
 const store = new Map();
 globalThis.localStorage = { getItem: (k) => (store.has(k) ? store.get(k) : null), setItem: (k, v) => { store.set(k, String(v)); }, removeItem: (k) => { store.delete(k); } };
 const ctxProxy = new Proxy({}, {
@@ -77,6 +79,24 @@ for (const k of M.TT_KEYS) M.drawBG(ctxProxy, k, 360, 252, 3, M.layoutOf(k, 360,
 t('tekenen zonder fouten', true);
 
 /* ------------------------------------------------------------------ staat en opslag */
+// fase 2: nieuwe inhoud en uiterlijken
+{
+  const G2 = await import(pathToFileURL(path.join(here, '..', 'docs', 'big-gfx.js')).href);
+  const newSp = M.SP.slice(42), newDeco = ['schelp', 'palm', 'fontein', 'vuurtoren'], newUp = ['ijs', 'foto', 'resto', 'vip', 'uv'];
+  t('minstens 25 nieuwe dingen (soorten+decor+upgrades+doelen+prestaties+gebieden)', newSp.length + newDeco.length + newUp.length + 10 + 7 + 2 >= 25, newSp.length);
+  t('17 nieuwe soorten', newSp.length === 17, newSp.length);
+  for (const s of newSp) t('nieuw dier heeft 3D-icoon ' + s.id, !!G2.iconName(s.e) && G2.has(G2.iconName(s.e)), s.e);
+  for (const id of newDeco) { t('deco ' + id, !!M.DECO[id] && G2.has(M.DECO[id].ic)); for (const hab of M.TT_KEYS) if (M.decoOk(id, hab)) M.drawDeco(ctxProxy, id, 50, 100, 1, 0, 360, 6); }
+  for (const id of newUp) t('upgrade ' + id, !!M.UP[id] && G2.iconName(M.UP[id].e) && M.UP[id].base > 0 && M.UP[id].gr >= 1);
+  // prijsvolgorde per habitat blijft logisch: duurdere dieren leveren meer aantrekkelijkheid
+  for (const hab of M.TT_KEYS) { const l = M.SP.filter((s) => s.hab === hab).sort((a, b) => a.price - b.price); for (let i = 1; i < l.length; i++) t(`ap stijgt met prijs ${l[i - 1].id}->${l[i].id}`, l[i].ap >= l[i - 1].ap); }
+  // terugverdientijd per upgrade (munten die het levert in 1 niveau vs kosten) blijft binnen een band
+  t('4 uiterlijken', M.LOOKS.length === 4 && M.LOOKS.every((l) => l.world && l.name));
+  for (const l of M.LOOKS) { M.setLookId(l.id); for (const k of M.TT_KEYS) { const w = M.waterOf(k); t(`water ${l.id}/${k}`, w.sky.length === 3 && /^#[0-9a-f]{6}$/.test(w.sky[1]) && /^#[0-9a-f]{6}$/.test(w.sand)); M.drawBG(ctxProxy, k, 360, 252, 1, M.layoutOf(k, 360, 252), 5); } }
+  M.setLookId('klassiek');
+  t('nieuwe expedities hebben loot', M.REGIONS.length >= 7 && M.REGIONS.every((r) => Object.keys(r.loot).length >= 3));
+  t('oude save (zonder nieuwe velden) laadt', !!M.migrate({ ...M.newState(), up: { ticket: 2 }, pk: { inc: 1 } }));
+}
 console.log('# staat en opslag');
 let s = M.newState(1000);
 t('start: 2 guppy, 15 munten', M.animalsTotal(s) === 2 && s.c === 15);

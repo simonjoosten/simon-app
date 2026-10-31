@@ -15,7 +15,7 @@
 //     allow delete: if isMember() && resource.data.from == request.auth.uid;
 //   }
 import { esc } from './core.js?v=1';
-import { avatarHTML, LV_NAMES } from './games-shop.js?v=1';
+import { avatarHTML, LV_NAMES, ic, emo } from './games-shop.js?v=2';
 
 export const DUEL_MAX_QS = 12, DUEL_MAX_CHARS = 12000, DUEL_DAYS = 14, DUEL_SHOW = 20, DAY_MS = 86400000;
 const FS_URL = 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
@@ -124,14 +124,14 @@ export function duelsHTML(api) {
   const S = api.S, uid = api.ctx.uid, f = S.dform || (S.dform = { open: false, game: '', level: 2, n: 8 });
   const ids = api.gameIds();
   if (!f.game || !ids.includes(f.game)) f.game = ids[0] || '';
-  let h = `<div class="lsp-card2"><b>⚔️ Uitdaging met je broer</b><small>Jullie spelen dezelfde vragen en dezelfde spelstart, op je eigen tijd. De hoogste score wint.</small>
+  let h = `<div class="lsp-card2"><b class="lsp-sectitle">${ic('sword', 40)} Uitdaging met je broer</b><small>Jullie spelen dezelfde vragen en dezelfde spelstart, op je eigen tijd. De hoogste score wint.</small>
     <div class="lsp-row"><button class="lsp-btn" data-act="duel-form">${f.open ? '✕ Sluiten' : '＋ Nieuwe uitdaging'}</button><button class="lsp-btn ghost" data-act="duel-refresh" ${S.duelBusy ? 'disabled' : ''}>🔄 Verversen</button></div></div>`;
   if (f.open) {
     h += `<div class="lsp-card2"><b>Nieuwe uitdaging</b><small>Kit: <b>${esc(api.kitLabel())}</b> (kies een andere kit op het beginscherm)</small>
-      <div class="lsp-lab">Spel</div><div class="lsp-chips">${ids.map((id) => { const m = api.meta(id); return `<button class="lsp-chip${f.game === id ? ' on' : ''}" data-act="duel-set" data-k="game" data-v="${esc(id)}">${esc(m.emoji)} ${esc(m.name)}</button>`; }).join('') || '<small>Nog geen spellen beschikbaar.</small>'}</div>
+      <div class="lsp-lab">Spel</div><div class="lsp-chips">${ids.map((id) => { const m = api.meta(id); return `<button class="lsp-chip${f.game === id ? ' on' : ''}" data-act="duel-set" data-k="game" data-v="${esc(id)}">${emo(m.emoji, 22)} ${esc(m.name)}</button>`; }).join('') || '<small>Nog geen spellen beschikbaar.</small>'}</div>
       <div class="lsp-lab">Moeilijkheid</div><div class="lsp-chips">${[1, 2, 3].map((l) => `<button class="lsp-chip${f.level === l ? ' on' : ''}" data-act="duel-set" data-k="level" data-v="${l}">${LV_NAMES[l]}</button>`).join('')}</div>
       <div class="lsp-lab">Aantal vragen (voor de vragenset)</div><div class="lsp-chips">${[6, 8, 10, 12].map((n) => `<button class="lsp-chip${f.n === n ? ' on' : ''}" data-act="duel-set" data-k="n" data-v="${n}">${n}</button>`).join('')}</div>
-      <button class="lsp-btn big" data-act="duel-create" ${S.duelBusy || !f.game ? 'disabled' : ''}>⚔️ Uitdaging versturen</button></div>`;
+      <button class="lsp-btn big" data-act="duel-create" ${S.duelBusy || !f.game ? 'disabled' : ''}>${ic('sword', 26)} Uitdaging versturen</button></div>`;
   }
   if (S.duelErr) h += `<div class="lsp-note err">${esc(S.duelErr)}</div>`;
   if (S.duelBusy && !S.duels) h += '<div class="lsp-empty">Laden…</div>';
@@ -141,7 +141,7 @@ export function duelsHTML(api) {
     const m = api.meta(d.game), st = duelStatus(d, uid), board = duelBoard(d, uid), top = Math.max(1, ...board.map((b) => b.score));
     const w = duelWinner(d, uid);
     const chip = st === 'open' ? '<span class="lsp-st open">Jouw beurt</span>' : st === 'wait' ? '<span class="lsp-st wait">Wachten op de ander</span>' : w ? (w.me ? '<span class="lsp-st win">Gewonnen 🏆</span>' : '<span class="lsp-st lose">Verloren</span>') : '<span class="lsp-st done">Gelijkspel</span>';
-    h += `<div class="lsp-duel ${st}"><div class="lsp-duel-top"><span class="lsp-duel-e" style="background:${esc(m.color)}">${esc(m.emoji)}</span><div><b>${esc(m.name)}</b><small>${esc(d.kitName)} · ${LV_NAMES[d.level] || ''} · ${(unpackQs(d.qs) || []).length} vragen</small></div>${chip}</div>
+    h += `<div class="lsp-duel ${st}"><div class="lsp-duel-top"><span class="lsp-duel-e" style="background:${esc(m.color)};width:52px;height:52px">${emo(m.emoji, 40)}</span><div><b>${esc(m.name)}</b><small>${esc(d.kitName)} · ${LV_NAMES[d.level] || ''} · ${(unpackQs(d.qs) || []).length} vragen</small></div>${chip}</div>
       <small>Van ${esc(d.fromName || '?')} · ${ago(ms(d.created))}</small>
       <div class="lsp-board">${board.map((b) => `<div class="lsp-brow${b.me ? ' me' : ''}"><span>${esc(b.name)}${b.me ? ' (jij)' : ''}</span><div class="lsp-bar2"><i style="width:${Math.round(100 * b.score / top)}%"></i></div><b>${b.score}</b></div>`).join('') || '<small>Nog niemand heeft gespeeld.</small>'}</div>
       ${st === 'open' ? `<button class="lsp-btn big" data-act="duel-play" data-id="${esc(d.id)}">▶ Speel mee</button>` : ''}</div>`;

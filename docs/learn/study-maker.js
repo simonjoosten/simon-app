@@ -1,6 +1,7 @@
 // Learn Study: kit-maker (snel invullen, plak-import, tekst -> vragen, generator-wizard, delen via code).
-import { h, mount, clear, twoTap } from './study-ui.js?v=1';
-import * as L from './study-logic.js?v=1';
+import { h, mount, clear, twoTap } from './study-ui.js?v=2';
+import * as L from './study-logic.js?v=2';
+import * as A from './study-art.js?v=2';
 
 const LANG_OPTS = [['nl', 'Nederlands'], ['en', 'Engels'], ['de', 'Duits'], ['fr', 'Frans'], ['es', 'Spaans']];
 const EXAMPLE_WORDS = 'huis - house\nkat - cat\nhond - dog\nboom - tree\nvriend - friend\nschool - school\nboek - book\nappel - apple';
@@ -58,7 +59,12 @@ export function openMaker(S, { kit = null, tab = 'vragen', copy = false } = {}) 
   const metaName = h('input', { class: 'ls-in', placeholder: 'Naam van je kit', value: draft.name, maxlength: 60, oninput: (e) => { draft.name = e.target.value; dirty = true; } });
   const metaEmoji = h('input', { class: 'ls-in', value: draft.emoji, maxlength: 4, style: { width: '64px', textAlign: 'center', fontSize: '22px' }, oninput: (e) => { draft.emoji = e.target.value; dirty = true; } });
   const metaLang = h('select', { class: 'ls-sel', onchange: (e) => { draft.lang = e.target.value === 'nl' ? undefined : e.target.value; dirty = true; } }, LANG_OPTS.map(([v, n]) => h('option', { value: v, selected: (draft.lang || 'nl') === v }, n)));
-  const meta = h('div', { class: 'ls-card' }, h('div', { class: 'ls-row' }, metaEmoji, h('div', { class: 'ls-grow' }, metaName)), h('span', { class: 'ls-lab' }, 'Taal van de antwoorden (voor voorlezen en woordjes)'), metaLang);
+  const preview = h('div', { class: 'ls-ico-big' }); const grid = h('div', { class: 'ls-icogrid' }); let gridOpen = false;
+  const drawPrev = () => mount(preview, A.kitIconEl(draft.emoji || '📘', 44));
+  const drawGrid = () => { mount(grid, gridOpen ? A.PICKER.map((em) => h('button', { type: 'button', class: draft.emoji === em ? 'on' : '', 'aria-label': 'Kies icoon', onclick: () => { draft.emoji = em; metaEmoji.value = em; dirty = true; drawPrev(); drawGrid(); } }, A.kitIconEl(em, 36))) : null); grid.style.display = gridOpen ? '' : 'none'; };
+  metaEmoji.addEventListener('input', drawPrev); drawPrev(); drawGrid();
+  const pickBtn = h('button', { type: 'button', class: 'ls-btn sm', onclick: () => { gridOpen = !gridOpen; drawGrid(); } }, '🎨 Kies een icoon');
+  const meta = h('div', { class: 'ls-card' }, h('div', { class: 'ls-row' }, preview, metaEmoji, h('div', { class: 'ls-grow' }, metaName)), h('div', { class: 'ls-row', style: { marginTop: '6px' } }, pickBtn), grid, h('span', { class: 'ls-lab' }, 'Taal van de antwoorden (voor voorlezen en woordjes)'), metaLang);
   const segs = [['vragen', '✏️ Vragen'], ['plak', '📋 Plakken'], ['tekst', '📝 Tekst'], ['gen', '⚙️ Generator'], ['delen', '📤 Delen']];
   const seg = h('div', { class: 'ls-seg' });
   const count = h('div', { class: 'ls-grow ls-muted' });

@@ -19,8 +19,9 @@ const near = (a, b, eps, m) => ok(Math.abs(a - b) <= eps, `${m} (${a} vs ${b})`)
 const STUB = `const doc=(db,...p)=>({path:p.join('/')});
 const getDoc=async(r)=>{const F=globalThis.__FS;F.reads++;const v=F.store.get(r.path);return{exists:()=>v!==undefined,data:()=>v}};
 const setDoc=async(r,d)=>{const F=globalThis.__FS;if(F.fail)throw new Error('offline');F.writes.push({path:r.path,data:JSON.parse(JSON.stringify(d))});F.store.set(r.path,JSON.parse(JSON.stringify(d)))};`;
+globalThis.__BIG_NOSCENES = true;
 globalThis.__FS = { store: new Map(), writes: [], reads: 0, fail: false };
-const code = fs.readFileSync(SRC, 'utf8').replace(/import \{[^}]*\} from 'https:[^']*';/, STUB);
+const code = fs.readFileSync(SRC, 'utf8').replace(/import \{[^}]*\} from 'https:[^']*';/, STUB).replace("'./big-gfx.js?v=1'", JSON.stringify(pathToFileURL(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'docs', 'big-gfx.js')).href));
 ok(code.includes(STUB.slice(0, 20)), 'import vervangen');
 const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'sb-')), 'big-stadbouwer.mjs');
 fs.writeFileSync(tmp, code);
@@ -187,6 +188,24 @@ function mockCtx() {
   for (const ch of BUILDABLE) for (const lv of [1, 2, 3]) { const T = newCity(2); T.g[(cx + 3) * N + cx] = ch; T.lv[(cx + 3) * N + cx] = lv; drawCity(c, { S: T, st: calc(T), cam: { x: cx, y: cx, z: 40 }, t: 1, night: 0.8, cars: [], floaters: [], tool: ch, ghost: { x: cx, y: cx + 4, ok: false }, sel: -1, layer: '', W: 300, H: 400, dpr: 1, glow, discSet: null }); }
   checks++;
 }
+
+/* ---------- fase 2: nieuwe inhoud en uiterlijken ---------- */
+{
+  const G2 = await import(pathToFileURL(path.join(here, '..', 'docs', 'big-gfx.js')).href);
+  const NEW = 'uDGIJNKMQTUV123456789 0YsOy'.replace(' ', '').split('');
+  ok(NEW.length === 26 && NEW.every((c) => BD[c] && BUILDABLE.includes(c)), '26 nieuwe gebouwen');
+  for (const c of NEW) { const B = BD[c]; ok(G2.iconName(B.e) && G2.has(G2.iconName(B.e)), `3D-icoon voor ${B.n} (${B.e})`); ok(B.unl < B.c, `ontgrendeling ${B.n} past bij prijs`); ok(B.res || B.jobs || B.shop || B.k || B.pwr || B.wat || B.transit || B.tour, `${B.n} heeft een effect`); }
+  ok(UPG.length >= 14 && GOALS.length >= 44 && ACHS.length >= 35, 'extra upgrades, doelen en prestaties');
+  ok(M.LOOKS.length === 4 && M.LOOKS.every((l) => l.world && l.g1 && l.water), '4 uiterlijken');
+  { const S = newCity(3); S.money = 1e9; S.peak = 99999; S.land = maxLand(S); const st = calc(S), c = mockCtx0();
+    for (const l of M.LOOKS) { M.setLookId(l.id); drawCity(c, { S, st, cam: { x: 11, y: 11, z: 36 }, t: 3, night: 0.2, cars: [], floaters: [], tool: null, ghost: null, sel: -1, layer: '', W: 300, H: 400, dpr: 1, glow: { w: 1 }, discSet: null }); }
+    M.setLookId('klassiek'); }
+  // elk nieuw gebouw werkt in de economie: een stad met alleen dit gebouw (+ weg + stroom/water) rekent door zonder NaN
+  for (const c of NEW) { const S = newCity(5); S.money = 1e12; S.peak = 99999; S.land = maxLand(S); const cx0 = Math.floor(S.size / 2); S.g[(cx0 + 3) * S.size + cx0] = c; S.g[(cx0 + 2) * S.size + cx0] = 'r'; const st = calc(S); ok(Number.isFinite(st.net) && Number.isFinite(st.happy), `calc met ${BD[c].n}`); }
+  // beter uiteindelijk: upgrades werken
+  { const S = newCity(9); S.money = 1e9; S.peak = 99999; const a = calc(S).pwr; S.up.sol = 5; ok(calc(S).pwr >= a, 'zonnepanelen verhogen stroom niet negatief'); }
+}
+function mockCtx0() { const grad = { addColorStop() {} }; return new Proxy({}, { get: (t, k) => (k === 'createLinearGradient' || k === 'createRadialGradient' ? () => grad : k === 'measureText' ? () => ({ width: 10 }) : k in t ? t[k] : () => {}), set: (t, k, v) => { t[k] = v; return true; } }); }
 
 /* ---------- 10. economie-simulatie met een slimme bot ---------- */
 function runBot(hours, opt = {}) {

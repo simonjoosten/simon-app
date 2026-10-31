@@ -1,6 +1,6 @@
 // Learn Spel: dezelfde kit-maker als in Learn Study, maar vanuit de spel-hub (zelf kits maken, bewerken en importeren).
 import * as C from './core.js?v=1';
-import { h, injectCss, CSS } from './study-ui.js?v=1';
+import { h, injectCss, CSS } from './study-ui.js?v=2';
 
 // S: { toast(msg), snd(name), onChange() }
 function host(o) {
@@ -32,11 +32,11 @@ function host(o) {
 }
 
 export async function openKitMaker(o, opts) {
-  const { openMaker } = await import('./study-maker.js?v=1');
+  const { openMaker } = await import('./study-maker.js?v=2');
   return openMaker(host(o), opts || {});
 }
 export async function openKitImport(o) {
-  const { openImportCode } = await import('./study-maker.js?v=1');
+  const { openImportCode } = await import('./study-maker.js?v=2');
   return openImportCode(host(o));
 }
 export async function removeKit(id) { C.Kits.remove(id); }

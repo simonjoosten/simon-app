@@ -10,6 +10,9 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'themapark-')), 'big-themapark.mjs');
 fs.copyFileSync(path.join(here, '..', 'docs', 'big-themapark.js'), tmp);
+// gedeelde grafische helper + gfx/art als buren van het tijdelijke bestand
+for (const f of ['big-gfx.js']) fs.copyFileSync(path.join(here, '..', 'docs', f), path.join(path.dirname(tmp), f));
+for (const d of ['gfx', 'art']) fs.symlinkSync(path.join(here, '..', 'docs', d), path.join(path.dirname(tmp), d));
 const T = await import(pathToFileURL(tmp).href);
 
 const { DEFS, ORDER, newGame, tick, place, paintRoad, findSpot, roadTo, buildCost, upgradeRide, upgradeCost, hire, buyResearch, researchList, isUnlocked,
@@ -31,7 +34,23 @@ ok(GOALS.length === new Set(GOALS.map((g) => g.id)).size, 'unieke doelen');
 ok(ACHS.length === new Set(ACHS.map((g) => g.id)).size, 'unieke prestaties');
 ok(fmtN(1234) === '1.234' && fmtN(12500) === '12,5 k' && fmtN(3.5e6) === '3,5 mln', 'getalopmaak: ' + fmtN(12500) + ' ' + fmtN(3.5e6));
 const ridesOrder = ORDER.filter((i) => DEFS[i].k === 'ride');
-ok(ridesOrder.length === 11, '11 attracties');
+ok(ridesOrder.length === 21, '21 attracties');
+// fase 2: nieuwe inhoud (26 bouwbare dingen), eigen 3D-icoon, degelijke balans
+{
+  const G2 = await import(pathToFileURL(path.join(path.dirname(tmp), 'big-gfx.js')).href);
+  const nw = ORDER.slice(30);
+  ok(nw.length >= 25, 'minstens 25 nieuwe bouwbare dingen: ' + nw.length);
+  for (const id of nw) { const d = DEFS[id]; ok(G2.iconName(d.e) && G2.has(G2.iconName(d.e)), 'nieuw item heeft 3D-icoon: ' + id + ' ' + d.e); ok(d.rp > 0, 'nieuw item vraagt onderzoek: ' + id); }
+  let prev = 0;
+  for (const id of ridesOrder.slice().sort((a, b) => DEFS[a].c - DEFS[b].c)) {
+    const d = DEFS[id], rate = d.cap * d.pr / (d.dur + 4), pay = d.c / rate;
+    ok(pay > 150 && pay < 2400, `terugverdientijd ${id}: ${Math.round(pay)} s`);
+    ok(d.rp >= prev * 0.5, 'onderzoekskosten oplopend ' + id); prev = d.rp;
+  }
+  for (const id of ORDER.filter((i) => ['food', 'shop'].includes(DEFS[i].k))) { const d = DEFS[id]; ok(d.pr / d.c < 0.06 && d.pr / d.c > 0.0015, 'kraam-prijs/kosten ' + id); }
+  ok(GOALS.length >= 41 && ACHS.length >= 30 && Object.keys(PERKS).length >= 10, 'extra doelen/prestaties/voordelen');
+  ok(T.LOOKS.length === 4 && T.LOOKS.every((l) => l.world && l.name), '4 uiterlijken');
+}
 
 /* ---------- 2. bouwen, wegen, paden ---------- */
 section('bouwen en paden');

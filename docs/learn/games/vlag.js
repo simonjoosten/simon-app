@@ -1,6 +1,8 @@
 // Vlaggenroof – veroveer de rode vlag! Goede antwoorden = stappen. Bots verdedigen (en vallen je vlag aan).
 // Pure spellogica (Flag) is los exporteerbaar voor bot-simulaties.
 
+import { attachWorld, fxLayer, gearBtn, iel, di, palette, softShadow, glow, hexA, mix } from './_gxa.js?v=1';
+
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 export const COLS = 9, ROWS = 11, WIN_CAPS = 3, LIMIT = 300;
 export const MY_FLAG = [4, 10], RED_FLAG = [4, 0], MY_HOME = [4, 9], RED_HOME = [4, 1];
@@ -9,13 +11,19 @@ const man = (a, b) => Math.abs(a.c - b.c) + Math.abs(a.r - b.r);
 export const inBlueHalf = (r) => r >= 6;
 export const inRedHalf = (r) => r <= 4;
 export const SHOP = [
-  { id: 'shoes', name: 'Schoenen', emoji: '👟', desc: '+1 stap per goed antwoord', cost: [40, 120, 300] },
-  { id: 'shield', name: 'Schild', emoji: '🛡️', desc: 'Beschermt tegen 1 tik (koop meer)', price: 45 },
-  { id: 'freeze', name: 'Vriesbom', emoji: '🧊', desc: 'Bevriest alle rode spelers 5 s', price: 60 },
-  { id: 'team', name: 'Wachters', emoji: '💂', desc: 'Je teamgenoten verdedigen sneller', cost: [60, 170] },
-  { id: 'radar', name: 'Radar', emoji: '📡', desc: 'Toont wie je kan tikken', cost: [35] },
+  { id: 'shoes', name: 'Schoenen', icon: 'bike', emoji: '👟', desc: '+1 stap per goed antwoord', cost: [40, 120, 300] },
+  { id: 'shield', name: 'Schild', icon: 'shield', emoji: '🛡️', desc: 'Beschermt tegen 1 tik (koop meer)', price: 45 },
+  { id: 'freeze', name: 'Vriesbom', icon: 'snowflake', emoji: '🧊', desc: 'Bevriest alle rode spelers 5 s', price: 60 },
+  { id: 'team', name: 'Wachters', icon: 'medal', emoji: '💂', desc: 'Je teamgenoten verdedigen sneller', cost: [60, 170] },
+  { id: 'radar', name: 'Radar', icon: 'satellite', emoji: '📡', desc: 'Toont wie je kan tikken', cost: [35] },
+  // ---- nieuw
+  { id: 'tele', name: 'Teleport', icon: 'ufo', emoji: '🛸', desc: 'Spring meteen naar de middenlijn', price: 50 },
+  { id: 'decoy', name: 'Lokeend', icon: 'duck', emoji: '🦆', desc: 'Rode wachters lopen 8 s weg van de vlag', price: 55 },
+  { id: 'sprint', name: 'Sprintdrank', icon: 'potion', emoji: '🧪', desc: '+4 stappen meteen', price: 35 },
+  { id: 'robot', name: 'Robotwacht', icon: 'robot', emoji: '🤖', desc: 'Een extra verdediger voor je team (1x)', cost: [130] },
 ];
-const AI = [['Rico', '🦊'], ['Zara', '🐯'], ['Boris', '🐻'], ['Lotte', '🐰'], ['Sem', '🐺'], ['Yara', '🦄']];
+const AI = [['Rico', '🦊', 'fox'], ['Zara', '🐯', 'lion'], ['Boris', '🐻', 'bear'], ['Lotte', '🐰', 'rabbit'], ['Sem', '🐺', 'dog'], ['Yara', '🦄', 'unicorn']];
+export const BLITZ_LIMIT = 150;
 
 export function genWalls(rand) {
   for (let tries = 0; tries < 60; tries++) {
@@ -55,16 +63,16 @@ export function newFlag(opts = {}) {
   const walls = genWalls(rand);
   const names = AI.slice().sort(() => rand() - 0.5);
   const sp = [1.45, 1.05, 0.82][level - 1];
-  const mk = (id, team, role, c, r, interval, name, emoji) => ({ id, team, role, c, r, home: { c, r }, name, emoji, interval, t: rand() * interval, freeze: 0, carry: false, mode: 'patrol', target: null, flash: 0 });
+  const mk = (id, team, role, c, r, interval, name, emoji, icon) => ({ id, team, role, c, r, home: { c, r }, name, emoji, icon, interval, t: rand() * interval, freeze: 0, carry: false, mode: 'patrol', target: null, flash: 0 });
   const agents = [
-    mk(1, 'blue', 'def', 3, 8, 1.2, names[0][0], names[0][1]), mk(2, 'blue', 'def', 5, 7, 1.2, names[1][0], names[1][1]),
-    mk(3, 'red', 'guard', 3, 2, 1.0 * sp, names[2][0], names[2][1]), mk(4, 'red', 'guard', 5, 3, 1.0 * sp, names[3][0], names[3][1]),
-    mk(5, 'red', 'raider', 4, 1, 0.68 * sp, names[4][0], names[4][1]),
+    mk(1, 'blue', 'def', 3, 8, 1.2, names[0][0], names[0][1], names[0][2]), mk(2, 'blue', 'def', 5, 7, 1.2, names[1][0], names[1][1], names[1][2]),
+    mk(3, 'red', 'guard', 3, 2, 1.0 * sp, names[2][0], names[2][1], names[2][2]), mk(4, 'red', 'guard', 5, 3, 1.0 * sp, names[3][0], names[3][1], names[3][2]),
+    mk(5, 'red', 'raider', 4, 1, 0.68 * sp, names[4][0], names[4][1], names[4][2]),
   ];
   agents[4].mode = 'wait';
   return {
-    rand, level, fx, walls, agents, t: 0, phase: 'play', coins: (fx.startCash || 0) * 0.3, bank: 1, up: { shoes: 0, team: 0, radar: 0 }, shieldN: fx.shield || 0, freezeN: 0,
-    me: { c: MY_HOME[0], r: MY_HOME[1], carry: false, walk: [], wt: 0, invuln: 2, name: opts.name || 'Jij', emoji: '😎', flash: 0 },
+    rand, level, fx, walls, agents, t: 0, phase: 'play', coins: (fx.startCash || 0) * 0.3, bank: 1, up: { shoes: 0, team: 0, radar: 0, robot: 0 }, decoyT: 0, blitz: !!opts.blitz, winCaps: opts.blitz ? 99 : WIN_CAPS, shieldN: fx.shield || 0, freezeN: 0,
+    me: { c: MY_HOME[0], r: MY_HOME[1], carry: false, walk: [], wt: 0, invuln: 2, name: opts.name || 'Jij', emoji: '😎', icon: 'astronaut', flash: 0 },
     caps: { blue: 0, red: 0 }, streak: 0, best: 0, correct: 0, wrong: 0, tagged: 0, tags: 0, ev: [], noFx: !!opts.noFx, spent: 0, chase: [2, 3, 3.5][level - 1], raiderStart: [34, 24, 16][level - 1], flagHeldRed: false,
   };
 }
@@ -73,9 +81,14 @@ const shopCost = (st, id) => { const u = SHOP.find((x) => x.id === id); if (u.pr
 export { shopCost };
 export function buy(st, id) {
   const c = shopCost(st, id); if (c == null || st.coins < c) return false;
+  if (id === 'robot' && st.up.robot >= 1) return false;
   if (id === 'shield' && st.shieldN >= 4) return false; if (id === 'freeze' && st.freezeN >= 3) return false;
   st.coins -= c; st.spent += c;
-  if (id === 'shield') st.shieldN++; else if (id === 'freeze') st.freezeN++; else st.up[id]++;
+  if (id === 'shield') st.shieldN++; else if (id === 'freeze') st.freezeN++; else if (st.up[id] != null) st.up[id]++;
+  if (id === 'tele') { st.me.c = 4; st.me.r = 5; st.me.walk = []; }
+  if (id === 'decoy') st.decoyT = 8;
+  if (id === 'sprint') st.bank = Math.min(14, st.bank + 4);
+  if (id === 'robot') st.agents.push({ id: 9, team: 'blue', role: 'def', c: 4, r: 8, home: { c: 4, r: 8 }, name: 'Robbie', emoji: '🤖', icon: 'robot', interval: 0.95, t: 0, freeze: 0, carry: false, mode: 'patrol', target: null, flash: 0 });
   if (id === 'team') for (const a of st.agents) if (a.team === 'blue') a.interval = 1.2 * Math.pow(0.78, st.up.team);
   return true;
 }
@@ -132,6 +145,7 @@ function moveAgent(st, a) {
   };
   if (a.role === 'guard') {
     const me = st.me, d = man(a, me);
+    if (st.decoyT > 0) { if (!a.target || (a.c === a.target.c && a.r === a.target.r)) a.target = { c: a.c < 4 ? 0 : COLS - 1, r: 1 + Math.floor(rand() * 3) }; if (st.walls.has(key(a.target.c, a.target.r)) || !stepTo(a.target, { maxRow: 4 })) a.target = null; return; }
     if (inRedHalf(me.r) && d <= st.chase && me.invuln <= 0) { stepTo(me, { maxRow: 4 }); return; }
     if (!a.target || (a.c === a.target.c && a.r === a.target.r) || rand() < 0.1) a.target = { c: Math.floor(rand() * COLS), r: Math.floor(rand() * 5) };
     if (st.walls.has(key(a.target.c, a.target.r)) || !stepTo(a.target, { maxRow: 4 })) a.target = null;
@@ -162,7 +176,7 @@ function moveAgent(st, a) {
 }
 export function step(st, dt) {
   if (st.phase !== 'play') return;
-  st.t += dt;
+  st.t += dt; if (st.decoyT > 0) st.decoyT -= dt;
   for (const e of st.ev) e.life -= dt; if (st.ev.length) st.ev = st.ev.filter((e) => e.life > 0);
   const me = st.me; if (me.invuln > 0) me.invuln -= dt; if (me.flash > 0) me.flash -= dt;
   if (me.walk.length) {
@@ -183,7 +197,7 @@ export function step(st, dt) {
     if (a.t <= 0) { a.t += a.interval * (0.9 + st.rand() * 0.2); moveAgent(st, a); }
   }
   checkTags(st);
-  if (st.caps.blue >= WIN_CAPS || st.caps.red >= WIN_CAPS || st.t >= (st.limit || LIMIT)) st.phase = st.caps.blue > st.caps.red ? 'won' : st.caps.blue === st.caps.red ? 'draw' : 'lost';
+  if (st.caps.blue >= st.winCaps || st.caps.red >= st.winCaps || st.t >= (st.limit || LIMIT)) st.phase = st.caps.blue > st.caps.red ? 'won' : st.caps.blue === st.caps.red ? 'draw' : 'lost';
 }
 // bot-speler (voor simulatie): wacht op de middenlijn, bevriest de wachters en sprint naar de vlag
 export function autoPlay(st) {
@@ -212,56 +226,67 @@ export function autoPlay(st) {
 const E = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
 const clr = (e) => { while (e.firstChild) e.removeChild(e.firstChild); };
 const addCss = (id, t) => { const s = document.createElement('style'); s.setAttribute('data-learn-g', id); s.textContent = t; document.head.appendChild(s); return s; };
-const EF = '"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif';
-const T = 30, CW = COLS * T, CH = ROWS * T;
+const T = 34, CW = COLS * T, CH = ROWS * T;
 const CSS = `
-.vl-root{position:relative;display:flex;flex-direction:column;gap:6px;width:100%;height:100%;min-height:440px;padding:6px;box-sizing:border-box;color:var(--ink);overflow:auto}
+.vl-root{position:relative;display:flex;flex-direction:column;gap:8px;width:100%;height:100%;min-height:460px;padding:8px;box-sizing:border-box;color:var(--ink);overflow:auto;font-size:calc(16px*var(--gfx-font,1))}
 .vl-root *{box-sizing:border-box}
 .vl-hud{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.vl-chip{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:3px 9px;font-weight:800;font-size:13px;white-space:nowrap}
-.vl-score{font-size:16px;font-weight:900;padding:3px 12px;border-radius:12px;background:linear-gradient(90deg,#3b82f6 50%,#ef4444 50%);color:#fff}
-.vl-cv{width:100%;max-width:${CW + 40}px;align-self:center;aspect-ratio:${CW}/${CH};border-radius:14px;border:2px solid var(--line);display:block;background:#4d7c0f;touch-action:manipulation}
-.vl-shop{display:grid;grid-template-columns:repeat(5,1fr);gap:5px}
-.vl-up{border:2px solid var(--line);background:var(--card);color:var(--ink);border-radius:12px;padding:3px 1px;font:inherit;font-size:10px;text-align:center;cursor:pointer;opacity:.6;line-height:1.1}
-.vl-up .e{font-size:19px;display:block}.vl-up b{display:block}.vl-up .c{font-weight:900;font-size:11px;display:block}
+.vl-chip{background:color-mix(in srgb,var(--card) 92%,transparent);border:1px solid var(--line);border-radius:14px;padding:6px 11px;font-weight:800;font-size:calc(15px*var(--gfx-font,1));white-space:nowrap;display:flex;gap:5px;align-items:center;min-height:44px;font-family:inherit;color:var(--ink)}
+.vl-score{font-size:calc(19px*var(--gfx-font,1));font-weight:900;padding:6px 14px;border-radius:14px;background:linear-gradient(90deg,#3b82f6 50%,#ef4444 50%);color:#fff;min-height:44px;display:flex;align-items:center}
+.vl-cv{width:100%;max-width:min(100%,380px);align-self:center;aspect-ratio:${CW}/${CH};border-radius:16px;border:3px solid color-mix(in srgb,var(--line) 70%,#000);display:block;background:#4d7c0f;touch-action:manipulation;box-shadow:0 8px 22px #0005}
+.vl-shop{display:flex;gap:8px;overflow-x:auto;padding:3px 2px 6px;-webkit-overflow-scrolling:touch}
+.vl-up{flex:0 0 auto;width:calc(84px*var(--gfx-scale,1));min-height:calc(84px*var(--gfx-scale,1));border:2px solid var(--line);background:color-mix(in srgb,var(--card) 94%,transparent);color:var(--ink);border-radius:14px;padding:4px 2px;font:inherit;font-size:calc(12px*var(--gfx-font,1));text-align:center;cursor:pointer;opacity:.65;line-height:1.1}
+.vl-up .e{display:block;margin:0 auto}.vl-up b{display:block}.vl-up .c{font-weight:900;font-size:calc(14px*var(--gfx-font,1));display:block}
 .vl-up.can{opacity:1;border-color:#22c55e;box-shadow:0 0 0 2px #22c55e44}
-.vl-q{flex:1;min-height:140px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:6px;overflow:auto}
-.vl-ov{position:absolute;inset:0;background:color-mix(in srgb,var(--card) 93%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:18px;z-index:9}
-.vl-ov h2{margin:0;font-size:26px}.vl-ov p{margin:0;max-width:330px;opacity:.85;line-height:1.35}.vl-ov .big{font-size:60px}
-.vl-btn{border:0;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border-radius:16px;font:inherit;font-weight:900;font-size:18px;padding:12px 28px;cursor:pointer;box-shadow:0 6px 16px #6366f166}
-.vl-toast{position:absolute;left:50%;top:44px;transform:translateX(-50%);background:#111d;color:#fff;border-radius:12px;padding:6px 12px;font-weight:800;z-index:5;white-space:nowrap}
+.vl-q{flex:1;min-height:160px;background:color-mix(in srgb,var(--card) 93%,transparent);border:1px solid var(--line);border-radius:18px;padding:8px;overflow:auto}
+.vl-ov{position:absolute;inset:0;background:color-mix(in srgb,var(--card) 88%,transparent);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:12px;padding:18px;z-index:40}
+.vl-ov h2{margin:0;font-size:calc(30px*var(--gfx-font,1))}.vl-ov p{margin:0;max-width:340px;opacity:.9;line-height:1.4}
+.vl-btn{border:0;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;border-radius:18px;font:inherit;font-weight:900;font-size:calc(19px*var(--gfx-font,1));padding:14px 28px;min-height:54px;cursor:pointer;box-shadow:0 6px 16px #6366f166}
+.vl-btn.alt{background:linear-gradient(135deg,#f59e0b,#ef4444);box-shadow:0 6px 16px #ef444466}
+.vl-toast{position:absolute;left:50%;top:60px;transform:translateX(-50%);background:#111d;color:#fff;border-radius:14px;padding:8px 14px;font-weight:800;z-index:35;white-space:nowrap;font-size:calc(15px*var(--gfx-font,1))}
 `;
 
 export default {
   id: 'vlag', name: 'Vlaggenroof', emoji: '🚩', color: '#3b82f6',
-  desc: 'Goede antwoorden geven stappen. Sluip langs de wachters, pak de rode vlag en breng hem thuis!',
-  tags: ['strategie', 'bots', 'kaart'], minutes: 5, duo: false,
+  desc: 'Goede antwoorden geven stappen. Sluip langs de wachters, pak de rode vlag en breng hem thuis! Of speel de Blitz: zoveel mogelijk vlaggen in 2,5 minuut.',
+  tags: ['strategie', 'bots', 'kaart', 'blitz'], minutes: 5, duo: false,
   create(host, env) {
     const style = addCss('vlag', CSS);
     const f0 = env.fx || {};
     const fx = { startCash: clamp(+f0.startCash || 0, 0, 5000), cashMult: clamp(+f0.cashMult || 1, 0.5, 5), shield: Math.round(clamp((+f0.shield || 0), 0, 3)), hints: Math.round(clamp(+f0.hints || 0, 0, 5)) };
-    const st = newFlag({ level: env.level || 2, rand: env.rand, fx, name: env.name });
+    let st = newFlag({ level: env.level || 2, rand: env.rand, fx, name: env.name });
     st.limit = LIMIT + clamp(+f0.timeBonus || 0, 0, 60);
     const root = E('div', 'vl-root'); host.appendChild(root);
-    let dead = false, ended = false, cur = null, started = false, raf = 0, last = 0, nQ = 0, queue = [], uiT = 0, toastEl = null;
+    const bgw = attachWorld(root, env, 'vlag'); const fl = fxLayer(root, env);
+    const world = bgw.world, pal = palette(world);
+    const wallIcons = (world.deco && world.deco.length ? world.deco : ['tree', 'rock']);
+    let dead = false, ended = false, cur = null, started = false, raf = 0, last = 0, nQ = 0, queue = [], uiT = 0, toastEl = null, blitz = false, seen = new Set();
     const timers = new Set();
     const later = (fn, ms) => { const t = setTimeout(() => { timers.delete(t); if (!dead) fn(); }, ms); timers.add(t); return t; };
-    const hud = E('div', 'vl-hud'); const cScore = E('div', 'vl-score'), cBank = E('div', 'vl-chip'), cCoins = E('div', 'vl-chip'), cTime = E('div', 'vl-chip'), cBuf = E('div', 'vl-chip'); hud.append(cScore, cBank, cCoins, cTime, cBuf);
-    const cv = E('canvas', 'vl-cv'); const dpr = Math.min(2, globalThis.devicePixelRatio || 1); cv.width = CW * dpr; cv.height = CH * dpr; const ctx = cv.getContext('2d');
+    const qq = () => (env.gfx && env.gfx.q != null ? env.gfx.q : 1);
+    const hud = E('div', 'vl-hud'); const cScore = E('div', 'vl-score'), cBank = E('div', 'vl-chip'), cCoins = E('div', 'vl-chip'), cTime = E('div', 'vl-chip'), cBuf = E('div', 'vl-chip'); hud.append(cScore, cBank, cCoins, cTime, cBuf, gearBtn());
+    const cv = E('canvas', 'vl-cv'); const dpr = Math.min(2, Math.max(1, globalThis.devicePixelRatio || 1) * ((env.gfx && env.gfx.q === 0) ? 1 : 1.25)); cv.width = Math.round(CW * dpr); cv.height = Math.round(CH * dpr); const ctx = cv.getContext('2d');
     const shop = E('div', 'vl-shop'); const upEls = {};
-    for (const u of SHOP) { const b = E('button', 'vl-up'); b.type = 'button'; b.title = u.desc; const c = E('span', 'c'), nm = E('b'); b.append(E('span', 'e', u.emoji), nm, c); b.addEventListener('click', () => { if (!started || ended) return; if (buy(st, u.id)) { env.snd.play('power'); toast(u.emoji + ' ' + u.name); } else env.snd.play('klik'); refresh(); }); upEls[u.id] = { b, c, nm }; shop.appendChild(b); }
-    const freezeBtn = E('button', 'vl-chip', '🧊 Gebruik vriesbom'); freezeBtn.type = 'button'; freezeBtn.style.cssText = 'cursor:pointer;display:none;border-color:#22d3ee';
-    freezeBtn.addEventListener('click', () => { if (useFreeze(st)) { env.snd.play('power'); toast('🧊 Rood bevroren!'); } refresh(); });
+    for (const u of SHOP) { const b = E('button', 'vl-up'); b.type = 'button'; b.title = u.desc; const c = E('span', 'c'), nm = E('b'); b.append(iel(u.icon, 36, 'e'), nm, c); b.addEventListener('click', () => { if (!started || ended) return; if (buy(st, u.id)) { env.snd.play('power'); toast(u.name + '!', u.icon); fl.burstEl(b, 'sparkle', 12); } else env.snd.play('klik'); refresh(); }); upEls[u.id] = { b, c, nm }; shop.appendChild(b); }
+    const freezeBtn = E('button', 'vl-chip'); freezeBtn.type = 'button'; freezeBtn.append(iel('snowflake', 26), E('span', '', 'Gebruik vriesbom')); freezeBtn.style.cssText = 'cursor:pointer;display:none;border-color:#22d3ee';
+    freezeBtn.addEventListener('click', () => { if (useFreeze(st)) { env.snd.play('power'); toast('Rood bevroren!', 'snowflake'); fl.burst((root.clientWidth || 360) / 2, 200, 'sparkle', 30); } refresh(); });
     const qhost = E('div', 'vl-q');
     root.append(hud, cv, freezeBtn, shop, qhost);
-    function toast(t) { if (toastEl) toastEl.remove(); toastEl = E('div', 'vl-toast', t); root.appendChild(toastEl); const el = toastEl; later(() => el.remove(), 1700); }
+    function toast(t, icon) { if (toastEl) toastEl.remove(); toastEl = E('div', 'vl-toast'); toastEl.style.display = 'flex'; toastEl.style.gap = '6px'; toastEl.style.alignItems = 'center'; if (icon) toastEl.appendChild(iel(icon, 24)); toastEl.appendChild(E('span', '', t)); root.appendChild(toastEl); const el = toastEl; later(() => el.remove(), 1700); }
+    const chip = (el, ico, txt) => { clr(el); el.append(iel(ico, 26), E('span', '', txt)); };
+    let rk = '';
     function refresh() {
       const m = Math.max(0, Math.floor(st.limit - st.t));
-      cScore.textContent = '🔵 ' + st.caps.blue + ' - ' + st.caps.red + ' 🔴'; cBank.textContent = '👣 ' + st.bank; cCoins.textContent = '🪙 ' + Math.floor(st.coins); cTime.textContent = '⏱ ' + Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0');
-      cBuf.textContent = (st.shieldN ? '🛡️' + st.shieldN + ' ' : '') + (st.freezeN ? '🧊' + st.freezeN : '') || '';
-      cBuf.style.display = cBuf.textContent ? '' : 'none'; freezeBtn.style.display = st.freezeN > 0 ? '' : 'none';
-      for (const u of SHOP) { const c = shopCost(st, u.id), el = upEls[u.id]; el.c.textContent = c == null ? 'MAX' : String(c); el.nm.textContent = u.name + (u.cost ? ' ' + st.up[u.id] : ''); el.b.className = 'vl-up' + (c != null && st.coins >= c ? ' can' : ''); }
+      const k = st.caps.blue + '|' + st.caps.red + '|' + st.bank + '|' + Math.floor(st.coins) + '|' + m + '|' + st.shieldN + '|' + st.freezeN + '|' + JSON.stringify(st.up);
+      if (k !== rk) {
+        rk = k;
+        cScore.textContent = st.caps.blue + ' - ' + st.caps.red; chip(cBank, 'bike', String(st.bank)); chip(cCoins, 'coin', String(Math.floor(st.coins))); chip(cTime, 'hourglass', Math.floor(m / 60) + ':' + String(m % 60).padStart(2, '0'));
+        clr(cBuf); if (st.shieldN) cBuf.append(iel('shield', 24), E('span', '', st.shieldN + ' ')); if (st.freezeN) cBuf.append(iel('snowflake', 24), E('span', '', String(st.freezeN)));
+        cBuf.style.display = cBuf.firstChild ? '' : 'none'; freezeBtn.style.display = st.freezeN > 0 ? '' : 'none';
+        for (const u of SHOP) { const c = shopCost(st, u.id), el = upEls[u.id]; el.c.textContent = c == null ? 'MAX' : String(c); el.nm.textContent = u.name + (u.cost && u.id !== 'robot' ? ' ' + st.up[u.id] : ''); el.b.className = 'vl-up' + (c != null && st.coins >= c && !(u.id === 'robot' && st.up.robot >= 1) ? ' can' : ''); }
+      }
     }
+    const toRoot = (c, r) => { try { const a = cv.getBoundingClientRect(), b = root.getBoundingClientRect(), k = (a.width || CW) / CW; return [a.left - b.left + (c * T + T / 2) * k, a.top - b.top + (r * T + T / 2) * k]; } catch (e) { return [c * T, r * T]; } };
     cv.addEventListener('pointerdown', (e) => {
       if (!started || ended) return;
       const r = cv.getBoundingClientRect(); const x = (e.clientX - r.left) / (r.width || CW) * COLS, y = (e.clientY - r.top) / (r.height || CH) * ROWS;
@@ -269,41 +294,44 @@ export default {
     });
 
     // ---- tekenen
-    function flagShape(x, y, color, wave) { ctx.fillStyle = '#e5e7eb'; ctx.fillRect(x - 1, y - 12, 2, 24); ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x + 1, y - 12); ctx.lineTo(x + 13, y - 8 + Math.sin(wave) * 2); ctx.lineTo(x + 1, y - 3); ctx.closePath(); ctx.fill(); }
-    function agentShape(x, y, a, ring, label) {
-      ctx.beginPath(); ctx.arc(x, y + 2, 12, 0, 6.2832); ctx.fillStyle = '#0003'; ctx.fill();
-      ctx.beginPath(); ctx.arc(x, y, 12, 0, 6.2832); ctx.fillStyle = a.freeze > 0 ? '#bae6fd' : '#fff'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = ring; ctx.stroke();
-      ctx.font = '16px ' + EF; ctx.fillText(a.emoji, x, y + 1);
-      if (a.carry) flagShape(x + 8, y - 10, a.team === 'red' ? '#3b82f6' : '#ef4444', st.t * 6);
-      if (a.freeze > 0) { ctx.font = '12px ' + EF; ctx.fillText('🧊', x + 8, y - 10); }
+    function flagShape(x, y, color, wave) { ctx.fillStyle = '#e5e7eb'; ctx.fillRect(x - 1.5, y - 15, 3, 30); ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x + 1.5, y - 15); ctx.lineTo(x + 17, y - 10 + Math.sin(wave) * 2.5); ctx.lineTo(x + 1.5, y - 3); ctx.closePath(); ctx.fill(); ctx.strokeStyle = '#0006'; ctx.lineWidth = 1; ctx.stroke(); }
+    function agentShape(x, y, a, ring) {
+      const q = qq();
+      ctx.beginPath(); ctx.ellipse(x, y + 14, 12, 4, 0, 0, 6.2832); ctx.fillStyle = '#0004'; ctx.fill();
+      ctx.beginPath(); ctx.arc(x, y + 4, 15, 0, 6.2832); ctx.fillStyle = a.freeze > 0 ? '#bae6fdcc' : 'rgba(255,255,255,.55)'; ctx.fill(); ctx.lineWidth = 3.5; ctx.strokeStyle = ring; ctx.stroke();
+      di(ctx, a.icon || 'astronaut', x, y - 1, 34, { q, shadow: false });
+      if (a.carry) flagShape(x + 10, y - 12, a.team === 'red' ? '#3b82f6' : '#ef4444', st.t * 6);
+      if (a.freeze > 0) di(ctx, 'snowflake', x + 11, y - 12, 16, { q, shadow: false });
     }
     function draw() {
+      const q = qq();
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-      for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) { ctx.fillStyle = (c + r) % 2 ? '#65a30d' : '#5b9a0c'; if (r >= 6) ctx.fillStyle = (c + r) % 2 ? '#4f9d6d' : '#468c62'; if (r <= 4) ctx.fillStyle = (c + r) % 2 ? '#a3a33a' : '#97973a'; ctx.fillRect(c * T, r * T, T, T); }
-      ctx.fillStyle = '#3b82f633'; ctx.fillRect(3 * T, 9 * T, 3 * T, 2 * T); ctx.fillStyle = '#ef444433'; ctx.fillRect(3 * T, 0, 3 * T, 2 * T);
-      ctx.strokeStyle = '#fff8'; ctx.setLineDash && ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 5.5 * T); ctx.lineTo(CW, 5.5 * T); ctx.stroke(); ctx.setLineDash && ctx.setLineDash([]);
-      ctx.font = '22px ' + EF; for (const k of st.walls) { const [c, r] = k.split(',').map(Number); ctx.fillText((c + r) % 3 ? '🌳' : '🪨', c * T + T / 2, r * T + T / 2 + 1); }
-      // vlaggen
+      const aBlue = mix(pal.a, '#3b82f6', 0.28), bBlue = mix(pal.b, '#3b82f6', 0.28), aRed = mix(pal.a, '#ef4444', 0.28), bRed = mix(pal.b, '#ef4444', 0.28);
+      for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) { const odd = (c + r) % 2; ctx.fillStyle = r >= 6 ? (odd ? aBlue : bBlue) : r <= 4 ? (odd ? aRed : bRed) : (odd ? pal.a : pal.b); ctx.fillRect(c * T, r * T, T, T); }
+      ctx.fillStyle = '#3b82f655'; ctx.fillRect(3 * T, 9 * T, 3 * T, 2 * T); ctx.fillStyle = '#ef444455'; ctx.fillRect(3 * T, 0, 3 * T, 2 * T);
+      ctx.strokeStyle = '#fff9'; ctx.setLineDash && ctx.setLineDash([6, 6]); ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, 5.5 * T); ctx.lineTo(CW, 5.5 * T); ctx.stroke(); ctx.setLineDash && ctx.setLineDash([]);
+      let wi = 0; for (const k of st.walls) { const [c, r] = k.split(',').map(Number); di(ctx, wallIcons[(c * 3 + r) % wallIcons.length], c * T + T / 2, r * T + T / 2 - 1, T * 1.05, { q }); wi++; }
       const redHere = !st.agents.some((a) => a.carry && a.team === 'blue') && !st.me.carry; const blueHere = !st.flagHeldRed;
       if (redHere) flagShape(RED_FLAG[0] * T + T / 2, RED_FLAG[1] * T + T / 2, '#ef4444', st.t * 5);
       if (blueHere) flagShape(MY_FLAG[0] * T + T / 2, MY_FLAG[1] * T + T / 2, '#3b82f6', st.t * 5 + 1);
-      // bereikbare tegels
       if (st.bank > 0 && !st.me.walk.length && started) {
-        ctx.fillStyle = '#ffffff44';
-        const seen = new Map([[key(st.me.c, st.me.r), 0]]), q = [{ c: st.me.c, r: st.me.r }];
-        for (let i = 0; i < q.length; i++) { const p = q[i], d = seen.get(key(p.c, p.r)); if (d >= st.bank) continue; for (const [dx, dy] of D4) { const c = p.c + dx, r = p.r + dy, k = key(c, r); if (c < 0 || r < 0 || c >= COLS || r >= ROWS || st.walls.has(k) || seen.has(k)) continue; seen.set(k, d + 1); q.push({ c, r }); ctx.beginPath(); ctx.arc(c * T + T / 2, r * T + T / 2, 3, 0, 6.2832); ctx.fill(); } }
+        ctx.fillStyle = '#ffffff66';
+        const sn = new Map([[key(st.me.c, st.me.r), 0]]), qu = [{ c: st.me.c, r: st.me.r }];
+        for (let i = 0; i < qu.length; i++) { const p = qu[i], d = sn.get(key(p.c, p.r)); if (d >= st.bank) continue; for (const [dx, dy] of D4) { const c = p.c + dx, r = p.r + dy, k = key(c, r); if (c < 0 || r < 0 || c >= COLS || r >= ROWS || st.walls.has(k) || sn.has(k)) continue; sn.set(k, d + 1); qu.push({ c, r }); ctx.beginPath(); ctx.arc(c * T + T / 2, r * T + T / 2, 3.5, 0, 6.2832); ctx.fill(); } }
       }
-      // radar: gevarenzones van de wachters
-      if (st.up.radar) for (const a of st.agents) if (a.team === 'red' && a.role === 'guard') { ctx.beginPath(); ctx.arc(a.c * T + T / 2, a.r * T + T / 2, st.chase * T * 0.9, 0, 6.2832); ctx.fillStyle = '#ef444418'; ctx.fill(); ctx.strokeStyle = '#ef444455'; ctx.lineWidth = 1; ctx.stroke(); }
+      if (st.up.radar) for (const a of st.agents) if (a.team === 'red' && a.role === 'guard') { ctx.beginPath(); ctx.arc(a.c * T + T / 2, a.r * T + T / 2, st.chase * T * 0.9, 0, 6.2832); ctx.fillStyle = '#ef444418'; ctx.fill(); ctx.strokeStyle = '#ef444477'; ctx.lineWidth = 1.5; ctx.stroke(); }
       for (const a of st.agents) agentShape(a.c * T + T / 2, a.r * T + T / 2 + Math.sin(st.t * 5 + a.id) * 1, a, a.team === 'red' ? '#ef4444' : '#3b82f6');
-      const me = st.me; if (!(me.invuln > 0 && Math.floor(st.t * 8) % 2)) agentShape(me.c * T + T / 2, me.r * T + T / 2, { emoji: me.emoji, freeze: 0, carry: me.carry, team: 'blue' }, '#facc15');
-      if (me.invuln > 0) { ctx.beginPath(); ctx.arc(me.c * T + T / 2, me.r * T + T / 2, 16, 0, 6.2832); ctx.strokeStyle = '#facc15aa'; ctx.lineWidth = 2; ctx.stroke(); }
+      const me = st.me; if (!(me.invuln > 0 && Math.floor(st.t * 8) % 2)) agentShape(me.c * T + T / 2, me.r * T + T / 2, { icon: me.icon, freeze: 0, carry: me.carry, team: 'blue' }, '#facc15');
+      if (me.invuln > 0) { ctx.beginPath(); ctx.arc(me.c * T + T / 2, me.r * T + T / 2 + 3, 19, 0, 6.2832); ctx.strokeStyle = '#facc15aa'; ctx.lineWidth = 2; ctx.stroke(); }
+      if (st.decoyT > 0) { ctx.font = 'bold 13px sans-serif'; ctx.fillStyle = '#fde047'; ctx.strokeStyle = '#000b'; ctx.lineWidth = 3; const t = 'Lokeend: ' + Math.ceil(st.decoyT) + ' s'; ctx.strokeText(t, CW / 2, 12); ctx.fillText(t, CW / 2, 12); }
       for (const e of st.ev) {
-        const a = clamp(e.life / e.max, 0, 1); ctx.globalAlpha = Math.min(1, a * 1.5); ctx.font = 'bold 18px sans-serif'; ctx.lineWidth = 4; ctx.strokeStyle = '#000b';
-        const txt = { grab: ['🚩 Vlag gepakt! Naar huis!', '#fde047'], score: ['🎉 PUNT!', '#86efac'], tagged: ['💥 Getikt!', '#fca5a5'], drop: ['Vlag kwijt', '#fca5a5'], stolen: ['⚠️ Rood pakt jouw vlag!', '#fca5a5'], redscore: ['Rood scoort...', '#fca5a5'], tag: ['👏 Aanvaller getikt!', '#86efac'], shield: ['🛡️ Geblokt!', '#93c5fd'], freeze: ['🧊 Bevroren!', '#67e8f9'] }[e.k];
+        const a = clamp(e.life / e.max, 0, 1); ctx.globalAlpha = Math.min(1, a * 1.5); ctx.font = 'bold 20px sans-serif'; ctx.lineWidth = 4; ctx.strokeStyle = '#000b';
+        const txt = { grab: ['Vlag gepakt! Naar huis!', '#fde047'], score: ['PUNT!', '#86efac'], tagged: ['Getikt!', '#fca5a5'], drop: ['Vlag kwijt', '#fca5a5'], stolen: ['Rood pakt jouw vlag!', '#fca5a5'], redscore: ['Rood scoort...', '#fca5a5'], tag: ['Aanvaller getikt!', '#86efac'], shield: ['Geblokt!', '#93c5fd'], freeze: ['Bevroren!', '#67e8f9'] }[e.k];
         if (txt) { ctx.fillStyle = txt[1]; const y = CH / 2 - (1 - a) * 20; ctx.strokeText(txt[0], CW / 2, y); ctx.fillText(txt[0], CW / 2, y); }
         ctx.globalAlpha = 1;
+        if (!seen.has(e)) { seen.add(e); const mp = toRoot(me.c, me.r); if (e.k === 'score') fl.burst(mp[0], mp[1], 'confetti', 40); else if (e.k === 'grab') fl.burst(mp[0], mp[1], 'stars', 14); else if (e.k === 'tagged') fl.burst(mp[0], mp[1], 'smoke', 8); else if (e.k === 'tag') { const rp = toRoot(e.c, e.r); fl.burst(rp[0], rp[1], 'sparkle', 12); } else if (e.k === 'shield') fl.burst(mp[0], mp[1], 'sparkle', 10); }
       }
+      if (seen.size > 80) seen = new Set([...seen].filter((e) => st.ev.includes(e)));
     }
 
     // ---- vragen
@@ -320,11 +348,10 @@ export default {
         if (dead || ended || cur !== h) return; cur = null; r = r || {};
         try { env.report({ q, ok: !!r.ok, ms: r.ms || 0 }); } catch (e) { /* hub */ }
         const res = answer(st, !!r.ok, r.ms || 9999);
-        env.snd.play(r.ok ? 'goed' : 'fout'); if (res.steps) toast('+' + res.steps + ' stappen: tik waar je heen wilt');
+        env.snd.play(r.ok ? 'goed' : 'fout'); if (res.steps) { toast('+' + res.steps + ' stappen: tik waar je heen wilt', 'bike'); fl.burstEl(cBank, 'sparkle', 8); }
         refresh(); later(nextQuestion, 30);
       }).catch(() => { if (!dead && !ended && cur === h) { cur = null; later(nextQuestion, 300); } });
     }
-    let seenEv = 0;
     function loop() {
       raf = 0; if (dead) return;
       if (host.isConnected === false) { later(loop, 500); last = performance.now(); return; }
@@ -340,18 +367,25 @@ export default {
     function finish() {
       if (ended) return; ended = true;
       if (cur) { try { cur.cancel(); } catch (e) { /* */ } cur = null; }
-      refresh();
+      rk = ''; refresh();
       const won = st.phase === 'won', draw0 = st.phase === 'draw';
-      const ov = E('div', 'vl-ov'); ov.append(E('div', 'big', won ? '🏆' : draw0 ? '🤝' : '😅'), E('h2', '', won ? 'Je team wint!' : draw0 ? 'Gelijkspel' : 'Rood wint'), E('p', '', 'Eindstand: blauw ' + st.caps.blue + ' - rood ' + st.caps.red + '.'));
-      root.appendChild(ov); env.snd.play(won ? 'win' : 'lose');
+      const ov = E('div', 'vl-ov'); const big = E('div', 'big'); big.appendChild(iel(won ? 'trophy' : draw0 ? 'medal' : 'flag', 96));
+      ov.append(big, E('h2', '', won ? 'Je team wint!' : draw0 ? 'Gelijkspel' : 'Rood wint'), E('p', '', 'Eindstand: blauw ' + st.caps.blue + ' - rood ' + st.caps.red + '.'));
+      root.appendChild(ov); env.snd.play(won ? 'win' : 'lose'); fl.burst((root.clientWidth || 360) / 2, 160, won ? 'confetti' : 'smoke', won ? 60 : 10);
       const score = st.caps.blue * 100 + st.correct * 3 + st.tags * 10 + (won ? 200 : 0);
-      later(() => env.end({ score, win: won ? true : draw0 ? null : false, stats: { correct: st.correct, wrong: st.wrong, 'beste reeks': st.best, vlaggen: st.caps.blue, getikt: st.tagged, 'aanvallers getikt': st.tags }, summary: 'Blauw ' + st.caps.blue + ' - ' + st.caps.red + ' rood · ' + st.correct + ' goed, ' + st.tagged + 'x getikt.' }), 1800);
+      later(() => env.end({ score, win: won ? true : draw0 ? null : false, stats: { correct: st.correct, wrong: st.wrong, 'beste reeks': st.best, vlaggen: st.caps.blue, getikt: st.tagged, 'aanvallers getikt': st.tags }, summary: (blitz ? 'Blitz: ' : '') + 'Blauw ' + st.caps.blue + ' - ' + st.caps.red + ' rood · ' + st.correct + ' goed, ' + st.tagged + 'x getikt.' }), 1800);
     }
-    function start() { if (started) return; started = true; last = performance.now(); refresh(); nextQuestion(); }
-    const intro = E('div', 'vl-ov'); const sb = E('button', 'vl-btn', 'Tik om te beginnen'); sb.type = 'button'; sb.addEventListener('click', () => { intro.remove(); start(); });
-    intro.append(E('div', 'big', '🚩'), E('h2', '', 'Vlaggenroof'), E('p', '', 'Elk goed antwoord geeft stappen: tik op de kaart om te lopen. Pak de rode vlag bovenin en breng hem naar je basis. Rode wachters tikken je in hun helft!'), sb);
+    function start(mode) {
+      if (started) return; started = true; blitz = mode === 'blitz';
+      if (blitz) { st = newFlag({ level: env.level || 2, rand: env.rand, fx, name: env.name, blitz: true }); st.limit = BLITZ_LIMIT + clamp(+f0.timeBonus || 0, 0, 60); }
+      last = performance.now(); refresh(); nextQuestion();
+    }
+    const intro = E('div', 'vl-ov');
+    const mk = (txt, cls, m) => { const b = E('button', 'vl-btn ' + cls, txt); b.type = 'button'; b.addEventListener('click', () => { intro.remove(); start(m); }); return b; };
+    const bigI = E('div', 'big'); bigI.appendChild(iel('flag', 96));
+    intro.append(bigI, E('h2', '', 'Vlaggenroof'), E('p', '', 'Elk goed antwoord geeft stappen: tik op de kaart om te lopen. Pak de rode vlag bovenin en breng hem naar je basis. Rode wachters tikken je in hun helft!'), mk('Tik om te beginnen (eerste tot 3)', '', 'klassiek'), mk('Blitz: 2,5 minuut, zoveel vlaggen als kan', 'alt', 'blitz'));
     root.appendChild(intro); refresh(); last = performance.now(); raf = requestAnimationFrame(loop);
 
-    return { destroy() { dead = true; if (raf) cancelAnimationFrame(raf); timers.forEach((t) => clearTimeout(t)); timers.clear(); if (cur) { try { cur.cancel(); } catch (e) { /* */ } cur = null; } root.remove(); style.remove(); } };
+    return { destroy() { dead = true; if (raf) cancelAnimationFrame(raf); timers.forEach((t) => clearTimeout(t)); timers.clear(); if (cur) { try { cur.cancel(); } catch (e) { /* */ } cur = null; } fl.destroy(); bgw.destroy(); root.remove(); style.remove(); } };
   },
 };

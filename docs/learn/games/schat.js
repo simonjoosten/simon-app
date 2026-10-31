@@ -1,7 +1,9 @@
 // Learn Spel 16: Schatgraver. Graaf tegels open, volg de goud-hints, ontwijk valkuilen (vraag!), open kisten (vraag!) en laad je energie op met vragen.
 // Gebouwd uit tools/learn-stubs/src-c/schat.src.js (hulpjes ingebouwd).
-// ---- gedeelde hulpjes (per bestand ingebouwd, geen externe imports) ----
+import { Gx, mix } from './_gfx.js?v=1';
+// ---- gedeelde hulpjes ----
 const $ = (t, c, x) => { const e = document.createElement(t); if (c) e.className = c; if (x != null) e.textContent = x; return e; };
+const $h = (t, c, h) => { const e = document.createElement(t); if (c) e.className = c; if (h != null) e.innerHTML = h; return e; };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 function css(txt) { const s = document.createElement('style'); s.textContent = txt; document.head.appendChild(s); return s; }
 function lifecycle() {
@@ -13,20 +15,23 @@ function lifecycle() {
   return L;
 }
 function baseCss(P) {
-  return `.${P}-root{position:relative;width:100%;overflow:hidden;color:var(--ink);font:inherit;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;flex-direction:column;background:var(--card);border-radius:14px;box-sizing:border-box}
+  return `.${P}-root{position:relative;width:100%;overflow:hidden;color:var(--ink);font:inherit;user-select:none;-webkit-user-select:none;touch-action:manipulation;display:flex;flex-direction:column;background:transparent;border-radius:14px;box-sizing:border-box;font-size:calc(16px*var(--gfx-font,1))}
 .${P}-root *{box-sizing:border-box}
-.${P}-hud{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:center;justify-content:center;padding:6px 8px;font-weight:700;font-size:14px}
-.${P}-chip{background:rgba(127,127,127,.16);border-radius:999px;padding:2px 10px;white-space:nowrap}
-.${P}-ov{position:absolute;top:0;left:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(10,12,30,.74);z-index:20;padding:10px;overflow:auto}
+.${P}-hud{display:flex;flex-wrap:wrap;gap:6px 8px;align-items:center;justify-content:flex-start;padding:8px 58px 4px 10px;font-weight:800;font-size:calc(15px*var(--gfx-font,1))}
+.${P}-chip{display:inline-flex;align-items:center;gap:5px;background:var(--card);border-radius:999px;padding:5px 12px;min-height:34px;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.${P}-ov{position:absolute;top:0;left:0;right:0;bottom:0;display:none;align-items:center;justify-content:center;background:rgba(10,12,30,.74);z-index:50;padding:10px;overflow:auto}
 .${P}-qbox{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:16px;padding:12px;width:min(100%,520px);max-height:100%;overflow:auto}
 .${P}-card{background:var(--card);color:var(--ink);border:1px solid var(--line);border-radius:18px;padding:16px;width:min(100%,460px);max-height:100%;overflow:auto;text-align:center}
-.${P}-card h2{margin:0 0 6px;font-size:22px}.${P}-card p{margin:6px 0;opacity:.85}
+.${P}-card h2{margin:0 0 6px;font-size:calc(24px*var(--gfx-font,1))}.${P}-card p{margin:6px 0;opacity:.88;font-size:calc(16px*var(--gfx-font,1));line-height:1.4}
 .${P}-big{font-size:54px;line-height:1.1}
-.${P}-btn{border:0;border-radius:12px;padding:10px 16px;font:inherit;font-weight:800;background:var(--accent);color:#fff;cursor:pointer;min-height:44px;box-shadow:0 2px 0 rgba(0,0,0,.25);margin:4px}
+.${P}-btn{border:0;border-radius:16px;padding:13px 22px;font:inherit;font-size:calc(17px*var(--gfx-font,1));font-weight:800;background:var(--accent);color:#fff;cursor:pointer;min-height:54px;box-shadow:0 4px 0 rgba(0,0,0,.25),0 6px 12px rgba(0,0,0,.2);margin:4px}
 .${P}-btn.alt{background:rgba(127,127,127,.22);color:var(--ink)}
 .${P}-btn:disabled{opacity:.45;cursor:default}
 .${P}-row{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:stretch}
-.${P}-shopi{border:1px solid var(--line);border-radius:14px;padding:8px;background:rgba(127,127,127,.08);flex:1 1 120px;min-width:110px;max-width:170px;text-align:center}
+.${P}-shopi{border:2px solid var(--line);border-radius:16px;padding:10px;background:var(--card);flex:1 1 130px;min-width:120px;max-width:190px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.12)}
+.${P}-modes{display:flex;flex-direction:column;gap:8px;margin:10px 0 4px}
+.${P}-mode{display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px;min-height:58px;border:3px solid var(--line);background:var(--card);color:var(--ink);border-radius:16px;padding:8px 14px;font:inherit;font-weight:800;cursor:pointer}
+.${P}-mode small{font-weight:600;opacity:.8;font-size:.82em}.${P}-mode.on{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent) inset}
 .${P}-shopi b{display:block}.${P}-shopi small{display:block;opacity:.75;min-height:2.4em}
 @keyframes ${P}pop{0%{transform:scale(.6);opacity:0}70%{transform:scale(1.08);opacity:1}100%{transform:scale(1)}}
 .${P}-pop{animation:${P}pop .35s ease-out}`;
@@ -37,12 +42,17 @@ function mkOv(root, P) {
 }
 function card(P, o) { // intro/info-kaart: {emoji,title,text,btn,onBtn,extra}
   const c = $('div', P + '-card ' + P + '-pop');
-  if (o.emoji) c.appendChild($('div', P + '-big', o.emoji));
+  if (o.ic || o.emoji) c.appendChild(o.ic ? $h('div', P + '-big', Gx.ic(o.ic, 72, o.emoji)) : $('div', P + '-big', o.emoji));
   if (o.title) c.appendChild($('h2', '', o.title));
   if (o.text) c.appendChild($('p', '', o.text));
   if (o.extra) c.appendChild(o.extra);
   if (o.btn) { const b = $('button', P + '-btn', o.btn); b.onclick = o.onBtn; c.appendChild(b); }
   return c;
+}
+function modePicker(P, modes, cur, onPick) { // modes: {id:{name,desc}} -> {el, get()}
+  const box = $('div', P + '-modes'); let val = cur; const bs = {};
+  Object.keys(modes).forEach(id => { const b = $h('button', P + '-mode' + (id === val ? ' on' : ''), '<span>' + modes[id].name + '</span><small>' + modes[id].desc + '</small>'); b.type = 'button'; b.onclick = () => { val = id; Object.keys(bs).forEach(k => { bs[k].className = P + '-mode' + (k === val ? ' on' : ''); }); if (onPick) onPick(id); }; bs[id] = b; box.appendChild(b); });
+  return { el: box, get: () => val };
 }
 function makeAsker(env, ov, P, L) {
   let cur = null;
@@ -113,37 +123,61 @@ export const DEPTHS = [
   { name: 'Lavatunnel', top: '#f59e0b', bot: '#b91c1c', open: '#450a0a' },
   { name: 'Schatkamer', top: '#fcd34d', bot: '#a16207', open: '#292524' }
 ];
-export const KINDS = { coin: { e: '🪙', v: 6 }, vase: { e: '🏺', v: 14 }, gem: { e: '💎', v: 30 }, crown: { e: '👑', v: 90 } };
+export const KINDS = {
+  coin: { e: '🪙', ic: 'coin', v: 6 }, vase: { e: '🏺', v: 14 }, gem: { e: '💎', ic: 'gem', v: 30 }, crown: { e: '👑', ic: 'crown', v: 90 },
+  // nieuwe schatsoorten
+  shell: { e: '🐚', ic: 'shell', v: 9 }, medal: { e: '🏅', ic: 'medal', v: 22 }, ring: { e: '💍', ic: 'ring', v: 50 }, crystal: { e: '🔮', ic: 'crystal', v: 65 }
+};
+// Nieuwe grotten (modus 'expeditie') en wereldgrotten (modus 'wereld')
+export const NEW_DEPTHS = [
+  { name: 'Mosgrot', top: '#86efac', bot: '#15803d', open: '#052e16' },
+  { name: 'Paddenstoelgrot', top: '#f9a8d4', bot: '#be185d', open: '#500724' },
+  { name: 'Dinogrot', top: '#d6d3d1', bot: '#78716c', open: '#1c1917' },
+  { name: 'Sterrengrot', top: '#a78bfa', bot: '#4c1d95', open: '#0f0720' }
+];
+export function worldDepths(world) {
+  const bg = (world && world.bg) || ['#60a5fa', '#1e3a8a'], gr = (world && world.ground) || '#78716c', ac = (world && world.accent) || '#f59e0b', nm = (world && world.name) || 'Wereld';
+  return [0, 1, 2, 3].map(i => { const top = mix(bg[Math.min(i, bg.length - 1)], gr, 0.35 + 0.1 * i), bot = mix(gr, ac, 0.2 + 0.12 * i); return { name: nm + 'grot ' + (i + 1), top, bot, open: mix(gr, '#000000', 0.7) }; });
+}
+export const DIG_MODES = {
+  klassiek: { name: 'Klassieke expeditie', desc: '5 grotten, van zand tot schatkamer.' },
+  expeditie: { name: 'Nieuwe grotten', desc: '4 nieuwe grotten: mos, paddenstoelen, dino en sterren.' },
+  wereld: { name: 'Mijn wereld', desc: 'Graaf in grotten in de kleuren van jouw gekozen wereld.' }
+};
 export const SHOP = [
-  { id: 'bat', emoji: '🔋', name: 'Grote batterij', desc: 'Meer energie per vraag en een hoger maximum.', max: 3, cost: l => 25 + 45 * l },
-  { id: 'pick', emoji: '⛏', name: 'Pikhouweel', desc: 'Rotsen kosten minder energie.', max: 2, cost: l => 35 + 60 * l },
-  { id: 'radar', emoji: '📡', name: 'Valkuilradar', desc: 'Toont rode cijfers: valkuilen om je heen.', max: 1, cost: () => 45 },
-  { id: 'detector', emoji: '🧭', name: 'Brede detector', desc: 'Goudhints kijken 2 tegels ver.', max: 1, cost: () => 70 },
-  { id: 'helm', emoji: '⛑️', name: 'Helm', desc: 'Vangt één valkuil op (stapelbaar).', max: 9, cost: l => 30 + 5 * l, stack: true },
-  { id: 'map', emoji: '🗺', name: 'Schatkaart', desc: 'Toont meteen waar de trap/hoofdschat ligt (1x).', max: 9, cost: () => 110, stack: true }
+  { id: 'bat', ic: 'bolt', emoji: '🔋', name: 'Grote batterij', desc: 'Meer energie per vraag en een hoger maximum.', max: 3, cost: l => 25 + 45 * l },
+  { id: 'pick', ic: 'hammer', emoji: '⛏', name: 'Pikhouweel', desc: 'Rotsen kosten minder energie.', max: 2, cost: l => 35 + 60 * l },
+  { id: 'radar', ic: 'satellite', emoji: '📡', name: 'Valkuilradar', desc: 'Toont rode cijfers: valkuilen om je heen.', max: 1, cost: () => 45 },
+  { id: 'detector', ic: 'compass', emoji: '🧭', name: 'Brede detector', desc: 'Goudhints kijken 2 tegels ver.', max: 1, cost: () => 70 },
+  { id: 'helm', ic: 'shield', emoji: '⛑️', name: 'Helm', desc: 'Vangt één valkuil op (stapelbaar).', max: 9, cost: l => 30 + 5 * l, stack: true },
+  { id: 'map', ic: 'map', emoji: '🗺', name: 'Schatkaart', desc: 'Toont meteen waar de trap/hoofdschat ligt (1x).', max: 9, cost: () => 110, stack: true },
+  { id: 'magnet', ic: 'magnet', emoji: '🧲', name: 'Goudmagneet', desc: '+20% goud per niveau.', max: 3, cost: l => 40 + 50 * l },
+  { id: 'clover', ic: 'clover', emoji: '🍀', name: 'Geluksklaver', desc: 'Minder valkuilen in nieuwe grotten.', max: 2, cost: l => 55 + 55 * l }
 ];
 const COLS = 6, ROWS = 7;
 
 export class Dig {
   constructor(o = {}) {
     this.rand = o.rand || Math.random; this.fx = o.fx || {}; this.diff = o.level || 2;
-    this.up = { bat: 0, pick: 0, radar: 0, detector: 0 }; this.helm = this.fx.shield ? 1 : 0; this.maps = 0;
+    this.up = { bat: 0, pick: 0, radar: 0, detector: 0, magnet: 0, clover: 0 };
+    this.mode = DIG_MODES[o.mode] ? o.mode : 'klassiek'; this.depths = o.depths || (this.mode === 'expeditie' ? NEW_DEPTHS : DEPTHS); this.helm = this.fx.shield ? 1 : 0; this.maps = 0;
     this.hearts = 3 + Math.max(0, Math.round(this.fx.extraLives || 0)); this.energy = 8 + Math.min(6, Math.round((this.fx.startCash || 0) / 10));
     this.gold = 0; this.total = 0; this.depth = 0; this.digs = 0; this.streak = 0; this.best = 0; this.good = 0; this.bad = 0; this.state = 'play'; this.chests = 0; this.dodged = 0;
     this.gen(0);
   }
   get cols() { return COLS; } get rows() { return ROWS; }
   get maxEnergy() { return 12 + 3 * this.up.bat; }
-  mult() { return (1 + this.depth * 0.4) * (this.fx.cashMult || 1); }
+  mult() { return (1 + this.depth * 0.4 + 0.2 * this.up.magnet) * (this.fx.cashMult || 1); }
   gen(d) {
     this.depth = d; const n = COLS * ROWS, r = this.rand; this.tiles = Array.from({ length: n }, () => ({ kind: 'dirt', open: false, v: 0 })); this.first = d === 0 && this.digs === 0;
     const free = () => { for (let k = 0; k < 300; k++) { const i = Math.floor(r() * n); if (this.tiles[i].kind === 'dirt') return i; } return this.tiles.findIndex(t => t.kind === 'dirt'); };
     const put = (kind, v) => { const i = free(); if (i >= 0) { this.tiles[i].kind = kind; this.tiles[i].v = v || 0; } return i; };
-    this.exit = put(d === DEPTHS.length - 1 ? 'final' : 'ladder');
-    for (let k = 0; k < 2 + (this.diff === 3 ? 1 : 0) + d; k++) put('trap');
+    this.exit = put(d === this.depths.length - 1 ? 'final' : 'ladder');
+    for (let k = 0; k < Math.max(1, 2 + (this.diff === 3 ? 1 : 0) + d - this.up.clover); k++) put('trap');
     for (let k = 0; k < 4 + d; k++) put('rock');
     for (let k = 0; k < 3; k++) put('chest', Math.round((40 + 30 * r()) * (1 + d * 0.4)));
     for (let k = 0; k < 7; k++) put('coin'); for (let k = 0; k < 3; k++) put('vase'); for (let k = 0; k < 2 + d; k++) put('gem'); if (d >= 1) put('crown');
+    for (let k = 0; k < 2; k++) put('shell'); for (let k = 0; k < 2; k++) put('medal'); if (d >= 1) put('ring'); if (d >= 2) put('crystal');
     this.mapShown = false;
   }
   nb(i, rad = 1) { const x = i % COLS, y = Math.floor(i / COLS), out = []; for (let dy = -rad; dy <= rad; dy++) for (let dx = -rad; dx <= rad; dx++) { if (!dx && !dy) continue; const a = x + dx, b = y + dy; if (a >= 0 && b >= 0 && a < COLS && b < ROWS) out.push(b * COLS + a); } return out; }
@@ -153,7 +187,7 @@ export class Dig {
     const t = this.tiles[i]; if (!t || t.open || this.state !== 'play') return { r: 'noop' };
     const c = this.costOf(i); if (this.energy < c) return { r: 'noenergy', need: c };
     this.energy -= c; t.open = true; this.digs++;
-    if (this.first && t.kind !== 'ladder' && t.kind !== 'final') { t.kind = 'coin'; } this.first = false;
+    if (this.first) { const was = t.kind; t.kind = 'coin'; if (was === 'ladder' || was === 'final') { const j = this.tiles.findIndex((x, k) => k !== i && x.kind === 'dirt'); if (j >= 0) { this.tiles[j].kind = was; this.exit = j; } } } this.first = false;
     if (KINDS[t.kind]) { const v = Math.max(1, Math.round(KINDS[t.kind].v * this.mult())); this.pay(v); return { r: 'gold', kind: t.kind, v }; }
     switch (t.kind) {
       case 'chest': return { r: 'chest', v: t.v };
@@ -169,7 +203,7 @@ export class Dig {
   trap(i, ok) { this.mark(ok); const t = this.tiles[i]; t.kind = 'dirt'; if (ok) { this.dodged++; return { dodged: true }; } this.hearts--; if (this.hearts <= 0) { this.state = 'over'; return { dodged: false, over: true }; } return { dodged: false }; }
   mark(ok) { if (ok) { this.good++; this.streak++; if (this.streak > this.best) this.best = this.streak; } else { this.bad++; this.streak = 0; } }
   recharge(ok) { this.mark(ok); const add = ok ? 5 + this.up.bat + Math.min(3, Math.floor(this.streak / 3)) : 2; const before = this.energy; this.energy = Math.min(Math.max(this.maxEnergy, this.energy), this.energy + add); return this.energy - before; }
-  descend() { if (this.depth + 1 < DEPTHS.length) this.gen(this.depth + 1); this.energy = Math.min(this.maxEnergy, this.energy + 2); }
+  descend() { if (this.depth + 1 < this.depths.length) this.gen(this.depth + 1); this.energy = Math.min(this.maxEnergy, this.energy + 2); }
   useMap() { if (this.maps <= 0 || this.mapShown) return false; this.maps--; this.mapShown = true; return true; }
   price(it) { return it.cost(it.stack ? 0 : this.up[it.id]); }
   canBuy(it) { return this.gold >= this.price(it) && (it.stack || this.up[it.id] < it.max); }
@@ -179,19 +213,20 @@ export class Dig {
 }
 
 const CSS = `
-.${P}-body{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:6px 8px 8px;gap:8px;transition:background .6s}
-.${P}-grid{display:grid;gap:5px;width:100%;max-width:440px}
-.${P}-t{position:relative;aspect-ratio:1;border:0;border-radius:11px;font-size:28px;padding:0;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:inset 0 -4px 0 rgba(0,0,0,.28);transition:transform .15s,filter .2s}
+.${P}-body{flex:1;overflow:auto;display:flex;flex-direction:column;align-items:center;padding:6px 8px 10px;gap:8px}
+.${P}-grid{display:grid;gap:calc(6px*var(--gfx-scale,1));width:100%;max-width:460px;padding:10px;border-radius:20px;box-shadow:0 6px 18px rgba(0,0,0,.35);box-sizing:border-box}
+.${P}-t{position:relative;aspect-ratio:1;border:0;border-radius:14px;font-size:30px;padding:0;cursor:pointer;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:900;box-shadow:inset 0 -5px 0 rgba(0,0,0,.28),0 2px 4px rgba(0,0,0,.25);transition:transform .15s,filter .2s;min-height:50px}
 .${P}-t:active{transform:scale(.92)}
 .${P}-t.o{box-shadow:inset 0 3px 8px rgba(0,0,0,.5);cursor:default}
 .${P}-t.dig{animation:${P}dg .35s ease-out}
 .${P}-t.map{outline:3px dashed #fde047;animation:${P}pu 1s infinite}
+html[data-reduce="1"] .${P}-t.dig,html[data-reduce="1"] .${P}-t.map{animation:none}
 @keyframes ${P}dg{0%{transform:scale(1)}40%{transform:scale(.8) rotate(-6deg)}100%{transform:scale(1)}}
 @keyframes ${P}pu{50%{outline-color:transparent}}
-.${P}-h1{color:#fde047;font-size:19px;text-shadow:0 1px 2px #000}.${P}-h2{color:#fca5a5;font-size:12px;position:absolute;right:4px;bottom:2px;text-shadow:0 1px 2px #000}
-.${P}-act{display:flex;gap:6px;width:100%;max-width:440px}.${P}-act button{flex:1;margin:0;padding:8px 4px;font-size:14px}
-.${P}-msg{min-height:22px;font-weight:800;text-align:center;font-size:14px;color:#fff;text-shadow:0 1px 3px #000}
-.${P}-bar{height:12px;border-radius:7px;background:rgba(0,0,0,.4);overflow:hidden;width:100%;max-width:440px}.${P}-bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fde047);transition:width .25s}`;
+.${P}-h1{color:#fde047;font-size:calc(24px*var(--gfx-font,1));text-shadow:0 1px 3px #000}.${P}-h2{color:#fca5a5;font-size:calc(15px*var(--gfx-font,1));position:absolute;right:5px;bottom:2px;text-shadow:0 1px 3px #000}
+.${P}-act{display:flex;gap:8px;width:100%;max-width:460px}.${P}-act button{flex:1;margin:0;padding:8px 4px;font-size:calc(15px*var(--gfx-font,1));display:flex;align-items:center;justify-content:center;gap:5px}
+.${P}-msg{min-height:24px;font-weight:800;text-align:center;font-size:calc(16px*var(--gfx-font,1));color:var(--ink);background:var(--card);border-radius:14px;padding:6px 12px;box-shadow:0 2px 8px rgba(0,0,0,.18)}
+.${P}-bar{height:14px;border-radius:8px;background:var(--card);overflow:hidden;width:100%;max-width:460px;box-shadow:0 2px 6px rgba(0,0,0,.2),0 0 0 3px var(--card)}.${P}-bar i{display:block;height:100%;background:linear-gradient(90deg,#f59e0b,#fde047);transition:width .25s}`;
 
 export default {
   id: 'schat', name: 'Schatgraver', emoji: '⛏️', color: '#b45309',
@@ -200,27 +235,30 @@ export default {
   create(host, env) {
     const L = lifecycle(); const style = css(baseCss(P) + CSS); host.textContent = '';
     const { H } = dims(host, env); const root = $('div', P + '-root'); root.style.height = H + 'px'; host.appendChild(root);
-    const g = new Dig({ rand: env.rand || Math.random, fx: env.fx, level: env.level });
+    const gx = Gx.start(root, env, 'schat'); let mode = 'klassiek';
+    let g = new Dig({ rand: env.rand || Math.random, fx: env.fx, level: env.level });
     const S = mkStats(); const ov = mkOv(root, P); const asker = makeAsker(env, ov, P, L); const nextQ = qsupply(env);
     let started = false, ended = false, busy = false, leaveArm = 0;
     const hud = $('div', P + '-hud'); const chip = {}; ['depth', 'energy', 'heart', 'gold'].forEach(k => { chip[k] = $('span', P + '-chip'); hud.appendChild(chip[k]); });
     const body = $('div', P + '-body'); const eb = $('div', P + '-bar'); const ebi = $('i'); eb.appendChild(ebi);
     const msg = $('div', P + '-msg', ''); const grid = $('div', P + '-grid'); const act = $('div', P + '-act');
-    const bR = $('button', P + '-btn', '⚡ Opladen (vraag)'), bM = $('button', P + '-btn alt', '🗺'), bS = $('button', P + '-btn alt', '🛒'), bH = $('button', P + '-btn alt', '🏠');
+    const bR = $h('button', P + '-btn', Gx.ic('bolt', 28, '⚡') + ' Opladen (vraag)'), bM = $h('button', P + '-btn alt', Gx.ic('map', 28, '🗺')), bS = $h('button', P + '-btn alt', Gx.ic('bag', 28, '🛒')), bH = $h('button', P + '-btn alt', Gx.ic('house', 28, '🏠'));
     act.append(bR, bM, bS, bH); body.append(eb, msg, grid, act); root.append(hud, body);
     let tiles = [];
     const say = (t) => { msg.textContent = t; };
-    const build = () => { grid.textContent = ''; tiles = []; grid.style.gridTemplateColumns = 'repeat(' + g.cols + ',1fr)'; const D = DEPTHS[g.depth]; body.style.background = 'linear-gradient(' + D.top + ',' + D.bot + ')';
+    const fxT = (i, kind, n) => { if (tiles[i]) gx.burstEl(tiles[i], kind, n); };
+    const build = () => { grid.textContent = ''; tiles = []; grid.style.gridTemplateColumns = 'repeat(' + g.cols + ',1fr)'; const D = g.depths[g.depth]; grid.style.background = 'linear-gradient(' + D.top + ',' + D.bot + ')';
       g.tiles.forEach((t, i) => { const b = $('button', P + '-t', ''); b.onclick = () => tap(i); grid.appendChild(b); tiles.push(b); }); };
+    const TICON = { chest: ['chest', '🧰'], ladder: ['ladder', '🪜'], final: ['trophy', '🏆'] };
     const paint = () => {
-      const D = DEPTHS[g.depth];
+      const D = g.depths[g.depth];
       g.tiles.forEach((t, i) => { const b = tiles[i]; if (!b) return; const open = t.open && t.kind !== 'chest';
         b.className = P + '-t' + (open ? ' o' : '') + (g.mapShown && g.exit === i && !t.open ? ' map' : ''); b.style.background = open || (t.open && t.kind === 'chest') ? D.open : 'linear-gradient(' + D.top + ',' + D.bot + ')';
         let tx = '', sub = '';
-        if (t.open) { if (t.kind === 'chest') tx = '🧰'; else if (t.kind === 'dirt') { const h = g.hint(i); tx = h.gold ? '' + h.gold : ''; sub = h.trap ? '' + h.trap : ''; } else if (t.kind === 'ladder') tx = '🪜'; else if (t.kind === 'final') tx = '🏆'; else if (KINDS[t.kind]) tx = KINDS[t.kind].e; }
-        else if (!t.open) tx = ''; b.textContent = tx; if (open && t.kind === 'dirt' && tx) b.className += ' ' + P + '-h1'; if (sub) { const s = $('span', P + '-h2', sub); b.appendChild(s); } });
-      chip.depth.textContent = '⛰ ' + DEPTHS[g.depth].name + ' ' + (g.depth + 1) + '/' + DEPTHS.length; chip.energy.textContent = '⚡ ' + g.energy + '/' + g.maxEnergy; chip.heart.textContent = '❤️ ' + g.hearts + (g.helm ? ' ⛑' + g.helm : ''); chip.gold.textContent = '🪙 ' + g.gold;
-      ebi.style.width = clamp(g.energy / g.maxEnergy * 100, 0, 100) + '%'; bM.textContent = '🗺 ' + g.maps; bM.disabled = !g.maps || g.mapShown; bR.style.outline = g.energy <= 1 ? '3px solid #fde047' : '';
+        if (t.open) { if (TICON[t.kind]) tx = Gx.ic(TICON[t.kind][0], 54, TICON[t.kind][1]); else if (t.kind === 'dirt') { const h = g.hint(i); tx = h.gold ? '' + h.gold : ''; sub = h.trap ? '' + h.trap : ''; } else if (KINDS[t.kind]) tx = Gx.ic(KINDS[t.kind].ic, 54, KINDS[t.kind].e); }
+        const key = tx + '|' + sub + '|' + (open ? 1 : 0); if (b._k === key) return; b._k = key; b.innerHTML = tx; if (open && t.kind === 'dirt' && tx) b.className += ' ' + P + '-h1'; if (sub) { const s2 = $('span', P + '-h2', sub); b.appendChild(s2); } });
+      chip.depth.innerHTML = Gx.ic('pickaxe', 24, '⛰') + ' ' + D.name + ' ' + (g.depth + 1) + '/' + g.depths.length; chip.energy.innerHTML = Gx.ic('bolt', 24, '⚡') + ' ' + g.energy + '/' + g.maxEnergy; chip.heart.innerHTML = Gx.ic('heart', 24, '❤️') + ' ' + g.hearts + (g.helm ? ' ' + Gx.ic('shield', 22, '⛑') + g.helm : ''); chip.gold.innerHTML = Gx.ic('coin', 24, '🪙') + ' ' + g.gold;
+      ebi.style.width = clamp(g.energy / g.maxEnergy * 100, 0, 100) + '%'; bM.innerHTML = Gx.ic('map', 28, '🗺') + ' ' + g.maps; bM.disabled = !g.maps || g.mapShown; bR.style.outline = g.energy <= 1 ? '3px solid #fde047' : '';
     };
     const finish = (why) => {
       if (ended) return; ended = true; const win = g.state === 'won';
@@ -234,24 +272,27 @@ export default {
       if (res.r === 'noop') return;
       if (res.r === 'noenergy') { snd(env, 'fout'); say('Geen energie! Tik op ⚡ Opladen.'); return; }
       if (b) { b.className += ' dig'; }
-      if (res.r === 'gold') { snd(env, 'munt'); say(KINDS[res.kind].e + ' +' + res.v + ' goud!'); flyText('+' + res.v, i); }
+      if (res.r === 'gold') { snd(env, 'munt'); say(KINDS[res.kind].e + ' +' + res.v + ' goud!'); flyText('+' + res.v, i); fxT(i, res.v >= 30 ? 'stars' : 'coins', res.v >= 30 ? 14 : 5); }
       else if (res.r === 'dirt') { snd(env, 'klik'); say(res.hint.gold ? '✨ ' + res.hint.gold + ' schat(ten) vlakbij' : 'Hier niets in de buurt.'); }
-      else if (res.r === 'rock') { snd(env, 'klik'); say('🪨 Rots weggehakt (' + res.cost + ' energie).'); }
+      else if (res.r === 'rock') { snd(env, 'klik'); fxT(i, 'smoke', 5); say('🪨 Rots weggehakt (' + res.cost + ' energie).'); }
       else if (res.r === 'blocked') { snd(env, 'power'); say('⛑ Je helm redde je van een valkuil!'); }
-      else if (res.r === 'ladder') { snd(env, 'level'); say('🪜 De trap omlaag!'); paint(); L.after(() => { if (g.state !== 'play') return; ov.show(card(P, { emoji: '🪜', title: 'Dieper graven?', text: 'Je vond de trap naar ' + DEPTHS[g.depth + 1].name + '. Daar is meer buit (en meer valkuilen).', btn: 'Naar beneden ▼', onBtn: () => { ov.hide(); g.descend(); build(); paint(); say('Welkom in de ' + DEPTHS[g.depth].name + '!'); } })); }, 400); }
-      else if (res.r === 'final') { snd(env, 'win'); paint(); say('🏆 De hoofdschat! +' + res.v); L.after(() => finish('Je vond de hoofdschat! ' + g.total + ' goud verzameld.'), 900); return; }
-      else if (res.r === 'chest') { snd(env, 'power'); say('🧰 Een kist! Beantwoord de vraag om hem te openen.'); paint(); const r = await ask(); if (L.dead) return; S.mark(r.ok); const c = g.chest(i, r.ok); snd(env, r.ok ? 'goed' : 'fout'); say(r.ok ? '🧰 Kist open! +' + c.v : '🧰 Kist half kapot: +' + c.v); flyText('+' + c.v, i); }
-      else if (res.r === 'trap') { snd(env, 'fout'); say('⚠️ Valkuil! Beantwoord snel de vraag om te ontsnappen!'); paint(); const r = await ask(); if (L.dead) return; S.mark(r.ok); const tr = g.trap(i, r.ok); snd(env, r.ok ? 'goed' : 'lose'); say(tr.dodged ? '💨 Ontsnapt!' : '💥 Au! -1 ❤️'); if (tr.over) { paint(); L.after(() => finish('De grot was te gevaarlijk. Je houdt 60% van je buit.'), 700); return; } }
+      else if (res.r === 'ladder') { snd(env, 'level'); say('🪜 De trap omlaag!'); paint(); L.after(() => { if (g.state !== 'play') return; ov.show(card(P, { ic: 'ladder', emoji: '🪜', title: 'Dieper graven?', text: 'Je vond de trap naar ' + g.depths[g.depth + 1].name + '. Daar is meer buit (en meer valkuilen).', btn: 'Naar beneden ▼', onBtn: () => { ov.hide(); g.descend(); build(); paint(); say('Welkom in de ' + g.depths[g.depth].name + '!'); } })); }, 400); }
+      else if (res.r === 'final') { snd(env, 'win'); paint(); say('🏆 De hoofdschat! +' + res.v); gx.burst((root.clientWidth || 360) / 2, 200, 'confetti', 60); L.after(() => finish('Je vond de hoofdschat! ' + g.total + ' goud verzameld.'), 900); return; }
+      else if (res.r === 'chest') { snd(env, 'power'); say('🧰 Een kist! Beantwoord de vraag om hem te openen.'); paint(); const r = await ask(); if (L.dead) return; S.mark(r.ok); const c = g.chest(i, r.ok); snd(env, r.ok ? 'goed' : 'fout'); say(r.ok ? '🧰 Kist open! +' + c.v : '🧰 Kist half kapot: +' + c.v); flyText('+' + c.v, i); fxT(i, r.ok ? 'coins' : 'smoke', r.ok ? 12 : 6); }
+      else if (res.r === 'trap') { snd(env, 'fout'); say('⚠️ Valkuil! Beantwoord snel de vraag om te ontsnappen!'); paint(); const r = await ask(); if (L.dead) return; S.mark(r.ok); const tr = g.trap(i, r.ok); snd(env, r.ok ? 'goed' : 'lose'); say(tr.dodged ? '💨 Ontsnapt!' : '💥 Au! -1 ❤️'); fxT(i, tr.dodged ? 'sparkle' : 'smoke', 10); if (tr.over) { paint(); L.after(() => finish('De grot was te gevaarlijk. Je houdt 60% van je buit.'), 700); return; } }
       paint();
     };
     bR.onclick = async () => { if (!started || busy || ov.shown || g.state !== 'play') return; if (g.energy >= g.maxEnergy) { say('Je energie is al vol.'); return; } const r = await ask(); if (L.dead) return; S.mark(r.ok); const add = g.recharge(r.ok); snd(env, r.ok ? 'goed' : 'fout'); say(r.ok ? '⚡ +' + add + ' energie!' : '⚡ Maar +' + add + ' energie'); paint(); };
     bM.onclick = () => { if (g.useMap()) { snd(env, 'power'); say('🗺 De trap is gemarkeerd!'); paint(); } };
-    bS.onclick = () => { if (!started || busy) return; const w = $('div'); const co = $('p'); const row = $('div', P + '-row');
-      const draw = () => { co.textContent = '🪙 ' + g.gold + ' goud'; row.textContent = ''; SHOP.forEach(it => { const c = $('div', P + '-shopi'); const full = !it.stack && g.up[it.id] >= it.max; c.append($('div', P + '-big', it.emoji), $('b', '', it.name + (it.stack ? '' : ' ' + g.up[it.id] + '/' + it.max)), $('small', '', it.desc)); const bb = $('button', P + '-btn', full ? 'Max' : '🪙 ' + g.price(it)); bb.disabled = full || !g.canBuy(it); bb.onclick = () => { if (g.buy(it.id)) { snd(env, 'munt'); draw(); paint(); } }; c.appendChild(bb); row.appendChild(c); }); };
-      draw(); w.append(co, row); ov.show(card(P, { emoji: '🛒', title: 'Graafwinkel', extra: w, btn: 'Verder graven', onBtn: () => { ov.hide(); paint(); } })); };
-    bH.onclick = () => { if (!started || busy) return; if (leaveArm < performance.now()) { leaveArm = performance.now() + 2500; bH.textContent = '🏠 Zeker?'; L.after(() => { bH.textContent = '🏠'; }, 2500); return; } g.leave(); finish('Je ging op tijd naar huis met ' + g.total + ' goud.'); };
+    bS.onclick = () => { if (!started || busy) return; const w = $('div'); const co = $h('p'); const row = $('div', P + '-row');
+      const draw = () => { co.innerHTML = Gx.ic('coin', 26, '🪙') + ' ' + g.gold + ' goud'; row.textContent = ''; SHOP.forEach(it => { const c = $('div', P + '-shopi'); const full = !it.stack && g.up[it.id] >= it.max; c.append($h('div', P + '-big', Gx.ic(it.ic, 60, it.emoji)), $('b', '', it.name + (it.stack ? '' : ' ' + g.up[it.id] + '/' + it.max)), $('small', '', it.desc)); const bb = $h('button', P + '-btn', full ? 'Max' : Gx.ic('coin', 22, '🪙') + ' ' + g.price(it)); bb.disabled = full || !g.canBuy(it); bb.onclick = () => { if (g.buy(it.id)) { snd(env, 'munt'); draw(); paint(); } }; c.appendChild(bb); row.appendChild(c); }); };
+      draw(); w.append(co, row); ov.show(card(P, { ic: 'bag', emoji: '🛒', title: 'Graafwinkel', extra: w, btn: 'Verder graven', onBtn: () => { ov.hide(); paint(); } })); };
+    bH.onclick = () => { if (!started || busy) return; if (leaveArm < performance.now()) { leaveArm = performance.now() + 2500; bH.textContent = 'Zeker?'; L.after(() => { bH.innerHTML = Gx.ic('house', 28, '🏠'); }, 2500); return; } g.leave(); finish('Je ging op tijd naar huis met ' + g.total + ' goud.'); };
     build(); paint();
-    ov.show(card(P, { emoji: '⛏️', title: 'Schatgraver', text: 'Tik een tegel om te graven (kost energie). Cijfers tonen schatten in de buurt. Bij valkuilen en kisten krijg je een vraag. Vind de trap naar beneden!', btn: 'Tik om te beginnen', onBtn: () => { ov.hide(); started = true; snd(env, 'klik'); say('Tik een tegel!'); } }));
-    return { destroy() { asker.cancel(); L.kill(); try { style.remove(); } catch (e) {} host.textContent = ''; } };
+    const mp = modePicker(P, DIG_MODES, mode, null);
+    ov.show(card(P, { ic: 'pickaxe', emoji: '⛏️', title: 'Schatgraver', text: 'Tik een tegel om te graven (kost energie). Cijfers tonen schatten in de buurt. Bij valkuilen en kisten krijg je een vraag. Vind de trap naar beneden!', extra: mp.el, btn: 'Tik om te beginnen', onBtn: () => {
+      mode = mp.get(); if (mode !== 'klassiek') { g = new Dig({ rand: env.rand || Math.random, fx: env.fx, level: env.level, mode, depths: mode === 'wereld' ? worldDepths(gx.world) : null }); build(); paint(); }
+      ov.hide(); started = true; snd(env, 'klik'); say('Tik een tegel!'); } }));
+    return { destroy() { asker.cancel(); L.kill(); gx.destroy(); try { style.remove(); } catch (e) {} host.textContent = ''; } };
   }
 };

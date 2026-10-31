@@ -58,7 +58,7 @@ const ING_IDS = [];
 [['br', 'Brood', '🍞', 1.5], ['ei', 'Eieren', '🥚', 1.2], ['me', 'Zuivel', '🥛', 1.2], ['gr', 'Groente', '🥬', 1.4], ['ao', 'Aardappel', '🥔', 1.0],
   ['to', 'Tomaat', '🍅', 1.5], ['ka', 'Kaas', '🧀', 2.4], ['vl', 'Vlees', '🥩', 3.8], ['ri', 'Rijst', '🍚', 1.2], ['de', 'Meel', '🌾', 1.0],
   ['no', 'Noedels', '🍥', 1.6], ['vi', 'Vis', '🐠', 4.5], ['fr', 'Fruit', '🍓', 2.2], ['kr', 'Kruiden', '🌶️', 1.8], ['ch', 'Chocola', '🍫', 3.0],
-  ['ga', 'Garnalen', '🦐', 6.5], ['tr', 'Truffel', '🍄', 12], ['kz', 'Kreeft', '🦞', 20]].forEach((r, i) => {
+  ['ga', 'Garnalen', '🦐', 6.5], ['tr', 'Truffel', '🍄', 12], ['kz', 'Kreeft', '🦞', 20], ['ma', 'Mais', '🌽', 1.1]].forEach((r, i) => {
   ING[r[0]] = { id: r[0], n: r[1], e: r[2], p: r[3], p1: 420 + (i * 97) % 480, p2: 90 + (i * 37) % 110, ph: i * 1.37 };
   ING_IDS.push(r[0]);
 });
@@ -90,6 +90,14 @@ export const DISH = {};
   ['don', 'Gourmet donut', '🍩', 'US', 350, 6, 'de1 ch1 fr1', 11], ['bak', 'Baklava', '🍯', 'TR', 390, 8, 'de1 fr1 me1 ch1', 12], ['moc', 'Mochi-ijs', '🍡', 'JP', 400, 7, 'ri1 me1 fr1', 12],
   ['kre', 'Kreeft thermidor', '🦞', 'FR', 900, 11, 'kz1 me1 kr1', 13], ['wag', 'Wagyu spies', '🍢', 'JP', 1000, 10, 'vl3 tr1', 14], ['omk', 'Omakase', '🥢', 'JP', 1100, 12, 'vi2 ga1 kz1', 15],
   ['gou', 'Gouden taart', '🎂', 'ZO', 1000, 8, 'ch2 fr1 ei1 me1', 16], ['dia', 'Diamant-diner', '💎', 'FR', 1500, 14, 'kz2 tr2 ga1', 17],
+  // nieuw (fase 2)
+  ['kof', 'Koffie', '☕', 'NL', 8, 2, 'me1', 0], ['mai', 'Maiskolf', '🌽', 'US', 17, 3, 'ma2', 1], ['app', 'Appeltaart', '🥧', 'NL', 26, 5, 'de1 fr1 ei1', 1],
+  ['koe', 'Chocoladekoekjes', '🍪', 'US', 22, 4, 'de1 ch1', 1], ['sma', 'Aardbeiensmoothie', '🍓', 'ZO', 24, 2, 'fr2 me1', 2], ['cup', 'Cupcake', '🧁', 'US', 40, 5, 'de1 me1 fr1', 2],
+  ['apf', 'Appelflap', '🍎', 'NL', 46, 4, 'de1 fr1', 3], ['wat', 'Watermeloenijs', '🍉', 'ZO', 44, 3, 'fr2 me1', 3], ['lol', 'Lolly-regenboog', '🍭', 'ZO', 52, 3, 'ch1 fr1', 3],
+  ['kip', 'Kip met frites', '🍗', 'US', 70, 6, 'vl1 ao2', 4], ['cre', 'Crêpe suzette', '🥞', 'FR', 62, 5, 'de1 ei1 me1 fr1', 4], ['fis', 'Fish & chips', '🐟', 'NL', 88, 6, 'vi1 ao2', 5],
+  ['wor', 'Wortelcake', '🥕', 'ZO', 106, 7, 'de1 ei1 kr1 me1', 5], ['ban', 'Bananasplit', '🍌', 'ZO', 110, 4, 'fr1 me1 ch1', 5], ['fon', 'Kaasfondue', '🧀', 'FR', 205, 8, 'ka2 me1 br1', 8],
+  ['esc', 'Escargots', '🐌', 'FR', 235, 8, 'kr1 me1 br1', 9], ['krb', 'Krab op toast', '🦀', 'FR', 185, 7, 'vi1 ga1 br1', 7], ['dru', 'Druiven-sorbet', '🍇', 'ZO', 370, 6, 'fr2 me1', 11],
+  ['bdt', 'Verjaardagstaart', '🎂', 'ZO', 410, 9, 'de1 ch1 fr1 me1 ei1', 10], ['gei', 'Gebakken ei op brood', '🥚', 'NL', 11, 3, 'ei1 br1', 0],
 ].forEach((r) => {
   const price = r[4];
   const ing = r[6] ? r[6].split(' ').map((x) => [x.slice(0, 2), int(x.slice(2))]) : [];
@@ -97,6 +105,7 @@ export const DISH = {};
   const d = { id: r[0], n: r[1], e: r[2], tag: r[3], price, cook: r[5], ing, st: r[7], tier, unl: r[0] === 'bro' ? 0 : Math.round(price * (price <= 15 ? 5 : 25) * WST(r[7])) };
   DISHES.push(d); DISH[d.id] = d;
 });
+DISHES.sort((a, b) => a.st - b.st || a.price - b.price);
 export const dishPrice = (d, lv) => d.price * (1 + 0.35 * (Math.max(1, lv) - 1));
 export const dishUpCost = (d, lv) => Math.round(d.price * 6 * Math.pow(1.65, lv - 1) * WST(d.st));
 
@@ -110,6 +119,10 @@ export const CITIES = [
   { id: 'nyc', n: 'New York', e: '🗽', likes: ['US', 'IT'], w: 19, arr: 0.32, cost: 1.5e8, st: 10, pal: ['#5b6b8a', '#d0a24a', '#8a96ad'], d: 'De stad die nooit slaapt (en altijd honger heeft).' },
   { id: 'mum', n: 'Mumbai', e: '🛕', likes: ['IN', 'TR'], w: 35, arr: 0.34, cost: 2e9, st: 12, pal: ['#d8742f', '#e9c36a', '#8a4a7a'], d: 'Kruidig, druk en vol kleur.' },
   { id: 'ist', n: 'Istanbul', e: '🕌', likes: ['TR', 'FR'], w: 65, arr: 0.36, cost: 3e10, st: 14, pal: ['#3f8f9b', '#e8c27a', '#a8573f'], d: 'Waar twee werelddelen elkaar ontmoeten.' },
+  { id: 'rio', n: 'Rio de Janeiro', e: '🌴', likes: ['MX', 'ZO'], w: 100, arr: 0.38, cost: 5e11, st: 16, pal: ['#2fa36b', '#f2c94c', '#3a8fd1'], d: 'Strand, samba en zonneschijn.' },
+  { id: 'syd', n: 'Sydney', e: '🏄', likes: ['US', 'ZO'], w: 160, arr: 0.4, cost: 8e12, st: 18, pal: ['#2f7fc4', '#f4e3c3', '#e8764a'], d: 'Surfers, barbecues en een beroemd operagebouw.' },
+  { id: 'dub', n: 'Dubai', e: '🏙️', likes: ['TR', 'FR'], w: 250, arr: 0.42, cost: 1.2e14, st: 20, pal: ['#d9b36c', '#6fb5d6', '#8a7a5a'], d: 'Wolkenkrabbers in de woestijn.' },
+  { id: 'sin', n: 'Singapore', e: '🦁', likes: ['JP', 'IN'], w: 400, arr: 0.44, cost: 2e15, st: 22, pal: ['#2f9d7a', '#e86a8a', '#3a4a8a'], d: 'Tuinen van de toekomst en straatvoedsel.' },
 ];
 export const CITY = {}; CITIES.forEach((c) => { CITY[c.id] = c; });
 export const branchBuild = (c) => Math.round(2500 * c.w * Math.pow(1.1, c.st));
@@ -123,6 +136,8 @@ export const STAFF = {
   kas: { n: 'Kassier', e: '🧑‍💼', nm: 'Bram', base: 500, g: 1.65, max: 40, d: '+5% fooi per niveau.' },
   ent: { n: 'Entertainer', e: '🎸', nm: 'Lola', base: 1200, g: 1.66, max: 40, d: 'Klanten wachten +3% langer en komen +2% vaker.' },
   buy: { n: 'Inkoper', e: '🛒', nm: 'Pieter', base: 2500, g: 1.7, max: 40, d: 'Vult de voorraad vanzelf aan, koopt extra als het goedkoop is (-1,5% prijs per niveau).' },
+  mrk: { n: 'Marketeer', e: '🎤', nm: 'Rik', base: 4000000, g: 1.85, max: 40, d: '+2% klanten per niveau met slimme reclame.' },
+  chf: { n: 'Sous-chef', e: '🏅', nm: 'Jolien', base: 6000000, g: 1.85, max: 40, d: '+1,5% verkoopprijs per niveau: alles ziet er chiquer uit.' },
 };
 export const STAFF_IDS = Object.keys(STAFF);
 export const staffCost = (id, lv) => cost(STAFF[id].base, STAFF[id].g, lv);
@@ -137,6 +152,12 @@ export const UPG = [
   { id: 'frg', n: 'Koelkast', e: '❄️', base: 100, g: 2.1, max: 12, d: '+25 voorraad per ingrediënt.' },
   { id: 'mnu', n: 'Menubord', e: '📋', base: 250, g: 2.8, max: 8, d: '+1 plek op je menu.' },
   { id: 'pat', n: 'Wachtbankje', e: '🛋️', base: 150, g: 1.65, max: 30, d: 'Klanten wachten +6% langer.' },
+  { id: 'rdr', n: 'Reclamebel', e: '🔔', base: 300000, g: 1.9, max: 25, d: '+3% klanten per niveau.' },
+  { id: 'tip', n: 'Fooienpot', e: '💰', base: 400000, g: 1.9, max: 20, d: '+2% fooi per niveau.' },
+  { id: 'snd', n: 'Snelle snijplank', e: '🥕', base: 250000, g: 1.9, max: 25, d: 'Koken +3% sneller per niveau.' },
+  { id: 'lux', n: 'Luxe servies', e: '👑', base: 1000000, g: 2, max: 20, d: '+2% verkoopprijs per niveau.' },
+  { id: 'kor', n: 'Klantenkaart', e: '🎟️', base: 750000, g: 2, max: 15, d: '-1% inkoopprijs per niveau.' },
+  { id: 'nac', n: 'Nachtlamp', e: '🌙', base: 1250000, g: 2, max: 10, d: '+2% meer verdienen terwijl je weg bent.' },
 ];
 export const UPGM = {}; UPG.forEach((u) => { UPGM[u.id] = u; });
 export const upCost = (id, lv) => cost(UPGM[id].base, UPGM[id].g, lv);
@@ -157,6 +178,15 @@ export const DECOR = [
   { id: 'lou', n: 'Loungebank', e: '🛋️', slot: 'grond', price: 15000, pat: 0.1 }, { id: 'fon', n: 'Fontein', e: '⛲', slot: 'grond', price: 60000, arr: 0.08 },
   { id: 'dra', n: 'Draaimolen', e: '🎠', slot: 'grond', price: 250000, arr: 0.12 }, { id: 'rad', n: 'Reuzenrad', e: '🎡', slot: 'grond', price: 3e6, arr: 0.2 },
   { id: 'sta', n: 'Standbeeld van jou', e: '🗿', slot: 'grond', price: 2e7, tip: 0.1, arr: 0.1 },
+  { id: 'zon', n: 'Zonnelamp', e: '☀️', slot: 'dak', price: 5000, arr: 0.03, tip: 0.015 }, { id: 'dgn', n: 'Drakenballon', e: '🐉', slot: 'dak', price: 1e6, arr: 0.1 },
+  { id: 'rak', n: 'Mini-raket', e: '🚀', slot: 'dak', price: 1.5e7, arr: 0.12, tip: 0.03 },
+  { id: 'gtr', n: 'Gitaar', e: '🎸', slot: 'zij', price: 4000, tip: 0.03 }, { id: 'rob', n: 'Robotarm', e: '🤖', slot: 'zij', price: 500000, tip: 0.05, arr: 0.02 },
+  { id: 'tro', n: 'Trofee', e: '🏆', slot: 'zij', price: 6e6, tip: 0.06, arr: 0.03 },
+  { id: 'wol', n: 'Wolkje', e: '☁️', slot: 'lucht', price: 600, pat: 0.04 }, { id: 'vli', n: 'Vlinders', e: '🦋', slot: 'lucht', price: 6000, arr: 0.04 },
+  { id: 'hel', n: 'Helikopter', e: '🚁', slot: 'lucht', price: 6e6, arr: 0.1, pat: 0.04 },
+  { id: 'tul', n: 'Zonnebloemen', e: '🌻', slot: 'grond', price: 800, pat: 0.04 }, { id: 'bij', n: 'Bijenkast', e: '🐝', slot: 'grond', price: 15000, arr: 0.03 },
+  { id: 'ten', n: 'Feesttent', e: '⛺', slot: 'grond', price: 25000, pat: 0.08 }, { id: 'win', n: 'Windmolen', e: '🌬️', slot: 'grond', price: 400000, arr: 0.05 },
+  { id: 'tre', n: 'Mini-trein', e: '🚆', slot: 'grond', price: 2e7, arr: 0.14 },
 ];
 export const DECM = {}; DECOR.forEach((d) => { DECM[d.id] = d; });
 export const SLOTS = { dak: ['dak'], zij: ['zij'], lucht: ['lucht'], grond: ['g0', 'g1', 'g2'] };
@@ -176,6 +206,9 @@ export const EVENTS = [
   { id: 'wed', n: 'Kookwedstrijd', e: '🏆', dur: 100, fx: {}, goal: 8, goalT: 'Serveer 8 gerechten supersnel', d: 'Wie serveert het snelst?' },
   { id: 'sch', n: 'Schoolreisje', e: '🚌', dur: 70, fx: { pat: 1.5 }, goal: 6, goalT: 'Serveer alle 6 kinderen', burst: 6, d: 'Hongerige kinderen, bestel wat snel en lekker!' },
   { id: 'vip', n: 'Beroemdheid', e: '🌟', dur: 60, fx: {}, goal: 1, goalT: 'Serveer de beroemdheid', vip: true, d: 'Een filmster wil bij jou eten. Betaalt flink!' },
+  { id: 'zon', n: 'Zonnige dag', e: '☀️', dur: 90, fx: { arr: 1.4, price: 1.1 }, d: 'Mooi weer: iedereen wil een hapje buiten.' },
+  { id: 'nmk', n: 'Nachtmarkt', e: '🌙', dur: 100, fx: { arr: 1.25, tip: 0.35 }, d: 'Gezellige sfeer en veel fooi.' },
+  { id: 'bru', n: 'Bruiloft', e: '💍', dur: 80, fx: { price: 1.8 }, d: 'Een feestelijk gezelschap: +80% prijs.' },
 ];
 export const EVM = {}; EVENTS.forEach((e) => { EVM[e.id] = e; });
 
@@ -193,6 +226,14 @@ export const PERKM = {}; PERKS.forEach((p) => { PERKM[p.id] = p; });
 export const perkCost = (lv) => lv + 1;
 export const startCoins = (lv) => (lv ? Math.round(150 * Math.pow(4, lv)) : 0);
 
+// Wereld-uiterlijken (kies in ⭐ Meer › Uiterlijk). 'stad' is het klassieke uiterlijk met de skyline van de stad waar je staat.
+export const WORLD_SKINS = {
+  stad: { n: 'Stad', ic: 'skyscraper', d: 'Skyline van de stad waar je staat', sw: ['#4a97e0', '#bfe3ff', '#585c68'] },
+  strand: { n: 'Strand', ic: 'palm', d: 'Zand, zee en palmbomen', sw: ['#4fc3f7', '#ffe9a8', '#e8d29a'] },
+  festival: { n: 'Festival', ic: 'ferriswheel', d: 'Tenten, lichtjes en feestvlaggetjes', sw: ['#3b1d6e', '#f0abfc', '#4a8a3c'] },
+  winter: { n: 'Winter', ic: 'snowflake', d: 'Sneeuw, dennenbomen en gezellig licht', sw: ['#9fb6d4', '#eaf3ff', '#f4f8ff'] },
+};
+
 // Missies (ketting): [tekst, metriek, doel, beloning in seconden inkomen, minimale beloning]
 export const MISSIONS = [
   ['Serveer 3 klanten', 'served', 3, 0, 15], ['Koop een verbetering in 🔧 Truck', 'upsum', 1, 0, 25], ['Serveer 15 klanten', 'served', 15, 0, 40],
@@ -205,6 +246,9 @@ export const MISSIONS = [
   ['Breng een gerecht naar niveau 5', 'dishlv', 5, 600, 1500], ['Ontgrendel 15 gerechten', 'rec', 15, 900, 2500], ['Open 4 steden', 'cities', 4, 1200, 5000],
   ['Personeel: samen niveau 30', 'staffsum', 30, 1200, 4000], ['Haal 10 sterren', 'stars', 10, 1800, 20000], ['Serveer 1.000 klanten', 'served', 1000, 1800, 9000],
   ['Verdien in totaal 1 miljoen 🪙', 'earned', 1e6, 1800, 40000], ['Open alle 8 steden', 'cities', 8, 3600, 1e6], ['Open je eerste franchise 🏅', 'franch', 1, 3600, 1e5],
+  ['Ontgrendel 30 gerechten', 'rec', 30, 2400, 20000], ['Serveer 5.000 klanten', 'served', 5000, 2400, 30000], ['Haal 14 sterren', 'stars', 14, 3000, 100000],
+  ['Koop 10 decoraties 🪴', 'decor', 10, 2400, 20000], ['Verdien in totaal 1 miljard 🪙', 'earned', 1e9, 3600, 2e6], ['Open 10 steden', 'cities', 10, 3600, 5e6],
+  ['Haal 20 sterren', 'stars', 20, 3600, 5e7], ['Bereik niveau 10 bij 5 gerechten', 'dishmax', 5, 3600, 1e6],
 ];
 
 export function metric(S, k) {
@@ -242,6 +286,10 @@ export const ACH = [];
   fam('dm', 'dishmax', 'Meestergerechten', '👨‍🍳', [1, 5, 15, 30]);
   fam('fr', 'franch', 'Franchises', '🏅', [1, 3, 10, 25]);
   fam('rt', 'rating', 'Topbeoordeling', '💯', [43, 46, 49], (t) => `${(t / 10).toFixed(1).replace('.', ',')}`);
+  fam('r2', 'rec', 'Kookboek', '📖', [55, 67]);
+  fam('c2', 'cities', 'Wereldreiziger', '🌍', [10, 12]);
+  fam('d2', 'decor', 'Versiering', '🎈', [32, 39]);
+  fam('s2', 'staffsum', 'Grote ploeg', '👥', [400, 700]);
 })();
 
 // Reviews
@@ -269,7 +317,7 @@ export function newState(now = Date.now(), keep = null) {
     city: 'ams', cities: { ams: { r: 4, b: 0 } },
     rec: { bro: 1 }, menu: ['bro'], stock: {}, staff: {}, up: {},
     look: { name: 'Mijn Foodtruck', col: 0, trim: 1, awn: 0 }, decor: [], placed: {},
-    mdone: {}, ach: {}, daily: { last: '', streak: 0 }, tut: 0, set: { snd: 1, mus: 1 }, auto: { buy: 1 },
+    mdone: {}, ach: {}, daily: { last: '', streak: 0 }, tut: 0, set: { snd: 1, mus: 1, skin: 'stad', seen: [] }, auto: { buy: 1 },
   };
   if (keep) { // franchise: bewaar meta
     S.badges = keep.badges; S.spent = keep.spent; S.perks = keep.perks; S.life = keep.life; S.look = keep.look; S.decor = keep.decor; S.placed = keep.placed;
@@ -321,7 +369,7 @@ export function parseSave(str, now = Date.now()) {
   S.mdone = {}; (Array.isArray(o.md) ? o.md : []).forEach((k) => { S.mdone[String(k)] = 1; });
   S.ach = {}; (Array.isArray(o.ac) ? o.ac : []).forEach((k) => { S.ach[String(k)] = 1; });
   const dl = o.dl || {}; S.daily = { last: String(dl.last || ''), streak: clamp(int(dl.streak), 0, 7) };
-  S.tut = clamp(int(o.tu), 0, 99); const st = o.st || {}; S.set = { snd: st.snd === 0 ? 0 : 1, mus: st.mus === 0 ? 0 : 1 };
+  S.tut = clamp(int(o.tu), 0, 99); const st = o.st || {}; S.set = { snd: st.snd === 0 ? 0 : 1, mus: st.mus === 0 ? 0 : 1, skin: WORLD_SKINS[st.skin] ? st.skin : 'stad', seen: Array.isArray(st.seen) ? st.seen.filter((x) => typeof x === 'string').slice(0, 40) : [] };
   S.auto = { buy: o.au && o.au.buy === 0 ? 0 : 1 };
   if (!S.menu.length) S.menu = ['bro'];
   return S;
@@ -349,15 +397,15 @@ export function derive(S, ev) {
   const D = {
     stars, city, wealth: city.w, rating: cs.r, badgeMul: badges,
     burners: 1 + U('brn'), cap: 3 + U('ctr'), menuSlots: 2 + U('mnu') + P('menu'),
-    cookSpeed: (1 + 0.12 * U('pan')) * (1 + 0.05 * T('kok')) * (1 + 0.05 * P('fast')) * em('cook'),
+    cookSpeed: (1 + 0.12 * U('pan')) * (1 + 0.03 * U('snd')) * (1 + 0.05 * T('kok')) * (1 + 0.05 * P('fast')) * em('cook'),
     patMul: (1 + 0.06 * U('pat')) * (1 + 0.03 * T('ent')) * (1 + dec.pat) * em('pat'),
-    arrival: city.arr * (1 + 0.1 * U('sign')) * (1 + 0.05 * stars) * (0.7 + 0.15 * cs.r) * (1 + 0.02 * T('ent')) * (1 + 0.1 * P('fans')) * (1 + dec.arr) * em('arr') * (S.life.served < 12 ? 2.2 : 1),
-    priceMul: (1 + 0.06 * U('cash')) * (1 + 0.04 * stars) * badges * city.w * em('price'),
-    tip: 0.05 * T('kas') + dec.tip + (ev && ev.tip != null ? ev.tip : 0),
-    fridge: 30 + 25 * U('frg'), disc: Math.min(0.6, 0.015 * T('buy') + 0.05 * P('disc')), mktScale: Math.pow(1.12, stars),
+    arrival: city.arr * (1 + 0.1 * U('sign')) * (1 + 0.03 * U('rdr')) * (1 + 0.02 * T('mrk')) * (1 + 0.05 * stars) * (0.7 + 0.15 * cs.r) * (1 + 0.02 * T('ent')) * (1 + 0.1 * P('fans')) * (1 + dec.arr) * em('arr') * (S.life.served < 12 ? 2.2 : 1),
+    priceMul: (1 + 0.06 * U('cash')) * (1 + 0.02 * U('lux')) * (1 + 0.015 * T('chf')) * (1 + 0.04 * stars) * badges * city.w * em('price'),
+    tip: 0.05 * T('kas') + 0.02 * U('tip') + dec.tip + (ev && ev.tip != null ? ev.tip : 0),
+    fridge: 30 + 25 * U('frg'), disc: Math.min(0.6, 0.015 * T('buy') + 0.05 * P('disc') + 0.01 * U('kor')), mktScale: Math.pow(1.12, stars),
     autoCook: T('kok') > 0, autoServe: T('srv') > 0, autoBuy: T('buy') > 0, autoFlip: T('kok') >= 5,
     kokReact: Math.max(0.35, 2.2 - 0.12 * T('kok')), srvReact: Math.max(0.3, 2.4 - 0.15 * T('srv')),
-    branch: branchRateOf(S, stars, badges), offEff: Math.min(1, BASE_OFF_EFF + 0.05 * P('off')),
+    branch: branchRateOf(S, stars, badges), offEff: Math.min(1, BASE_OFF_EFF + 0.05 * P('off') + 0.02 * U('nac')),
   };
   D.quickAuto = D.srvReact <= 1.5;
   return D;
@@ -431,7 +479,8 @@ export function missionReward(S, i) {
 }
 export function dailyReward(S, streakDay) {
   const r = rates(S, 'active');
-  return Math.round(Math.max(120 * streakDay, r.coins * 400 * (0.5 + 0.25 * streakDay)));
+  // dag 1 is ongeveer 10% van wat een gewone speler in het eerste uur verdient; elke streakdag meer
+  return Math.round(Math.max(60 * streakDay, r.coins * 72 * (1 + 0.25 * (streakDay - 1))));
 }
 
 /* =====================================================================
@@ -815,36 +864,36 @@ export function makeAudio() {
    6. STIJL (unieke prefix ft-)
    ===================================================================== */
 const CSS = `
-.ft{--ft-gold:#f5b301;--ft-ok:#2fb36d;--ft-no:#e5534b;--ft-soft:rgba(127,127,127,.12);--ft-warm:#ff8a3d;display:block;color:var(--ink);-webkit-user-select:none;user-select:none;padding-bottom:4.4rem;position:relative}
+.ft{--ft-gold:#f5b301;--ft-ok:#2fb36d;--ft-no:#e5534b;--ft-soft:rgba(127,127,127,.12);--ft-warm:#ff8a3d;display:block;color:var(--ink);-webkit-user-select:none;user-select:none;padding-bottom:calc(5.016rem*var(--gfx-font,1));position:relative}
 .ft *{box-sizing:border-box}
 .ft button{touch-action:manipulation}
 .ft small,.ft .ft-mut{color:var(--mute)}
-.ft-load{padding:3rem 1rem;text-align:center;font-size:1.1rem}
-.ft-hud{position:sticky;top:58px;z-index:6;display:flex;align-items:center;gap:.4rem;padding:.4rem .5rem;margin:.4rem 0;background:var(--card);border:1px solid var(--line);border-radius:14px;font-size:.85rem}
-.ft-coins{font-weight:800;font-size:1.05rem;display:flex;align-items:center;gap:.25rem;min-width:5.5rem}
+.ft-load{padding:calc(3.42rem*var(--gfx-font,1)) calc(1.14rem*var(--gfx-font,1));text-align:center;font-size:calc(1.254rem*var(--gfx-font,1))}
+.ft-hud{position:sticky;top:58px;z-index:6;display:flex;align-items:center;gap:calc(0.456rem*var(--gfx-font,1));padding:calc(0.456rem*var(--gfx-font,1)) calc(0.57rem*var(--gfx-font,1));margin:calc(0.456rem*var(--gfx-font,1)) 0;background:var(--card);border:1px solid var(--line);border-radius:14px;font-size:calc(0.969rem*var(--gfx-font,1))}
+.ft-coins{font-weight:800;font-size:calc(1.197rem*var(--gfx-font,1));display:flex;align-items:center;gap:calc(0.285rem*var(--gfx-font,1));min-width:calc(6.27rem*var(--gfx-font,1))}
 .ft-coins span{display:inline-block;transition:transform .15s}
 .ft-coins.pop span{transform:scale(1.18)}
 .ft-star{display:flex;flex-direction:column;flex:1;min-width:0;gap:2px}
-.ft-star b{font-size:.85rem;white-space:nowrap}
+.ft-star b{font-size:calc(0.969rem*var(--gfx-font,1));white-space:nowrap}
 .ft-xp{display:block;height:6px;background:var(--line);border-radius:9px;overflow:hidden}
 .ft-xp i{display:block;height:100%;background:linear-gradient(90deg,var(--ft-gold),#ffd966);border-radius:9px;transition:width .3s}
 .ft-rt{font-weight:700;white-space:nowrap}
-.ft-hud button{padding:.3rem .5rem;border-radius:10px;font-size:1rem;line-height:1}
+.ft-hud button{padding:calc(0.342rem*var(--gfx-font,1)) calc(0.57rem*var(--gfx-font,1));border-radius:10px;font-size:calc(1.14rem*var(--gfx-font,1));line-height:1}
 .ft-pane{display:block}.ft-pane[hidden]{display:none}
 .ft-cv{position:relative;width:100%;aspect-ratio:360/260;border-radius:16px;overflow:hidden;border:1px solid var(--line);background:#9cc7ee;touch-action:manipulation}
 .ft-cv canvas{display:block;width:100%;height:100%}
 .ft-trv{position:absolute;inset:auto 0 8px 0;text-align:center;font-weight:700;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.5);pointer-events:none}
-.ft-ev{margin:.5rem 0}
-.ft-evb{display:flex;align-items:center;gap:.5rem;padding:.5rem .6rem;border-radius:14px;background:linear-gradient(135deg,rgba(255,138,61,.18),rgba(245,179,1,.18));border:1px solid rgba(245,179,1,.5);font-size:.85rem}
-.ft-evb .ft-eve{font-size:1.6rem}.ft-evb>div{flex:1;min-width:0}
-.ft-evb .ft-bar{margin-top:.25rem}
+.ft-ev{margin:calc(0.57rem*var(--gfx-font,1)) 0}
+.ft-evb{display:flex;align-items:center;gap:calc(0.57rem*var(--gfx-font,1));padding:calc(0.57rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));border-radius:14px;background:linear-gradient(135deg,rgba(255,138,61,.18),rgba(245,179,1,.18));border:1px solid rgba(245,179,1,.5);font-size:calc(0.969rem*var(--gfx-font,1))}
+.ft-evb .ft-eve{font-size:calc(1.824rem*var(--gfx-font,1))}.ft-evb>div{flex:1;min-width:0}
+.ft-evb .ft-bar{margin-top:calc(0.285rem*var(--gfx-font,1))}
 .ft-bar{display:block;height:7px;border-radius:9px;background:var(--line);overflow:hidden}
 .ft-bar i{display:block;height:100%;border-radius:9px;background:var(--accent);transition:width .25s}
 .ft-bar.g i{background:var(--ft-ok)}.ft-bar.y i{background:var(--ft-gold)}.ft-bar.r i{background:var(--ft-no)}
-.ft-tix{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:.35rem;margin:.5rem 0}
-.ft-tk{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:.3rem .15rem .4rem;min-height:68px;border-radius:12px;border:2px solid var(--line);background:var(--card);overflow:hidden;font-size:.62rem;line-height:1.1;--p:0%}
-.ft-tk .ft-tke{font-size:1.5rem;line-height:1}
-.ft-tk .ft-tkt{font-weight:700;color:var(--mute);height:.8rem;white-space:nowrap}
+.ft-tix{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:calc(0.399rem*var(--gfx-font,1));margin:calc(0.57rem*var(--gfx-font,1)) 0}
+.ft-tk{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;padding:calc(0.342rem*var(--gfx-font,1)) calc(0.171rem*var(--gfx-font,1)) calc(0.456rem*var(--gfx-font,1));min-height:68px;border-radius:12px;border:2px solid var(--line);background:var(--card);overflow:hidden;font-size:calc(0.707rem*var(--gfx-font,1));line-height:1.1;--p:0%}
+.ft-tk .ft-tke{font-size:calc(1.71rem*var(--gfx-font,1));line-height:1}
+.ft-tk .ft-tkt{font-weight:700;color:var(--mute);height:calc(0.912rem*var(--gfx-font,1));white-space:nowrap}
 .ft-tk .ft-tkb{display:block;position:absolute;left:0;right:0;bottom:0;height:5px;background:var(--line)}
 .ft-tk .ft-tkb b{display:block;height:100%;background:var(--ft-ok);width:100%;transition:width .2s linear}
 .ft-tk.e{opacity:.4;border-style:dashed}
@@ -859,95 +908,110 @@ const CSS = `
 .ft-tk.vip{box-shadow:0 0 0 2px var(--ft-gold) inset}
 @keyframes ftpulse{from{transform:scale(1)}to{transform:scale(1.06)}}
 @keyframes fthit{0%{transform:scale(.9)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
-.ft-sbar{display:flex;gap:.4rem;flex-wrap:wrap;align-items:center;font-size:.8rem;margin:.3rem 0}
-.ft-sbar>span{background:var(--ft-soft);border-radius:99px;padding:.2rem .6rem;white-space:nowrap}
-.ft-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:.7rem .8rem;margin:.55rem 0}
-.ft-card h3{margin:.1rem 0 .4rem;font-size:1rem}
-.ft-card p{margin:.3rem 0;font-size:.85rem}
-.ft-coach{display:flex;gap:.6rem;align-items:flex-start;margin:.55rem 0;padding:.65rem .75rem;border-radius:16px;background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(255,138,61,.16));border:1px solid var(--accent);font-size:.88rem}
-.ft-coach>b{font-size:1.6rem;line-height:1}.ft-coach>div{flex:1}
-.ft-coach button{font-size:.72rem;padding:.2rem .5rem;margin-top:.3rem}
-.ft-ms{margin:.5rem 0}
-.ft-mi{display:flex;align-items:center;gap:.5rem;padding:.45rem .6rem;border-radius:12px;background:var(--ft-soft);margin:.3rem 0;font-size:.82rem}
-.ft-mi>div{flex:1;min-width:0}.ft-mi .ft-bar{margin-top:.25rem}
+.ft-sbar{display:flex;gap:calc(0.456rem*var(--gfx-font,1));flex-wrap:wrap;align-items:center;font-size:calc(0.912rem*var(--gfx-font,1));margin:calc(0.342rem*var(--gfx-font,1)) 0}
+.ft-sbar>span{background:var(--ft-soft);border-radius:99px;padding:calc(0.228rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));white-space:nowrap}
+.ft-card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:calc(0.798rem*var(--gfx-font,1)) calc(0.912rem*var(--gfx-font,1));margin:calc(0.627rem*var(--gfx-font,1)) 0}
+.ft-card h3{margin:calc(0.114rem*var(--gfx-font,1)) 0 calc(0.456rem*var(--gfx-font,1));font-size:calc(1.14rem*var(--gfx-font,1))}
+.ft-card p{margin:calc(0.342rem*var(--gfx-font,1)) 0;font-size:calc(0.969rem*var(--gfx-font,1))}
+.ft-coach{display:flex;gap:calc(0.684rem*var(--gfx-font,1));align-items:flex-start;margin:calc(0.627rem*var(--gfx-font,1)) 0;padding:calc(0.741rem*var(--gfx-font,1)) calc(0.855rem*var(--gfx-font,1));border-radius:16px;background:linear-gradient(135deg,rgba(99,102,241,.16),rgba(255,138,61,.16));border:1px solid var(--accent);font-size:calc(1.003rem*var(--gfx-font,1))}
+.ft-coach>b{font-size:calc(1.824rem*var(--gfx-font,1));line-height:1}.ft-coach>div{flex:1}
+.ft-coach button{font-size:calc(0.821rem*var(--gfx-font,1));padding:calc(0.228rem*var(--gfx-font,1)) calc(0.57rem*var(--gfx-font,1));margin-top:calc(0.342rem*var(--gfx-font,1))}
+.ft-ms{margin:calc(0.57rem*var(--gfx-font,1)) 0}
+.ft-mi{display:flex;align-items:center;gap:calc(0.57rem*var(--gfx-font,1));padding:calc(0.513rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));border-radius:12px;background:var(--ft-soft);margin:calc(0.342rem*var(--gfx-font,1)) 0;font-size:calc(0.935rem*var(--gfx-font,1))}
+.ft-mi>div{flex:1;min-width:0}.ft-mi .ft-bar{margin-top:calc(0.285rem*var(--gfx-font,1))}
 .ft-mi.rdy{background:rgba(47,179,109,.18);border:1px solid var(--ft-ok)}
-.ft-nav{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:430px;margin:0 auto;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:.3rem .3rem calc(.3rem + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(0,0,0,.08)}
-.ft-nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:.25rem 0;border-radius:10px;font-size:.58rem;color:var(--mute);line-height:1.1}
-.ft-nav button span{font-size:1.25rem;line-height:1.1}
+.ft-nav{position:fixed;left:0;right:0;bottom:0;z-index:20;max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(7,1fr);gap:2px;padding:calc(0.342rem*var(--gfx-font,1)) calc(0.342rem*var(--gfx-font,1)) calc(calc(0.342rem*var(--gfx-font,1)) + env(safe-area-inset-bottom,0px));background:var(--card);border-top:1px solid var(--line);box-shadow:0 -4px 14px rgba(0,0,0,.08)}
+.ft-nav button{position:relative;display:flex;flex-direction:column;align-items:center;gap:1px;border:0;background:none;padding:calc(0.285rem*var(--gfx-font,1)) 0;border-radius:10px;font-size:calc(0.661rem*var(--gfx-font,1));color:var(--mute);line-height:1.1}
+.ft-nav button span{font-size:calc(1.425rem*var(--gfx-font,1));line-height:1.1}
 .ft-nav button.on{background:var(--ft-soft);color:var(--ink);font-weight:700}
 .ft-nav button.pul{animation:ftpulse .6s infinite alternate;background:rgba(245,179,1,.3)}
-.ft-nav button i{position:absolute;top:1px;right:6px;min-width:15px;height:15px;border-radius:99px;background:var(--ft-no);color:#fff;font-size:.6rem;font-style:normal;line-height:15px;text-align:center;padding:0 3px}
-.ft-sub{display:flex;gap:.3rem;overflow-x:auto;margin:.2rem 0 .4rem;padding-bottom:.2rem}
-.ft-sub button{white-space:nowrap;font-size:.8rem;padding:.35rem .7rem;border-radius:99px}
+.ft-nav button i{position:absolute;top:1px;right:6px;min-width:15px;height:15px;border-radius:99px;background:var(--ft-no);color:#fff;font-size:calc(0.684rem*var(--gfx-font,1));font-style:normal;line-height:15px;text-align:center;padding:0 3px}
+.ft-sub{display:flex;gap:calc(0.342rem*var(--gfx-font,1));overflow-x:auto;margin:calc(0.228rem*var(--gfx-font,1)) 0 calc(0.456rem*var(--gfx-font,1));padding-bottom:calc(0.228rem*var(--gfx-font,1))}
+.ft-sub button{white-space:nowrap;font-size:calc(0.912rem*var(--gfx-font,1));padding:calc(0.399rem*var(--gfx-font,1)) calc(0.798rem*var(--gfx-font,1));border-radius:99px}
 .ft-sub button.on{background:var(--accent);border-color:var(--accent);color:#fff}
-.ft-b{border-radius:10px;padding:.4rem .6rem;font-size:.8rem;font-weight:700;white-space:nowrap;background:var(--accent);border-color:var(--accent);color:#fff}
+.ft-b{border-radius:10px;padding:calc(0.456rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));font-size:calc(0.912rem*var(--gfx-font,1));font-weight:700;white-space:nowrap;background:var(--accent);border-color:var(--accent);color:#fff}
 .ft-b.no{opacity:.45;background:var(--card);color:var(--ink);border-color:var(--line)}
 .ft-b.alt{background:var(--card);color:var(--ink);border-color:var(--line)}
 .ft-b.on{background:var(--ft-ok);border-color:var(--ft-ok);color:#fff}
 .ft-b.gold{background:var(--ft-gold);border-color:var(--ft-gold);color:#3a2a00}
 .ft-b:disabled{opacity:.4}
-.ft-chip{display:inline-flex;align-items:center;gap:.25rem;padding:.2rem .55rem;border-radius:99px;background:var(--ft-soft);font-size:.78rem;margin:.1rem}
+.ft-chip{display:inline-flex;align-items:center;gap:calc(0.285rem*var(--gfx-font,1));padding:calc(0.228rem*var(--gfx-font,1)) calc(0.627rem*var(--gfx-font,1));border-radius:99px;background:var(--ft-soft);font-size:calc(0.889rem*var(--gfx-font,1));margin:calc(0.114rem*var(--gfx-font,1))}
 .ft-chip.on{background:rgba(47,179,109,.2);border:1px solid var(--ft-ok)}
 .ft-chip.lack{background:rgba(229,83,75,.16)}
-.ft-dish{display:flex;gap:.6rem;align-items:center;padding:.55rem .6rem;border-radius:14px;border:1px solid var(--line);background:var(--card);margin:.4rem 0}
+.ft-dish{display:flex;gap:calc(0.684rem*var(--gfx-font,1));align-items:center;padding:calc(0.627rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));border-radius:14px;border:1px solid var(--line);background:var(--card);margin:calc(0.456rem*var(--gfx-font,1)) 0}
 .ft-dish.lock{opacity:.8}
-.ft-dish .ft-de{font-size:2rem;width:2.4rem;text-align:center;flex:none}
+.ft-dish .ft-de{font-size:calc(2.28rem*var(--gfx-font,1));width:calc(2.736rem*var(--gfx-font,1));text-align:center;flex:none}
 .ft-dish.lock .ft-de{filter:grayscale(.8)}
-.ft-di{flex:1;min-width:0;font-size:.82rem;line-height:1.35}
-.ft-di b{font-size:.9rem}
-.ft-da{display:flex;flex-direction:column;gap:.3rem;align-items:stretch;flex:none}
-.ft-row{display:flex;gap:.5rem;align-items:center;margin:.35rem 0;flex-wrap:wrap}
+.ft-di{flex:1;min-width:0;font-size:calc(0.935rem*var(--gfx-font,1));line-height:1.35}
+.ft-di b{font-size:calc(1.026rem*var(--gfx-font,1))}
+.ft-da{display:flex;flex-direction:column;gap:calc(0.342rem*var(--gfx-font,1));align-items:stretch;flex:none}
+.ft-row{display:flex;gap:calc(0.57rem*var(--gfx-font,1));align-items:center;margin:calc(0.399rem*var(--gfx-font,1)) 0;flex-wrap:wrap}
 .ft-row>div{flex:1;min-width:0}
-.ft-ing{display:flex;gap:.55rem;align-items:center;padding:.5rem .6rem;border-radius:14px;border:1px solid var(--line);background:var(--card);margin:.35rem 0}
-.ft-ing .ft-ie{font-size:1.8rem;width:2.2rem;text-align:center}
-.ft-ing .ft-ii{flex:1;min-width:0;font-size:.8rem}
-.ft-ing .ft-bar{margin:.25rem 0}
-.ft-ing .ft-ib{display:flex;gap:.25rem}
-.ft-ing .ft-ib button{padding:.3rem .45rem;font-size:.75rem}
+.ft-ing{display:flex;gap:calc(0.627rem*var(--gfx-font,1));align-items:center;padding:calc(0.57rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));border-radius:14px;border:1px solid var(--line);background:var(--card);margin:calc(0.399rem*var(--gfx-font,1)) 0}
+.ft-ing .ft-ie{font-size:calc(2.052rem*var(--gfx-font,1));width:calc(2.508rem*var(--gfx-font,1));text-align:center}
+.ft-ing .ft-ii{flex:1;min-width:0;font-size:calc(0.912rem*var(--gfx-font,1))}
+.ft-ing .ft-bar{margin:calc(0.285rem*var(--gfx-font,1)) 0}
+.ft-ing .ft-ib{display:flex;gap:calc(0.285rem*var(--gfx-font,1))}
+.ft-ing .ft-ib button{padding:calc(0.342rem*var(--gfx-font,1)) calc(0.513rem*var(--gfx-font,1));font-size:calc(0.855rem*var(--gfx-font,1))}
 .ft-up{color:var(--ft-ok);font-weight:700}.ft-dn{color:var(--ft-no);font-weight:700}
 .ft-cheap{border-color:var(--ft-ok);box-shadow:0 0 0 1px var(--ft-ok) inset}
-.ft-sw{display:inline-block;width:2rem;height:2rem;border-radius:50%;border:3px solid transparent;padding:0;margin:.15rem}
+.ft-sw{display:inline-block;width:calc(2.28rem*var(--gfx-font,1));height:calc(2.28rem*var(--gfx-font,1));border-radius:50%;border:3px solid transparent;padding:0;margin:calc(0.171rem*var(--gfx-font,1))}
 .ft-sw.on{border-color:var(--ink)}
-.ft-slots{display:flex;gap:.35rem;flex-wrap:wrap;margin:.3rem 0}
-.ft-slot{width:3.6rem;height:3.6rem;border-radius:14px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:1.7rem;background:none;padding:0;position:relative}
+.ft-slots{display:flex;gap:calc(0.399rem*var(--gfx-font,1));flex-wrap:wrap;margin:calc(0.342rem*var(--gfx-font,1)) 0}
+.ft-slot{width:calc(4.104rem*var(--gfx-font,1));height:calc(4.104rem*var(--gfx-font,1));border-radius:14px;border:2px dashed var(--line);display:flex;align-items:center;justify-content:center;font-size:calc(1.938rem*var(--gfx-font,1));background:none;padding:0;position:relative}
 .ft-slot.has{border-style:solid;border-color:var(--ft-ok);background:rgba(47,179,109,.1)}
 .ft-slot.sel{border-color:var(--accent)}
-.ft-slot small{position:absolute;bottom:1px;font-size:.5rem}
-.ft-dec{display:flex;flex-direction:column;align-items:center;gap:2px;width:calc(25% - .3rem);min-width:72px;padding:.4rem .15rem;border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:.65rem;text-align:center}
-.ft-dec>span{font-size:1.6rem}
+.ft-slot small{position:absolute;bottom:1px;font-size:calc(0.57rem*var(--gfx-font,1))}
+.ft-dec{display:flex;flex-direction:column;align-items:center;gap:2px;width:calc(25% - calc(0.342rem*var(--gfx-font,1)));min-width:72px;padding:calc(0.456rem*var(--gfx-font,1)) calc(0.171rem*var(--gfx-font,1));border-radius:12px;border:1px solid var(--line);background:var(--card);font-size:calc(0.741rem*var(--gfx-font,1));text-align:center}
+.ft-dec>span{font-size:calc(1.824rem*var(--gfx-font,1))}
 .ft-dec.own{border-color:var(--ft-ok)}.ft-dec.pl{background:rgba(47,179,109,.18)}
-.ft-decs{display:flex;flex-wrap:wrap;gap:.35rem}
-.ft-city{padding:.7rem;border-radius:16px;border:1px solid var(--line);background:var(--card);margin:.5rem 0}
+.ft-decs{display:flex;flex-wrap:wrap;gap:calc(0.399rem*var(--gfx-font,1))}
+.ft-city{padding:calc(0.798rem*var(--gfx-font,1));border-radius:16px;border:1px solid var(--line);background:var(--card);margin:calc(0.57rem*var(--gfx-font,1)) 0}
 .ft-city.here{border-color:var(--ft-ok);box-shadow:0 0 0 1px var(--ft-ok) inset}
 .ft-city.lock{opacity:.8}
-.ft-city .ft-ch{display:flex;align-items:center;gap:.5rem}
-.ft-city .ft-ce{font-size:2.2rem}
+.ft-city .ft-ch{display:flex;align-items:center;gap:calc(0.57rem*var(--gfx-font,1))}
+.ft-city .ft-ce{font-size:calc(2.508rem*var(--gfx-font,1))}
 .ft-city .ft-ch>div{flex:1}
-.ft-stars{color:var(--ft-gold);letter-spacing:1px;font-size:.85rem}
-.ft-ach{display:flex;flex-wrap:wrap;gap:.35rem}
-.ft-an{width:calc(33.3% - .3rem);min-width:92px;padding:.4rem .3rem;border-radius:12px;border:1px solid var(--line);text-align:center;font-size:.65rem;background:var(--card)}
-.ft-an>span{display:block;font-size:1.5rem}
+.ft-stars{color:var(--ft-gold);letter-spacing:1px;font-size:calc(0.969rem*var(--gfx-font,1))}
+.ft-ach{display:flex;flex-wrap:wrap;gap:calc(0.399rem*var(--gfx-font,1))}
+.ft-an{width:calc(33.3% - calc(0.342rem*var(--gfx-font,1)));min-width:92px;padding:calc(0.456rem*var(--gfx-font,1)) calc(0.342rem*var(--gfx-font,1));border-radius:12px;border:1px solid var(--line);text-align:center;font-size:calc(0.741rem*var(--gfx-font,1));background:var(--card)}
+.ft-an>span{display:block;font-size:calc(1.71rem*var(--gfx-font,1))}
 .ft-an.off{opacity:.45;filter:grayscale(1)}
-.ft-rv{padding:.45rem .6rem;border-radius:12px;background:var(--ft-soft);margin:.3rem 0;font-size:.8rem}
-.ft-days{display:flex;gap:.25rem;margin:.4rem 0}
-.ft-days span{flex:1;text-align:center;padding:.3rem 0;border-radius:10px;background:var(--ft-soft);font-size:.7rem}
+.ft-rv{padding:calc(0.513rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));border-radius:12px;background:var(--ft-soft);margin:calc(0.342rem*var(--gfx-font,1)) 0;font-size:calc(0.912rem*var(--gfx-font,1))}
+.ft-days{display:flex;gap:calc(0.285rem*var(--gfx-font,1));margin:calc(0.456rem*var(--gfx-font,1)) 0}
+.ft-days span{flex:1;text-align:center;padding:calc(0.342rem*var(--gfx-font,1)) 0;border-radius:10px;background:var(--ft-soft);font-size:calc(0.798rem*var(--gfx-font,1))}
 .ft-days span.done{background:rgba(47,179,109,.25)}.ft-days span.now{outline:2px solid var(--ft-gold)}
-.ft-toasts{position:fixed;left:0;right:0;top:64px;z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:.3rem}
-.ft-toast{max-width:min(92vw,400px);padding:.45rem .8rem;border-radius:99px;background:rgba(30,32,45,.92);color:#fff;font-size:.82rem;box-shadow:0 4px 14px rgba(0,0,0,.25);animation:fttoast 2.8s forwards}
+.ft-toasts{position:fixed;left:0;right:0;top:64px;z-index:40;pointer-events:none;display:flex;flex-direction:column;align-items:center;gap:calc(0.342rem*var(--gfx-font,1))}
+.ft-toast{max-width:min(92vw,400px);padding:calc(0.513rem*var(--gfx-font,1)) calc(0.912rem*var(--gfx-font,1));border-radius:99px;background:rgba(30,32,45,.92);color:#fff;font-size:calc(0.935rem*var(--gfx-font,1));box-shadow:0 4px 14px rgba(0,0,0,.25);animation:fttoast 2.8s forwards}
 .ft-toast.good{background:rgba(31,140,86,.95)}.ft-toast.gold{background:rgba(190,130,0,.95)}.ft-toast.bad{background:rgba(190,60,55,.95)}
 @keyframes fttoast{0%{opacity:0;transform:translateY(-10px)}8%{opacity:1;transform:none}85%{opacity:1}100%{opacity:0}}
-.ft-modal{position:fixed;inset:0;z-index:50;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;padding:1rem}
+.ft-modal{position:fixed;inset:0;z-index:50;background:rgba(10,12,20,.55);display:flex;align-items:center;justify-content:center;padding:calc(1.14rem*var(--gfx-font,1))}
 .ft-modal[hidden]{display:none}
-.ft-mb{width:min(100%,380px);max-height:86vh;overflow:auto;background:var(--card);color:var(--ink);border-radius:20px;padding:1.1rem;box-shadow:0 10px 40px rgba(0,0,0,.4);text-align:center;animation:ftpop .25s}
-.ft-mb h3{margin:.2rem 0 .4rem}.ft-mb .ft-big{font-size:3rem;line-height:1.1}
-.ft-mb .ft-mrow{display:flex;gap:.5rem;justify-content:center;margin-top:.8rem}
+.ft-mb{width:min(100%,460px);max-height:86vh;overflow:auto;background:var(--card);color:var(--ink);border-radius:20px;padding:calc(1.254rem*var(--gfx-font,1));box-shadow:0 10px 40px rgba(0,0,0,.4);text-align:center;animation:ftpop .25s}
+.ft-mb h3{margin:calc(0.228rem*var(--gfx-font,1)) 0 calc(0.456rem*var(--gfx-font,1))}.ft-mb .ft-big{font-size:calc(3.42rem*var(--gfx-font,1));line-height:1.1}
+.ft-mb .ft-mrow{display:flex;gap:calc(0.57rem*var(--gfx-font,1));justify-content:center;margin-top:calc(0.912rem*var(--gfx-font,1))}
 @keyframes ftpop{from{transform:scale(.85);opacity:0}to{transform:none;opacity:1}}
 .ft input[type=text]{width:100%}
-.ft-switch{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem 0;border-bottom:1px solid var(--line)}
-.ft-note{font-size:.75rem;color:var(--mute);margin:.25rem 0}
-.ft-hint{background:rgba(245,179,1,.15);border-radius:12px;padding:.4rem .6rem;font-size:.8rem;margin:.4rem 0}
+.ft-switch{display:flex;align-items:center;justify-content:space-between;gap:calc(0.57rem*var(--gfx-font,1));padding:calc(0.57rem*var(--gfx-font,1)) 0;border-bottom:1px solid var(--line)}
+.ft-note{font-size:calc(0.855rem*var(--gfx-font,1));color:var(--mute);margin:calc(0.285rem*var(--gfx-font,1)) 0}
+.ft-hint{background:rgba(245,179,1,.15);border-radius:12px;padding:calc(0.456rem*var(--gfx-font,1)) calc(0.684rem*var(--gfx-font,1));font-size:calc(0.912rem*var(--gfx-font,1));margin:calc(0.456rem*var(--gfx-font,1)) 0}
 .ft-tcv{width:100%;aspect-ratio:360/190;display:block;border-radius:14px;border:1px solid var(--line)}
 @media (prefers-reduced-motion:reduce){.ft *{animation:none!important;transition:none!important}}
+
+.ft-i{width:1.3em;height:1.3em;vertical-align:-.3em;object-fit:contain;display:inline-block;filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.3))}
+.ft-de .ft-i,.ft-ie .ft-i,.ft-ce .ft-i{width:1.15em;height:1.15em;vertical-align:middle}
+.ft-tke .ft-i{width:1.25em;height:1.25em}
+.ft-b{min-height:calc(44px*var(--gfx-scale,1))}
+.ft-hud button{min-width:calc(44px*var(--gfx-scale,1));min-height:calc(44px*var(--gfx-scale,1))}
+.ft-nav button{min-height:calc(58px*var(--gfx-scale,1))}
+.ft-card,.ft-dish,.ft-ing,.ft-city{box-shadow:0 3px 10px rgba(0,0,0,.1)}
+.ft-cv{box-shadow:0 8px 22px rgba(0,0,0,.25)}
+.ft-skins{display:grid;grid-template-columns:repeat(2,1fr);gap:.6rem}
+.ft-skin{display:flex;flex-direction:column;align-items:center;gap:.25rem;padding:.7rem .5rem;border-radius:16px;border:2px solid var(--line);background:var(--card);text-align:center;font-size:.85rem}
+.ft-skin.on{border-color:var(--ft-ok);box-shadow:0 0 0 2px var(--ft-ok) inset}
+.ft-skin i{display:block;width:100%;height:46px;border-radius:12px;border:1px solid rgba(0,0,0,.15)}
+.ft-skin small{font-size:.7rem}
+html[data-reduce="1"] .ft *{animation:none!important;transition:none!important}
 `;
 
 /* =====================================================================
@@ -970,11 +1034,127 @@ export function skyAt(h) {
   const night = h < 5 || h >= 21 ? 1 : h < 7 ? (7 - h) / 2 : h < 19 ? 0 : (h - 19) / 2;
   return { top: mix(a[1], b[1], t), bot: mix(a[2], b[2], t), night };
 }
+/* ----- grafische kern (dynamisch geladen: de pure logica blijft in node importeerbaar) ----- */
+const GX = { art: null, icons: null, fx: null, set: null, panel: null, scenes: null };
+export async function loadGfx() {
+  const ld = async (k, p) => { try { GX[k] = await import(p); } catch (e) { GX[k] = null; } };
+  await Promise.all([ld('art', './gfx/art.js?v=1'), ld('icons', './gfx/icons.js?v=1'), ld('fx', './gfx/fx.js?v=1'), ld('set', './gfx/settings.js?v=1'), ld('panel', './gfx/panel.js?v=1'), ld('scenes', './gfx/scenes.js?v=1')]);
+  buildRev();
+  return GX;
+}
+export const gfxQ = () => (GX.set && GX.set.GFX ? GX.set.GFX.q : 1);
+export const gfxReduce = () => !!(GX.set && GX.set.GFX && GX.set.GFX.reduce);
+const ALIAS = { '🌟': 'star', '🪩': 'lightbulb', '🏮': 'lightbulb', '🏄': 'wave', '🪴': 'flower', '🌿': 'leaf', '🗿': 'trophy', '🎏': 'flag', '🎪': 'tent', '📖': 'book', '📋': 'scroll', '🛒': 'shop', '🔧': 'gear', '⚙️': 'gear', '🌷': 'flower', '🏛️': 'castle', '🗻': 'volcano', '🗽': 'skyscraper', '🛕': 'castle', '🕌': 'tower', '🏙️': 'skyscraper', '🥄': 'medal', '🚚': 'truck', '🔔': 'bell', '🪙': 'coin', '💰': 'bag', '🍳': 'egg', '🌴': 'palm', '💍': 'ring', '🍴': 'burger', '🎵': 'note', '🧐': 'trophy', '🌙': 'moon', '🌍': 'earth' };
+let REV = {}, EMO_SPLIT = null;
+const stripV = (s) => s.replace(/️/g, '');
+function buildRev() {
+  REV = {};
+  const I = GX.icons && GX.icons.ICONS;
+  if (I) for (const [n, e] of Object.entries(I)) { const k = stripV(e); if (!REV[k]) REV[k] = n; }
+  for (const [e, n] of Object.entries(ALIAS)) REV[stripV(e)] = n;
+  const keys = Object.keys(REV).filter((k) => GX.art && GX.art.has(REV[k])).sort((a, b) => b.length - a.length);
+  EMO_SPLIT = keys.length ? new RegExp('(' + keys.map((k) => k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '️?').join('|') + ')') : null;
+}
+export const iconOf = (emoji) => { const n = REV[stripV(emoji || '')]; return n && GX.art && GX.art.has(n) ? n : null; };
+// emoji -> HTML-string met <img> (of de emoji zelf)
+export function emHtml(e) {
+  const n = iconOf(e);
+  if (!n) return e || '';
+  return `<img class="ft-i" src="${GX.art.iconUrl(n)}" alt="${e}" draggable="false" onerror="this.replaceWith(document.createTextNode(this.alt))">`;
+}
+// vervang emoji in tekstknopen door 3D-icoontjes (alleen in de browser)
+export function iconify(root) {
+  if (!EMO_SPLIT || !root || typeof document === 'undefined' || !document.createTreeWalker || !document.createDocumentFragment) return;
+  const nodes = [];
+  try {
+    const w = document.createTreeWalker(root, 4); let n;
+    while ((n = w.nextNode())) { if (n.nodeValue && /[^\x00- ]/.test(n.nodeValue) && n.nodeValue.split(EMO_SPLIT).length > 1) nodes.push(n); }
+  } catch (e) { return; }
+  for (const n of nodes) {
+    const par = n.parentNode; if (!par || /^(SCRIPT|STYLE|TEXTAREA|OPTION)$/.test(par.nodeName)) continue;
+    const parts = n.nodeValue.split(EMO_SPLIT), frag = document.createDocumentFragment();
+    parts.forEach((p, i) => {
+      if (i % 2 === 0) { if (p) frag.appendChild(document.createTextNode(p)); return; }
+      const im = document.createElement('img'); im.className = 'ft-i'; im.src = GX.art.iconUrl(REV[stripV(p)]); im.alt = p; im.draggable = false;
+      im.onerror = () => { if (im.parentNode) im.parentNode.replaceChild(document.createTextNode(p), im); };
+      frag.appendChild(im);
+    });
+    par.replaceChild(frag, n);
+  }
+}
+// emoji (of icoon) op het canvas: x,y = middelpunt
+function emDraw(c, e, x, y, size) {
+  const n = iconOf(e);
+  if (n) { GX.art.drawIcon(c, n, x, y, size * 1.22); return; }
+  c.fillText(e, x, y + size * 0.05);
+}
+const gl = (c, x, y, r, col, a) => { if (GX.fx && gfxQ() > 0) GX.fx.glow(c, x, y, r, col, a); };
+
 const STARS = Array.from({ length: 36 }, (_, i) => [(i * 97 % 360), (i * 53 % 110) + 4, (i % 3) + 0.6]);
 const CLOUDS = [{ x: 30, y: 30, s: 1, v: 5 }, { x: 170, y: 58, s: 0.7, v: 3 }, { x: 290, y: 22, s: 1.2, v: 4 }];
 
-export function drawSky(c, h, t) {
-  const sk = skyAt(h);
+
+/* ----- wereld-uiterlijken: lucht-tint, achtergrond, grond en weer ----- */
+const SKY_TINT = { stad: null, strand: ['#58c8f4', '#fff1c0', 0.5], festival: ['#3b1d6e', '#ff9ad5', 0.32], winter: ['#9db4d2', '#eef5ff', 0.5] };
+function skyTint(sk, skin) {
+  const k = SKY_TINT[skin]; if (!k) return sk;
+  const day = 1 - sk.night;
+  return { top: mix(sk.top, mix(k[0], '#0b1030', sk.night * 0.8), k[2] * (skin === 'festival' ? 1 : day * 0.8 + 0.2)), bot: mix(sk.bot, mix(k[1], '#1c2a5a', sk.night * 0.8), k[2] * (skin === 'festival' ? 0.7 : day * 0.8 + 0.2)), night: sk.night };
+}
+function drawPalm(c, x, y, h, lean, dark, t) {
+  c.strokeStyle = dark('#7a5a3a'); c.lineWidth = 4; c.beginPath(); c.moveTo(x, y); c.quadraticCurveTo(x + lean * 0.4, y - h * 0.6, x + lean, y - h); c.stroke();
+  c.fillStyle = dark('#2f9d57');
+  for (let k = 0; k < 6; k++) { const a = -Math.PI / 2 + (k - 2.5) * 0.55 + Math.sin(t * 1.4 + k + x) * 0.05; c.beginPath(); c.moveTo(x + lean, y - h); c.quadraticCurveTo(x + lean + Math.cos(a) * 14, y - h + Math.sin(a) * 10 - 6, x + lean + Math.cos(a) * 30, y - h + Math.sin(a) * 18 + 10); c.quadraticCurveTo(x + lean + Math.cos(a) * 14, y - h + Math.sin(a) * 10 + 2, x + lean, y - h); c.fill(); }
+}
+function drawPine(c, x, y, h, dark, snow) {
+  c.fillStyle = dark('#6b4a2f'); c.fillRect(x - 2, y - 8, 4, 8);
+  for (let k = 0; k < 3; k++) { const w = 14 - k * 3, yy = y - 6 - k * h * 0.28; c.fillStyle = dark('#2f6f4a'); c.beginPath(); c.moveTo(x - w, yy); c.lineTo(x, yy - h * 0.4); c.lineTo(x + w, yy); c.closePath(); c.fill(); if (snow) { c.fillStyle = dark('#f2f7ff'); c.beginPath(); c.moveTo(x - w * 0.55, yy - h * 0.18); c.lineTo(x, yy - h * 0.4); c.lineTo(x + w * 0.55, yy - h * 0.18); c.quadraticCurveTo(x, yy - h * 0.1, x - w * 0.55, yy - h * 0.18); c.fill(); } }
+}
+export function drawWorldBack(c, skin, night, t, q = 1) {
+  const dark = (col) => mix(col, '#0b1030', night * 0.7);
+  if (skin === 'strand') {
+    const hy = BASE - 34, g = c.createLinearGradient(0, hy, 0, BASE); g.addColorStop(0, dark('#3ec1e8')); g.addColorStop(1, dark('#1f86c0'));
+    c.fillStyle = g; c.fillRect(0, hy, CW, 34);
+    c.fillStyle = dark('#4aa66a'); c.beginPath(); c.moveTo(212, hy); c.quadraticCurveTo(250, hy - 34, 300, hy); c.fill(); c.fillStyle = dark('#3c8a58'); c.beginPath(); c.moveTo(280, hy); c.quadraticCurveTo(318, hy - 22, 352, hy); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1;
+    for (let r = 0; r < 4; r++) { c.beginPath(); for (let x = 0; x <= CW; x += 8) { const y = hy + 6 + r * 8 + Math.sin(x * 0.07 + t * (1.2 + r * 0.3) + r) * (1.2 + r * 0.4); x ? c.lineTo(x, y) : c.moveTo(x, y); } c.stroke(); }
+    const bx = ((t * 7) % (CW + 80)) - 40; c.fillStyle = dark('#fff'); c.beginPath(); c.moveTo(bx, hy + 14); c.lineTo(bx, hy - 2); c.lineTo(bx + 12, hy + 14); c.fill(); c.fillStyle = dark('#c8553d'); c.fillRect(bx - 8, hy + 14, 22, 3);
+    if (q > 0 && night < 0.6) { c.fillStyle = 'rgba(255,255,255,.8)'; const n = q === 1 ? 8 : 16; for (let i = 0; i < n; i++) { const a = 0.5 + 0.5 * Math.sin(t * 2 + i * 1.7); c.globalAlpha = a; c.fillRect((i * 53) % CW, hy + 4 + (i * 17) % 28, 2, 1.4); } c.globalAlpha = 1; }
+    drawPalm(c, 24, BASE, 74, 14, dark, t); drawPalm(c, 338, BASE, 86, -16, dark, t + 2); drawPalm(c, 70, BASE, 52, 8, dark, t + 4);
+  } else if (skin === 'festival') {
+    const cols = ['#e5534b', '#f5b301', '#2fb36d', '#5aa9e6', '#e87bb5'];
+    for (let k = 0; k < 4; k++) { const x = 20 + k * 96, h = 54 + (k % 2) * 16; c.fillStyle = dark(cols[k % 5]); c.beginPath(); c.moveTo(x, BASE); c.lineTo(x + 40, BASE - h); c.lineTo(x + 80, BASE); c.closePath(); c.fill(); c.fillStyle = dark('#ffffff'); for (let s = 0; s < 3; s++) { c.beginPath(); c.moveTo(x + 20 + s * 20, BASE); c.lineTo(x + 40, BASE - h); c.lineTo(x + 30 + s * 20, BASE); c.closePath(); if (s === 1) c.fill(); } c.fillStyle = dark('#3a2a4a'); c.fillRect(x + 32, BASE - 22, 16, 22); c.fillStyle = dark(cols[(k + 2) % 5]); c.beginPath(); c.moveTo(x + 40, BASE - h); c.lineTo(x + 40, BASE - h - 12); c.lineTo(x + 52, BASE - h - 8); c.lineTo(x + 40, BASE - h - 4); c.fill(); }
+    if (GX.art && GX.art.has('ferriswheel')) { c.save(); c.translate(318, BASE - 50); GX.art.drawIcon(c, 'ferriswheel', 0, 0, 78, { alpha: 0.95 }); c.restore(); }
+    // lichtbundels van het podium
+    if (night > 0.2 || q > 0) { c.save(); c.globalCompositeOperation = 'lighter'; for (let k = 0; k < 3; k++) { const a = Math.sin(t * 0.9 + k * 2) * 0.35, x0 = 70 + k * 100; c.fillStyle = `rgba(${[255, 120, 255][k % 3]},${[200, 220, 255][k % 3]},${[120, 255, 140][k % 3]},${0.07 + night * 0.12})`; c.beginPath(); c.moveTo(x0 - 3, 40); c.lineTo(x0 + 3, 40); c.lineTo(x0 + Math.sin(a) * 90 + 26, BASE); c.lineTo(x0 + Math.sin(a) * 90 - 26, BASE); c.closePath(); c.fill(); } c.restore(); }
+    // vlaggetjes
+    c.strokeStyle = 'rgba(0,0,0,.4)'; c.lineWidth = 1; c.beginPath(); c.moveTo(0, 96); c.quadraticCurveTo(CW / 2, 122, CW, 96); c.stroke();
+    for (let k = 0; k < 18; k++) { const u = (k + 0.5) / 18, x = u * CW, y = (1 - u) * (1 - u) * 96 + 2 * u * (1 - u) * 122 + u * u * 96; c.fillStyle = dark(cols[k % 5]); c.beginPath(); c.moveTo(x - 5, y); c.lineTo(x + 5, y); c.lineTo(x, y + 11 + Math.sin(t * 2 + k) * 1.2); c.fill(); }
+  } else if (skin === 'winter') {
+    c.fillStyle = dark('#b6c8e0'); c.beginPath(); c.moveTo(-10, BASE); c.lineTo(50, BASE - 70); c.lineTo(110, BASE); c.lineTo(180, BASE - 52); c.lineTo(250, BASE); c.lineTo(300, BASE - 78); c.lineTo(370, BASE); c.closePath(); c.fill();
+    c.fillStyle = dark('#ffffff'); for (const [x, h] of [[50, 70], [180, 52], [300, 78]]) { c.beginPath(); c.moveTo(x, BASE - h); c.lineTo(x - h * 0.3, BASE - h * 0.62); c.lineTo(x + h * 0.3, BASE - h * 0.62); c.closePath(); c.fill(); }
+    for (let k = 0; k < 11; k++) drawPine(c, 8 + k * 34 + (k % 2) * 6, BASE + 2, 36 + (k * 7) % 18, dark, true);
+    for (const x of [236, 292]) { c.fillStyle = dark('#c9a27a'); c.fillRect(x, BASE - 26, 36, 26); c.fillStyle = dark('#f2f7ff'); c.beginPath(); c.moveTo(x - 4, BASE - 26); c.lineTo(x + 18, BASE - 44); c.lineTo(x + 40, BASE - 26); c.closePath(); c.fill(); c.fillStyle = `rgba(255,214,120,${0.55 + night * 0.4})`; c.fillRect(x + 6, BASE - 18, 8, 8); c.fillRect(x + 22, BASE - 18, 8, 8); if (q > 0) gl(c, x + 18, BASE - 14, 28, '#ffcf70', 0.12 + night * 0.25); c.fillStyle = dark('#8a5a3a'); c.fillRect(x + 28, BASE - 42, 5, 10); if (!gfxReduce()) { c.fillStyle = 'rgba(255,255,255,.55)'; for (let s = 0; s < 3; s++) { const p = ((t * 0.5) + s / 3) % 1; c.beginPath(); c.arc(x + 30 + Math.sin(t + s) * 3, BASE - 44 - p * 26, 2 + p * 3, 0, 6.2832); c.fill(); } } }
+  }
+}
+// weer/deeltjes bovenop de scene (stateloos): sneeuw, confetti, glinsters
+export function drawWorldFx(c, skin, t, night, q = 1) {
+  if (gfxReduce() || q === undefined) return;
+  if (skin === 'winter') { c.fillStyle = '#fff'; const n = [16, 34, 64][q]; for (let i = 0; i < n; i++) { const sp = 14 + (i % 4) * 7, x = (i * 37 + Math.sin(t * 0.7 + i) * 12 + 400) % CW, y = (t * sp + i * 53) % (CH + 10) - 5; c.globalAlpha = 0.5 + (i % 3) * 0.2; c.beginPath(); c.arc(x, y, 1 + (i % 3) * 0.5, 0, 6.2832); c.fill(); } c.globalAlpha = 1; }
+  else if (skin === 'festival') { const cols = ['#f5b301', '#e5534b', '#2fb36d', '#5aa9e6', '#e87bb5']; const n = [6, 16, 32][q]; for (let i = 0; i < n; i++) { const x = (i * 61 + Math.sin(t * 0.8 + i) * 18 + 400) % CW, y = (t * (16 + (i % 3) * 8) + i * 71) % (CH + 10) - 5; c.save(); c.translate(x, y); c.rotate(t * 2 + i); c.fillStyle = cols[i % 5]; c.globalAlpha = 0.85; c.fillRect(-2.5, -1, 5, 2.4); c.restore(); } c.globalAlpha = 1; }
+  else if (skin === 'strand' && q > 0 && night < 0.5) { for (let i = 0; i < [0, 3, 6][q]; i++) { const x = ((t * (10 + i * 3)) + i * 90) % (CW + 40) - 20, y = 20 + (i * 29) % 70 + Math.sin(t * 0.8 + i) * 4; c.fillStyle = '#fff'; c.globalAlpha = 0.9; c.beginPath(); c.moveTo(x - 4, y); c.quadraticCurveTo(x - 1, y - 3, x, y); c.quadraticCurveTo(x + 1, y - 3, x + 4, y); c.lineWidth = 1; c.strokeStyle = '#fff'; c.stroke(); } c.globalAlpha = 1; }
+}
+function groundCols(skin) {
+  switch (skin) {
+    case 'strand': return ['#f0dfae', '#e2cd92', '#cdb97c', '#bda76a'];
+    case 'festival': return ['#6aa04e', '#528a3d', '#4a7a3a', '#3a6430'];
+    case 'winter': return ['#f7fbff', '#e3edf8', '#d2e0f0', '#c0d2e8'];
+    default: return ['#d8d0be', '#c7bfae', '#6b6f7a', '#585c68'];
+  }
+}
+
+export function drawSky(c, h, t, skin = 'stad') {
+  const sk = skyTint(skyAt(h), skin), q = gfxQ();
   const g = c.createLinearGradient(0, 0, 0, BASE); g.addColorStop(0, sk.top); g.addColorStop(1, sk.bot);
   c.fillStyle = g; c.fillRect(0, 0, CW, CH);
   if (sk.night > 0.15) { c.fillStyle = '#fff'; for (const s of STARS) { c.globalAlpha = sk.night * (0.5 + 0.5 * Math.sin(t * 1.5 + s[0])); c.fillRect(s[0], s[1], s[2], s[2]); } c.globalAlpha = 1; }
@@ -982,12 +1162,12 @@ export function drawSky(c, h, t) {
   const p = day ? (h - 6) / 13 : ((h + 24 - 19) % 24) / 11;
   const x = 30 + (CW - 60) * clamp(p, 0, 1), y = 130 - Math.sin(clamp(p, 0, 1) * Math.PI) * 100;
   const rg = c.createRadialGradient(x, y, 2, x, y, 38); rg.addColorStop(0, day ? 'rgba(255,240,170,.9)' : 'rgba(230,235,255,.6)'); rg.addColorStop(1, 'rgba(255,240,170,0)');
-  c.fillStyle = rg; c.fillRect(x - 40, y - 40, 80, 80);
+  c.fillStyle = rg; c.fillRect(x - 40, y - 40, 80, 80); if (q > 0) gl(c, x, y, q > 1 ? 90 : 62, day ? '#ffe9a0' : '#cfd8ff', day ? 0.28 : 0.18);
   c.fillStyle = day ? '#ffe27a' : '#eef1ff'; c.beginPath(); c.arc(x, y, day ? 12 : 9, 0, 6.2832); c.fill();
   if (!day) { c.fillStyle = sk.top; c.beginPath(); c.arc(x + 4, y - 2, 8, 0, 6.2832); c.fill(); }
   c.fillStyle = 'rgba(255,255,255,' + (0.85 - sk.night * 0.65) + ')';
-  for (const cl of CLOUDS) {
-    const cx = ((cl.x + t * cl.v) % (CW + 120)) - 60, s = cl.s;
+  for (const cl of CLOUDS.slice(0, q === 0 ? 2 : 3)) {
+    const cx = ((cl.x + t * cl.v * (q > 1 ? 1.3 : 1)) % (CW + 120)) - 60, s = cl.s;
     c.beginPath(); c.ellipse(cx, cl.y, 24 * s, 8 * s, 0, 0, 6.2832); c.ellipse(cx - 14 * s, cl.y + 3 * s, 14 * s, 6 * s, 0, 0, 6.2832); c.ellipse(cx + 15 * s, cl.y + 2 * s, 16 * s, 7 * s, 0, 0, 6.2832); c.fill();
   }
   return sk;
@@ -997,7 +1177,8 @@ function bld(c, x, w, h, col, night, win = true) {
   c.fillStyle = col; c.fillRect(x, BASE - h, w, h);
   if (win && night > 0.3) { c.fillStyle = 'rgba(255,220,120,' + (0.85 * night) + ')'; for (let yy = BASE - h + 6; yy < BASE - 8; yy += 10) for (let xx = x + 3; xx < x + w - 5; xx += 8) if (((xx * 7 + yy * 13) | 0) % 5 !== 0) c.fillRect(xx, yy, 3, 4); }
 }
-export function drawSkyline(c, id, pal, night, t) {
+export function drawSkyline(c, id, pal, night, t, skin = 'stad') {
+  if (skin && skin !== 'stad' && skin !== 'x') { drawWorldBack(c, skin, night, t, gfxQ()); return; }
   const dark = (col) => mix(col, '#0b1030', night * 0.72);
   const far = dark(mix(pal[2], '#9aa8c8', 0.45)), mid = dark(pal[2]), a = dark(pal[0]), b = dark(pal[1]);
   c.globalAlpha = 1;
@@ -1040,6 +1221,26 @@ export function drawSkyline(c, id, pal, night, t) {
     c.fillStyle = dark('#e8d8b8'); c.fillRect(240, BASE - 70, 104, 70); c.fillStyle = dark('#7a5a3a'); c.beginPath(); c.arc(292, BASE, 26, Math.PI, 0); c.fill();
     c.fillStyle = dark('#e8d8b8'); for (const dx of [250, 292, 334]) { c.beginPath(); c.arc(dx, BASE - 70, 12, Math.PI, 0); c.fill(); } c.fillRect(290, BASE - 96, 4, 14);
     c.fillStyle = dark('#3d7c4a'); for (const px of [228, 358]) { c.fillRect(px, BASE - 44, 4, 44); for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(px + 2 + (k - 2) * 7, BASE - 46 + Math.abs(k - 2) * 3, 9, 3, (k - 2) * 0.4, 0, 6.2832); c.fill(); } }
+  } else if (id === 'rio') {
+    fill([far, mid, b], 24, 20, 30, 4);
+    c.fillStyle = dark('#6c8a6a'); c.beginPath(); c.moveTo(228, BASE); c.quadraticCurveTo(262, BASE - 96, 296, BASE - 70); c.quadraticCurveTo(320, BASE - 40, 352, BASE); c.fill();
+    c.fillStyle = dark('#8fb08a'); c.beginPath(); c.moveTo(262, BASE - 70); c.quadraticCurveTo(280, BASE - 96, 300, BASE - 72); c.fill();
+    c.fillStyle = dark('#f1f4ff'); c.fillRect(278, BASE - 106, 4, 22); c.fillRect(268, BASE - 100, 24, 4);
+    for (const px of [236, 350]) { c.strokeStyle = dark('#7a5a3a'); c.lineWidth = 3; c.beginPath(); c.moveTo(px, BASE); c.lineTo(px + 4, BASE - 40); c.stroke(); c.fillStyle = dark('#2f9d57'); for (let k = 0; k < 5; k++) { c.beginPath(); c.ellipse(px + 4 + (k - 2) * 7, BASE - 42 + Math.abs(k - 2) * 3, 9, 3, (k - 2) * 0.4, 0, 6.2832); c.fill(); } }
+  } else if (id === 'syd') {
+    fill([far, mid, a], 26, 24, 30, 4);
+    c.fillStyle = dark('#8fa0b8'); c.fillRect(220, BASE - 8, 150, 8);
+    c.fillStyle = dark('#f6f1e4'); for (const [x, w, h] of [[236, 40, 52], [270, 34, 40], [300, 30, 30], [324, 26, 24]]) { c.beginPath(); c.moveTo(x, BASE - 8); c.quadraticCurveTo(x + w * 0.2, BASE - 8 - h, x + w, BASE - 8 - h * 0.1); c.lineTo(x + w, BASE - 8); c.closePath(); c.fill(); }
+    c.strokeStyle = dark('#4a5568'); c.lineWidth = 3; c.beginPath(); c.moveTo(176, BASE); c.quadraticCurveTo(220, BASE - 74, 240, BASE - 20); c.stroke();
+  } else if (id === 'dub') {
+    fill([far, b, mid], 28, 36, 20, 3);
+    c.fillStyle = dark('#c7d4e6'); c.beginPath(); c.moveTo(296, BASE); c.lineTo(292, BASE - 70); c.lineTo(294, BASE - 120); c.lineTo(298, BASE - 150); c.lineTo(300, BASE - 120); c.lineTo(302, BASE - 70); c.lineTo(306, BASE); c.closePath(); c.fill();
+    c.fillStyle = dark('#8aa0c0'); c.fillRect(246, BASE - 74, 14, 74); c.fillRect(330, BASE - 90, 12, 90); c.fillRect(262, BASE - 54, 10, 54);
+    c.fillStyle = dark('#d9b36c'); c.beginPath(); c.arc(200, BASE, 34, Math.PI, 0); c.fill();
+  } else if (id === 'sin') {
+    fill([far, mid, b], 30, 34, 22, 3);
+    for (const [x, h] of [[236, 70], [282, 90], [330, 64]]) { c.fillStyle = dark('#5a4a6a'); c.fillRect(x - 2, BASE - h, 4, h); c.fillStyle = dark('#2fae7a'); c.beginPath(); c.ellipse(x, BASE - h, 22, 8, 0, 0, 6.2832); c.fill(); c.fillStyle = dark('#e86a8a'); for (let k = 0; k < 4; k++) c.fillRect(x - 14 + k * 8, BASE - h + 4, 3, 3); }
+    c.fillStyle = dark('#cfd8e8'); c.fillRect(184, BASE - 62, 10, 62); c.fillRect(214, BASE - 62, 10, 62); c.fillRect(176, BASE - 70, 56, 8);
   } else { // ist
     fill([far, a, mid], 26, 22, 34, 4);
     c.fillStyle = dark('#efe3c6'); rr(c, 240, BASE - 46, 112, 46, 3); c.fill(); c.beginPath(); c.arc(296, BASE - 46, 36, Math.PI, 0); c.fill();
@@ -1049,10 +1250,17 @@ export function drawSkyline(c, id, pal, night, t) {
   }
 }
 
-export function drawGround(c, night) {
-  const g = c.createLinearGradient(0, BASE, 0, CH);
-  g.addColorStop(0, mix('#d8d0be', '#2a2f40', night * 0.75)); g.addColorStop(0.7, mix('#c7bfae', '#222736', night * 0.75)); g.addColorStop(0.72, mix('#6b6f7a', '#161922', night * 0.7)); g.addColorStop(1, mix('#585c68', '#12151d', night * 0.7));
+export function drawGround(c, night, skin = 'stad') {
+  const gc = groundCols(skin), g = c.createLinearGradient(0, BASE, 0, CH);
+  g.addColorStop(0, mix(gc[0], '#2a2f40', night * 0.75)); g.addColorStop(0.7, mix(gc[1], '#222736', night * 0.75)); g.addColorStop(0.72, mix(gc[2], '#161922', night * 0.7)); g.addColorStop(1, mix(gc[3], '#12151d', night * 0.7));
   c.fillStyle = g; c.fillRect(0, BASE, CW, CH - BASE);
+  if (skin !== 'stad') { // zachte schaduwrand en structuur voor de andere werelden
+    c.fillStyle = 'rgba(0,0,0,.08)'; c.fillRect(0, BASE, CW, 3);
+    c.fillStyle = skin === 'strand' ? 'rgba(160,130,70,.25)' : skin === 'winter' ? 'rgba(90,120,170,.18)' : 'rgba(0,40,0,.18)';
+    for (let x = 6; x < CW; x += 23) c.fillRect(x, BASE + 12 + (x * 7) % 50, 6, 2);
+    if (skin === 'festival') { const cs = ['#f5b301', '#e5534b', '#2fb36d', '#5aa9e6', '#e87bb5']; for (let x = 10; x < CW; x += 30) { c.fillStyle = mix(cs[(x / 30 | 0) % 5], '#000000', night * 0.2); c.beginPath(); c.arc(x, BASE + 4, 2, 0, 6.2832); c.fill(); } }
+    return;
+  }
   c.strokeStyle = 'rgba(0,0,0,.07)'; c.lineWidth = 1;
   for (let x = 0; x < CW; x += 36) { c.beginPath(); c.moveTo(x, BASE + 22); c.lineTo(x - 12, 238); c.stroke(); }
   for (let y = BASE + 22; y < 238; y += 16) { c.beginPath(); c.moveTo(0, y); c.lineTo(CW, y); c.stroke(); }
@@ -1080,7 +1288,7 @@ export function drawTruck(c, S, o) {
   c.fillStyle = trim; c.fillRect(0, 85, 172, 4);
   // zijdecor (muurschildering e.d.)
   const side = S.placed.zij ? DECM[S.placed.zij] : null;
-  if (side) { c.font = '26px system-ui,sans-serif'; c.fillText(side.e, 20, 52); } else { c.fillStyle = shade(body, 0.2); rr(c, 8, 34, 24, 36, 6); c.fill(); c.fillStyle = trim; c.font = '700 8px system-ui,sans-serif'; c.fillText('★' + (o.stars || 0), 20, 52); }
+  if (side) { c.font = '26px system-ui,sans-serif'; emDraw(c, side.e, 20, 42, 28); } else { c.fillStyle = shade(body, 0.2); rr(c, 8, 34, 24, 36, 6); c.fill(); c.fillStyle = trim; c.font = '700 8px system-ui,sans-serif'; c.fillText('★' + (o.stars || 0), 20, 52); }
   // raam
   c.fillStyle = shade(body, -0.3); rr(c, 38, 28, 118, 52, 6); c.fill();
   const wg = c.createLinearGradient(0, 32, 0, 76); wg.addColorStop(0, night > 0.3 ? '#ffd68a' : '#5a3a28'); wg.addColorStop(1, night > 0.3 ? '#e29a45' : '#2e2018');
@@ -1126,7 +1334,7 @@ export function drawTruck(c, S, o) {
   }
   // dakversiering
   const roof = S.placed.dak ? DECM[S.placed.dak] : null;
-  if (roof) { c.font = '24px system-ui,sans-serif'; c.fillText(roof.e, 14, -10); c.fillText(roof.e, 160, -10 + Math.sin(t * 2) * 1.5); }
+  if (roof) { c.font = '24px system-ui,sans-serif'; emDraw(c, roof.e, 14, -19, 28); emDraw(c, roof.e, 160, -19 + Math.sin(t * 2) * 1.5, 28); }
   c.restore();
 }
 
@@ -1155,7 +1363,7 @@ export function drawCust(c, x, y, look, o) {
   c.restore();
 }
 export function drawBubble(c, x, y, cu, d, now, showFlip) {
-  const w = 32, h = 28, bx = x - w / 2, by = y;
+  const w = 36, h = 32, bx = x - w / 2, by = y - 3;
   const bounce = cu.st === 'ready' ? Math.abs(Math.sin(now * 7)) * 3 : 0;
   c.save(); c.translate(0, -bounce);
   c.fillStyle = cu.st === 'ready' ? '#e6ffee' : cu.st === 'cook' ? '#fff2e0' : '#ffffff'; c.strokeStyle = cu.st === 'ready' ? '#2fb36d' : cu.need ? '#e5534b' : 'rgba(0,0,0,.25)'; c.lineWidth = cu.st === 'ready' || cu.need ? 2 : 1;
@@ -1163,12 +1371,12 @@ export function drawBubble(c, x, y, cu, d, now, showFlip) {
   c.beginPath(); c.moveTo(x - 4, by + h - 0.5); c.lineTo(x, by + h + 5); c.lineTo(x + 4, by + h - 0.5); c.fillStyle = c.fillStyle; c.fill();
   c.font = '17px system-ui,sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
   if (cu.st === 'cook') {
-    const p = clamp(cu.cook / cu.dur, 0, 1); c.globalAlpha = 0.35; c.fillText(d.e, x, by + h / 2 + 1); c.globalAlpha = 1;
-    c.save(); c.beginPath(); c.rect(bx, by + h * (1 - p), w, h * p); c.clip(); c.fillText(d.e, x, by + h / 2 + 1); c.restore();
+    const p = clamp(cu.cook / cu.dur, 0, 1); c.globalAlpha = 0.35; emDraw(c, d.e, x, by + h / 2 + 1, 19); c.globalAlpha = 1;
+    c.save(); c.beginPath(); c.rect(bx, by + h * (1 - p), w, h * p); c.clip(); emDraw(c, d.e, x, by + h / 2 + 1, 19); c.restore();
     if (cu.flip === 1) { c.strokeStyle = '#f5b301'; c.lineWidth = 3; c.beginPath(); c.arc(x, by + h / 2, 15 + Math.sin(now * 14) * 2, 0, 6.2832); c.stroke(); c.fillStyle = '#b88300'; c.font = '800 14px system-ui,sans-serif'; c.fillText('↻', x, by + h / 2 + 1); }
-  } else c.fillText(d.e, x, by + h / 2 + 1);
+  } else emDraw(c, d.e, x, by + h / 2 + 1, 19);
   if (cu.st === 'ready') { c.fillStyle = '#2fb36d'; c.beginPath(); c.arc(bx + w - 2, by + 2, 7, 0, 6.2832); c.fill(); c.fillStyle = '#fff'; c.font = '800 10px system-ui,sans-serif'; c.fillText('✓', bx + w - 2, by + 3); }
-  if (cu.need && cu.st === 'wait') { c.font = '11px system-ui,sans-serif'; c.fillText('🛒', bx + w - 2, by + 2); }
+  if (cu.need && cu.st === 'wait') { c.font = '11px system-ui,sans-serif'; emDraw(c, '🛒', bx + w - 2, by + 2, 11); }
   const pf = clamp(cu.pat / cu.patMax, 0, 1);
   c.fillStyle = 'rgba(0,0,0,.2)'; c.fillRect(bx + 2, by + h + 7, w - 4, 3); c.fillStyle = pf > 0.55 ? '#2fb36d' : pf > 0.25 ? '#f5b301' : '#e5534b'; c.fillRect(bx + 2, by + h + 7, (w - 4) * pf, 3);
   c.restore();
@@ -1188,7 +1396,7 @@ export class Fx {
     for (const q of this.p) {
       const a = clamp(q.life / q.max * 1.6, 0, 1);
       c.globalAlpha = a;
-      if (q.kind === 'txt') { c.font = `800 ${q.size}px system-ui,sans-serif`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.45)'; if (q.col !== '#fff' && q.txt.length < 14 && !/\p{Extended_Pictographic}/u.test(q.txt)) c.strokeText(q.txt, q.x, q.y); c.fillStyle = q.col; c.fillText(q.txt, q.x, q.y); }
+      if (q.kind === 'txt') { c.font = `800 ${q.size}px system-ui,sans-serif`; c.lineWidth = 3; c.strokeStyle = 'rgba(0,0,0,.45)'; if (q.col !== '#fff' && q.txt.length < 14 && !/\p{Extended_Pictographic}/u.test(q.txt)) c.strokeText(q.txt, q.x, q.y); if (iconOf(q.txt)) emDraw(c, q.txt, q.x, q.y, q.size); else { c.fillStyle = q.col; c.fillText(q.txt, q.x, q.y); } }
       else if (q.kind === 'puff') { c.fillStyle = 'rgba(255,255,255,.7)'; c.beginPath(); c.arc(q.x, q.y, q.size * (1.4 - a * 0.4), 0, 6.2832); c.fill(); }
       else { c.save(); c.translate(q.x, q.y); c.rotate(q.rot); c.fillStyle = q.col; c.fillRect(-q.size / 2, -q.size / 4, q.size, q.size / 2); c.restore(); }
     }
@@ -1200,16 +1408,19 @@ export class Fx {
 export function drawSkyDecor(c, id, t, night) {
   if (!id) return;
   if (id === 'lic') { c.strokeStyle = 'rgba(40,40,40,.6)'; c.lineWidth = 1.2; c.beginPath(); c.moveTo(0, 96); c.quadraticCurveTo(CW / 2, 128, CW, 96); c.stroke(); for (let k = 0; k <= 12; k++) { const u = k / 12, x = u * CW, y = (1 - u) * (1 - u) * 96 + 2 * u * (1 - u) * 128 + u * u * 96; c.fillStyle = `rgba(255,224,120,${0.6 + 0.4 * Math.sin(t * 3 + k)})`; c.beginPath(); c.arc(x, y + 3, 3.2, 0, 6.2832); c.fill(); } }
-  else if (id === 'lam') { c.font = '20px system-ui,sans-serif'; c.textAlign = 'center'; for (let k = 0; k < 6; k++) c.fillText('🏮', 30 + k * 60, 112 + Math.sin(t * 1.6 + k) * 3); }
+  else if (id === 'lam') { c.font = '20px system-ui,sans-serif'; c.textAlign = 'center'; for (let k = 0; k < 6; k++) { const lx = 30 + k * 60, ly = 112 + Math.sin(t * 1.6 + k) * 3; gl(c, lx, ly, 26, '#ffb060', 0.12 + night * 0.25); emDraw(c, '🏮', lx, ly, 22); } }
+  else if (id === 'wol') { c.globalAlpha = 0.95; for (let k = 0; k < 3; k++) { const cx = ((t * (6 + k * 2) + k * 130) % (CW + 80)) - 40; emDraw(c, '☁️', cx, 40 + k * 22 + Math.sin(t + k) * 3, 34 - k * 4); } c.globalAlpha = 1; }
+  else if (id === 'vli') { for (let k = 0; k < 4; k++) { const bx = 60 + k * 75 + Math.sin(t * 0.9 + k * 2) * 26, by = 80 + Math.sin(t * 1.7 + k) * 18 + k * 6; emDraw(c, '🦋', bx, by, 18 + Math.abs(Math.sin(t * 9 + k)) * 3); } }
+  else if (id === 'hel') { const hx = ((t * 24) % (CW + 120)) - 60; emDraw(c, '🚁', hx, 54 + Math.sin(t * 2) * 3, 34); }
   else if (id === 'wim') { const cols = ['#e5534b', '#f5b301', '#2fb36d', '#5aa9e6', '#e87bb5']; c.strokeStyle = 'rgba(0,0,0,.4)'; c.beginPath(); c.moveTo(0, 90); c.quadraticCurveTo(CW / 2, 118, CW, 90); c.stroke(); for (let k = 0; k < 16; k++) { const u = (k + 0.5) / 16, x = u * CW, y = (1 - u) * (1 - u) * 90 + 2 * u * (1 - u) * 118 + u * u * 90; c.fillStyle = cols[k % 5]; c.beginPath(); c.moveTo(x - 6, y); c.lineTo(x + 6, y); c.lineTo(x, y + 12 + Math.sin(t * 3 + k) * 1.5); c.closePath(); c.fill(); } }
-  else if (id === 'dro') { c.font = '24px system-ui,sans-serif'; c.textAlign = 'center'; c.fillText('🛸', 80 + Math.sin(t * 0.8) * 50, 70 + Math.sin(t * 1.7) * 6); }
-  else if (id === 'reg') { c.font = '60px system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.85; c.fillText('🌈', 300, 90); c.globalAlpha = 1; }
+  else if (id === 'dro') { c.font = '24px system-ui,sans-serif'; c.textAlign = 'center'; emDraw(c, '🛸', 80 + Math.sin(t * 0.8) * 50, 70 + Math.sin(t * 1.7) * 6, 28); }
+  else if (id === 'reg') { c.font = '60px system-ui,sans-serif'; c.textAlign = 'center'; c.globalAlpha = 0.9; emDraw(c, '🌈', 300, 80, 64); c.globalAlpha = 1; }
 }
 export const GROUND_X = { g0: 22, g1: 322, g2: 345 };
 export function drawGroundDecor(c, S, t) {
   c.textAlign = 'center'; c.textBaseline = 'alphabetic';
   const spots = [['g0', 22, 214, 26], ['g1', 322, 206, 26], ['g2', 296, 214, 22]];
-  for (const [k, x, y, sz] of spots) { const it = S.placed[k] ? DECM[S.placed[k]] : null; if (!it) continue; c.font = `${sz}px system-ui,sans-serif`; const wob = it.id === 'dra' ? Math.sin(t * 2) * 2 : 0; c.fillText(it.e, x, y + wob); }
+  for (const [k, x, y, sz] of spots) { const it = S.placed[k] ? DECM[S.placed[k]] : null; if (!it) continue; c.font = `${sz}px system-ui,sans-serif`; const wob = it.id === 'dra' ? Math.sin(t * 2) * 2 : it.id === 'win' || it.id === 'tre' ? Math.sin(t * 3) * 1.2 : 0; if (GX.fx && gfxQ() > 0) GX.fx.softShadow(c, x, y + 1, sz * 0.5, sz * 0.14, 0.3); emDraw(c, it.e, x, y - sz * 0.4 + wob, sz * 1.15); }
 }
 
 /* =====================================================================
@@ -1237,6 +1448,8 @@ export async function foodtruckView(ctx) {
 
   if (typeof document !== 'undefined' && !document.getElementById('ft-css')) { const st = document.createElement('style'); st.id = 'ft-css'; st.textContent = CSS; document.head.appendChild(st); }
   view.innerHTML = '<div class="ft"><div class="ft-load">🚚 Foodtruck Imperium wordt gestart…</div></div>';
+  await loadGfx();
+  if (!alive) return;
 
   function saveLocal() { if (!S) return; S.ts = Date.now(); try { localStorage.setItem(lsKey, serialize(S)); } catch { /* geen opslag beschikbaar */ } cloudDirty = true; }
   async function cloudSave(force) {
@@ -1293,7 +1506,7 @@ export async function foodtruckView(ctx) {
     <div class="ft-hud"><div class="ft-coins"><b>🪙</b><span id="ft-c">0</span></div>
       <div class="ft-star"><b id="ft-s">⭐ 0</b><i class="ft-xp"><i id="ft-xp" style="width:0"></i></i></div>
       <div class="ft-rt" id="ft-r" title="Beoordeling">★ 3,5</div>
-      <button data-a="snd" id="ft-snd" aria-label="Geluid aan of uit">🔊</button></div>
+      <button data-a="snd" id="ft-snd" aria-label="Geluid aan of uit">🔊</button><button data-a="gear" id="ft-gear" aria-label="Instellingen">⚙</button></div>
     <section class="ft-pane" data-p="svc">
       <div class="ft-cv"><canvas width="720" height="520" aria-label="Je foodtruck"></canvas><div class="ft-trv" hidden></div></div>
       <div class="ft-ev"></div>
@@ -1313,16 +1526,25 @@ export async function foodtruckView(ctx) {
   const navBtns = [...view.querySelectorAll('.ft-nav button')];
 
   function toast(msg, kind = '') {
-    const d = document.createElement('div'); d.className = `ft-toast ${kind}`; d.textContent = msg; toasts.appendChild(d);
+    const d = document.createElement('div'); d.className = `ft-toast ${kind}`; d.textContent = msg; iconify(d); toasts.appendChild(d);
     while (toasts.children.length > 3) toasts.removeChild(toasts.children[0]);
     later(() => { if (d.remove) d.remove(); }, 2900);
   }
   function modal(html) {
     if (modalOpen) { mq.push(html); return; }
-    modalOpen = true; mdl.innerHTML = `<div class="ft-mb" role="dialog" aria-modal="true">${html}</div>`; mdl.hidden = false;
+    if (sceneRun) { mq.push(html); return; }
+    modalOpen = true; mdl.innerHTML = `<div class="ft-mb" role="dialog" aria-modal="true">${html}</div>`; mdl.hidden = false; iconify(mdl);
     const b = mdl.querySelector('button'); if (b && b.focus) { try { b.focus(); } catch { /* */ } }
   }
   function closeModal() { mdl.hidden = true; mdl.innerHTML = ''; modalOpen = false; if (mq.length) modal(mq.shift()); }
+  let sceneRun = null;
+  function playScene(id, title, subt, key, then) {
+    if (key) { if (S.set.seen.includes(key)) return false; S.set.seen.push(key); g.dirty = true; }
+    const sn = GX.scenes && GX.scenes.Scenes;
+    const fin = () => { sceneRun = null; if (alive) { if (then) then(); if (!modalOpen && mq.length) modal(mq.shift()); } };
+    if (!sn || sceneRun || typeof document === 'undefined' || !document.body) { if (then) then(); return false; }
+    try { const run = sn.play(document.body, id, { title, sub: subt }); sceneRun = run; run.done.then(fin, fin); return true; } catch (e) { sceneRun = null; if (then) then(); return false; }
+  }
   const res = (r, snd = 'buy') => { if (r === 'ok') { audio.play(snd); return true; } toast(MSG[r] || 'Dat lukt nu niet', 'bad'); audio.play('err'); return false; };
 
   /* ---------- tekenscene ---------- */
@@ -1330,7 +1552,7 @@ export async function foodtruckView(ctx) {
   const slotX = (i, cap) => { cap = cap || tixCap || 3; return cap <= 1 ? CW / 2 : 30 + i * ((CW - 60) / (cap - 1)); };
   function resizeCanvas() {
     if (!c2) return; const w = cv.clientWidth || 360; if (w === sc.cw) return; sc.cw = w;
-    sc.dpr = Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
+    sc.dpr = (GX.set && GX.set.GFX && GX.set.GFX.dpr) || Math.min(2, (typeof window !== 'undefined' && window.devicePixelRatio) || 1);
     cv.width = Math.round(w * sc.dpr); cv.height = Math.round(w * CH / CW * sc.dpr);
   }
   function sceneUpdate(dt) {
@@ -1353,14 +1575,15 @@ export async function foodtruckView(ctx) {
   function drawScene() {
     if (!c2) return; resizeCanvas();
     const k = cv.width / CW; c2.setTransform(k, 0, 0, k, 0, 0);
-    const h = hourNow(), sk = drawSky(c2, h, sc.t);
-    drawSkyline(c2, sc.city.id, sc.city.pal, sk.night, sc.t);
+    const h = hourNow(), skin = S.set.skin || 'stad', q = gfxQ(), sk = drawSky(c2, h, sc.t, skin);
+    drawSkyline(c2, sc.city.id, sc.city.pal, sk.night, sc.t, skin);
     drawSkyDecor(c2, S.placed.lucht, sc.t, sk.night);
-    drawGround(c2, sk.night);
+    drawGround(c2, sk.night, skin);
     const p = g.travelT > 0 ? 1 - g.travelT / 2.5 : 1; let off = 0;
     if (g.travelT > 0) off = p < 0.5 ? p * 2 * 420 : -420 + (p - 0.5) * 2 * 420;
     drawTruck(c2, S, { x: 12 + off, y: 86, sc: 0.84, t: sc.t, night: sk.night, cooking: Math.min(3, g.burning()) || (sc.chef > 0 ? 1 : 0), burners: g.D.burners, stars: g.D.stars, wheel: sc.wheel });
     drawGroundDecor(c2, S, sc.t);
+    if (q > 0 && sk.night > 0.25) { gl(c2, 60 + off, 118, 70, '#ffd48a', 0.22 * sk.night); gl(c2, 190 + off, 150, 60, '#ffd48a', 0.14 * sk.night); }
     const list = [];
     for (let i = 0; i < g.slots.length; i++) { const cu = g.slots[i]; if (cu) { const v = sc.vis.get(cu.id); if (v) list.push([cu, v, i]); } }
     for (const [cu, v] of list) {
@@ -1369,7 +1592,7 @@ export async function foodtruckView(ctx) {
     }
     for (const gh of sc.ghosts) { c2.globalAlpha = clamp(1.8 - gh.t, 0, 1); drawCust(c2, gh.x, FEET, gh.look, { t: sc.t, walk: true, mood: gh.happy ? 1 : 0, happy: gh.happy, vip: gh.vip, hop: gh.happy ? Math.abs(Math.sin(gh.t * 9)) * 6 : 0 }); if (gh.happy) { c2.font = '14px system-ui,sans-serif'; c2.textAlign = 'center'; c2.fillText('💛', gh.x, FEET - 58 - gh.t * 14); } c2.globalAlpha = 1; }
     for (const [cu, v] of list) { if (v.walk && cu.st === 'wait' && Math.abs(v.tx - v.x) > 20) continue; drawBubble(c2, v.x, FEET - 78, cu, DISH[cu.dish], sc.t); }
-    sc.fx.draw(c2);
+    sc.fx.draw(c2); drawWorldFx(c2, skin, sc.t, sk.night, q);
     if (g.combo >= 2) { c2.textAlign = 'left'; c2.textBaseline = 'alphabetic'; c2.font = '800 13px system-ui,sans-serif'; c2.fillStyle = 'rgba(0,0,0,.45)'; rrect(c2, 6, 6, 92, 22, 11); c2.fillStyle = '#ffb347'; c2.fillText(`🔥 Combo ×${g.combo}`, 12, 22); c2.fillStyle = 'rgba(255,255,255,.35)'; c2.fillRect(12, 25, 80 * clamp(g.comboT / 10, 0, 1), 2); }
   }
   const rrect = (c, x, y, w, h, r) => { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); c.fill(); };
@@ -1378,7 +1601,7 @@ export async function foodtruckView(ctx) {
     const el = q('#ft-mini'); if (!el || !el.getContext) return;
     if (el !== miniCv) { miniCv = el; const w = el.clientWidth || 360; el.width = Math.round(w * 2); el.height = Math.round(w * 190 / 360 * 2); }
     const m = el.getContext('2d'), k = el.width / CW; m.setTransform(k, 0, 0, k, 0, -46 * k);
-    const sk = drawSky(m, hourNow(), sc.t); drawSkyline(m, CITY[S.city].id, CITY[S.city].pal, sk.night, sc.t); drawSkyDecor(m, S.placed.lucht, sc.t, sk.night); drawGround(m, sk.night);
+    const skin = S.set.skin || 'stad', sk = drawSky(m, hourNow(), sc.t, skin); drawSkyline(m, CITY[S.city].id, CITY[S.city].pal, sk.night, sc.t, skin); drawSkyDecor(m, S.placed.lucht, sc.t, sk.night); drawGround(m, sk.night, skin);
     drawTruck(m, S, { x: 12, y: 86, sc: 0.84, t: sc.t, night: sk.night, cooking: 0, burners: g.D.burners, stars: g.D.stars }); drawGroundDecor(m, S, sc.t);
   }
 
@@ -1426,7 +1649,7 @@ export async function foodtruckView(ctx) {
         case 'flipopen': audio.play('flipopen'); break;
         case 'flip': audio.play('flip'); sc.fx.text(x, FEET - 84, '↻ Hop!', '#ffd45a', 13); break;
         case 'serve': {
-          sc.fx.text(x, FEET - 74, `+${fmt(e.pay)}`, '#ffe27a', 15); sc.fx.burst(x, FEET - 56, ['🪙'], 3, 44);
+          sc.fx.text(x, FEET - 74, `+${fmt(e.pay)}`, '#ffe27a', 15); sc.fx.burst(x, FEET - 56, ['🪙'], GX.set ? Math.max(2, GX.set.GFX.particles(6)) : 3, 44); if (gfxQ() > 0) sc.fx.burst(x, FEET - 60, ['⭐'], gfxQ() > 1 ? 3 : 1, 36);
           if (e.combo >= 3) sc.fx.text(x, FEET - 94, `Combo ×${e.combo}`, '#ff9a4d', 12);
           if (e.perfect) { sc.fx.text(x, FEET - 110, '✨ Super!', '#8affc1', 14); sc.fx.burst(x, FEET - 60, ['✨', '⭐'], 6); audio.play('perfect'); } else if (e.quick) { sc.fx.text(x, FEET - 110, 'Snel!', '#9ad0ff', 12); audio.play('serve', { combo: e.combo }); } else audio.play('serve', { combo: e.combo });
           if (e.vip) { sc.fx.confetti(24); audio.play('coin'); }
@@ -1457,6 +1680,7 @@ export async function foodtruckView(ctx) {
     if (nc.length) lines.push(`Nieuwe stad: ${nc.map((c) => `${c.e} ${esc(c.n)}`).join(', ')}`);
     lines.push('Meer klanten en hogere prijzen!');
     if (e.n === 10 && canPrestige(S)) lines.push('Je kunt nu een franchise openen (⭐ Meer).');
+    if ([3, 6, 10, 15, 20, 25].includes(e.n)) playScene(e.n >= 15 ? 'victory' : 'levelup', `Ster ${e.n}!`, e.n >= 10 ? 'Jouw imperium groeit' : 'Steeds beroemder', 'star' + e.n);
     modal(`<div class="ft-big">⭐</div><h3>Nieuwe ster! Je hebt er nu ${e.n}</h3><p>${lines.join('<br>')}</p><div class="ft-mrow"><button class="ft-b" data-a="mclose">Lekker!</button></div>`);
     refresh();
   }
@@ -1480,7 +1704,7 @@ export async function foodtruckView(ctx) {
         if (cu.vip) cls += ' vip'; cls += pw < 25 ? ' bad' : pw < 55 ? ' warn' : '';
       }
       const key = `${cls}|${em}|${tx}|${Math.round(pw / 4)}|${Math.round(p / 5)}`;
-      if (tkCache[i] !== key) { tkCache[i] = key; t.el.className = cls; t.e.textContent = em; t.t.textContent = tx; t.b.style.width = `${pw}%`; t.el.style.setProperty('--p', `${p}%`); }
+      if (tkCache[i] !== key) { tkCache[i] = key; t.el.className = cls; t.e.innerHTML = emHtml(em); t.t.textContent = tx; if (tx) iconify(t.t); t.b.style.width = `${pw}%`; t.el.style.setProperty('--p', `${p}%`); }
     }
   }
   function evHtml() {
@@ -1525,19 +1749,19 @@ export async function foodtruckView(ctx) {
     const ct = fmt(shown); if (ct !== lastCoinsTxt) { lastCoinsTxt = ct; hudC.textContent = ct; }
     if (S.coins > lastCoinsVal + 0.5) { hudCoins.classList.add('pop'); later(() => hudCoins.classList.remove('pop'), 160); } lastCoinsVal = S.coins;
     const st = g.D.stars, a = st ? fameNeed(st) : 0, b = fameNeed(st + 1), pr = st >= MAXSTAR ? 100 : clamp((S.fame - a) / (b - a), 0, 1) * 100;
-    hudS.textContent = `⭐ ${st}`; hudXp.style.width = `${pr}%`;
+    const stTxt = `⭐ ${st}`; if (hudS.dataset.v !== stTxt) { hudS.dataset.v = stTxt; hudS.textContent = stTxt; iconify(hudS); } hudXp.style.width = `${pr}%`;
     hudR.textContent = `★ ${(S.cities[S.city] ? S.cities[S.city].r : 3.5).toFixed(1).replace('.', ',')}`;
-    const sn = S.set.snd ? '🔊' : '🔇'; if (hudSnd.textContent !== sn) hudSnd.textContent = sn;
+    const sn = S.set.snd ? '🔊' : '🔇'; if (hudSnd.dataset.v !== sn) { hudSnd.dataset.v = sn; hudSnd.textContent = sn; }
     if (tab !== 'svc') return;
     updTix();
-    const eh = evHtml(); if (eh !== lastEv) { lastEv = eh; evEl.innerHTML = eh; }
-    const sb = sbarHtml(); if (sb !== lastSb) { lastSb = sb; sbarEl.innerHTML = sb; }
-    const ch = coachHtml(); if (ch !== lastCoach) { lastCoach = ch; if (ch) { coachEl.hidden = false; coachEl.innerHTML = `<b>👩‍🍳</b><div>${esc(ch)}<br><button data-a="tutskip">Uitleg overslaan</button></div>`; } else { coachEl.hidden = true; coachEl.innerHTML = ''; } }
-    trvEl.hidden = g.travelT <= 0; if (g.travelT > 0) trvEl.textContent = `🚚 Onderweg naar ${CITY[S.city].n}…`;
+    const eh = evHtml(); if (eh !== lastEv) { lastEv = eh; evEl.innerHTML = eh; iconify(evEl); }
+    const sb = sbarHtml(); if (sb !== lastSb) { lastSb = sb; sbarEl.innerHTML = sb; iconify(sbarEl); }
+    const ch = coachHtml(); if (ch !== lastCoach) { lastCoach = ch; if (ch) { coachEl.hidden = false; coachEl.innerHTML = `<b>👩‍🍳</b><div>${esc(ch)}<br><button data-a="tutskip">Uitleg overslaan</button></div>`; iconify(coachEl); } else { coachEl.hidden = true; coachEl.innerHTML = ''; } }
+    trvEl.hidden = g.travelT <= 0; if (g.travelT > 0) { const tt = `🚚 Onderweg naar ${CITY[S.city].n}…`; if (trvEl.dataset.v !== tt) { trvEl.dataset.v = tt; trvEl.textContent = tt; iconify(trvEl); } }
   }
   function second() {
     tutCheck(); rateNow = rates(S, 'active');
-    const mh = msHtml(); if (mh !== lastMs) { lastMs = mh; msEl.innerHTML = mh; }
+    const mh = msHtml(); if (mh !== lastMs) { lastMs = mh; msEl.innerHTML = mh; iconify(msEl); }
     // wenk voor de navigatie
     const want = S.tut < TUT.length ? TUT[S.tut][2] : '';
     let badge = 0; for (const i of activeMissions(S)) if (metric(S, MISSIONS[i][1]) >= MISSIONS[i][2]) badge++; if (dailyState(S).can) badge++;
@@ -1602,6 +1826,8 @@ export async function foodtruckView(ctx) {
       case 'srv': return `Serveert na ${react('s', 0.15).toFixed(1).replace('.', ',')} s${react('s', 0.15) <= 1.5 ? ' · supersnel' : ''}`;
       case 'kas': return `+${lv * 5}% fooi`;
       case 'ent': return `+${lv * 3}% wachttijd en +${lv * 2}% klanten`;
+      case 'mrk': return `+${lv * 2}% klanten`;
+      case 'chf': return `+${(lv * 1.5).toFixed(1).replace('.', ',')}% verkoopprijs`;
       default: return `Koopt zelf in · -${(lv * 1.5).toFixed(1).replace('.', ',')}% inkoopprijs`;
     }
   }
@@ -1652,7 +1878,7 @@ export async function foodtruckView(ctx) {
       <div class="ft-card"><h3>🎨 Versiering</h3><p class="ft-mut">Koop versiering en tik om te plaatsen of weg te halen. Het geeft bonussen én het ziet er gezellig uit.</p>${dec}</div>`;
   }
   function htmlMore() {
-    const tabs = [['ms', '🎯 Missies'], ['ac', '🏆 Prestaties'], ['rv', '💬 Reviews'], ['fr', '🏅 Franchise'], ['op', '⚙️ Opties']];
+    const tabs = [['ms', '🎯 Missies'], ['wd', '🎨 Uiterlijk'], ['ac', '🏆 Prestaties'], ['rv', '💬 Reviews'], ['fr', '🏅 Franchise'], ['op', '⚙️ Opties']];
     const sb = `<div class="ft-sub">${tabs.map(([k, n]) => `<button class="${sub.more === k ? 'on' : ''}" data-a="msub" data-v="${k}">${n}</button>`).join('')}</div>`;
     const k = sub.more; let body = '';
     if (k === 'ms') {
@@ -1661,6 +1887,10 @@ export async function foodtruckView(ctx) {
       body = `<div class="ft-card"><h3>📅 Dagelijkse beloning</h3><div class="ft-days">${days}</div>${ds.can ? `<button class="ft-b gold" data-a="daily">Pak dag ${day} (${fmt(dailyReward(S, day))} 🪙)</button>` : '<p class="ft-mut">Vandaag al opgehaald. Kom morgen terug voor meer!</p>'}</div>`;
       const act = activeMissions(S);
       body += `<div class="ft-card"><h3>🎯 Missies</h3>${act.length ? act.map((i) => { const m = MISSIONS[i], v = metric(S, m[1]), ok = v >= m[2]; return `<div class="ft-mi ${ok ? 'rdy' : ''}"><div><b>${esc(m[0])}</b><br><small>${fmt(Math.min(v, m[2]))} / ${fmt(m[2])} · beloning ${fmt(missionReward(S, i))} 🪙</small><span class="ft-bar ${ok ? 'g' : ''}"><i style="width:${Math.round(100 * clamp(v / m[2], 0, 1))}%"></i></span></div>${ok ? `<button class="ft-b on" data-a="mclaim" data-i="${i}">Pak!</button>` : ''}</div>`; }).join('') : '<p>Alle missies gehaald, wat een chef! 🎉</p>'}<p class="ft-note">${Object.keys(S.mdone).length}/${MISSIONS.length} missies gehaald</p></div>`;
+    } else if (k === 'wd') {
+      const cur = S.set.skin || 'stad';
+      body = `<div class="ft-card"><h3>🎨 Uiterlijk van je wereld</h3><p class="ft-mut">Kies waar je truck staat: een andere sfeer, andere kleuren en ander weer. Het verandert niets aan je verdiensten.</p><div class="ft-skins">${Object.entries(WORLD_SKINS).map(([id, w]) => `<button class="ft-skin ${cur === id ? 'on' : ''}" data-a="skin" data-v="${id}"><i style="background:linear-gradient(${w.sw.join(',')})"></i><b>${w.n}</b><small>${w.d}</small></button>`).join('')}</div></div>
+        <div class="ft-card"><h3>🎬 Intro</h3><div class="ft-row"><button class="ft-b alt" data-a="intro">Intro opnieuw bekijken</button></div></div>`;
     } else if (k === 'ac') {
       const n = ACH.filter((a) => S.ach[a.id]).length;
       body = `<div class="ft-card"><h3>🏆 Prestaties (${n}/${ACH.length})</h3><div class="ft-ach">${ACH.map((a) => `<div class="ft-an ${S.ach[a.id] ? '' : 'off'}"><span>${a.e}</span>${esc(a.n)}</div>`).join('')}</div></div>`;
@@ -1679,6 +1909,7 @@ export async function foodtruckView(ctx) {
       body = `<div class="ft-card"><h3>⚙️ Opties</h3>
         <div class="ft-switch"><span>🔊 Geluidjes</span><button class="ft-b ${S.set.snd ? 'on' : 'alt'}" data-a="snd">${S.set.snd ? 'Aan' : 'Uit'}</button></div>
         <div class="ft-switch"><span>🎵 Muziekje</span><button class="ft-b ${S.set.mus ? 'on' : 'alt'}" data-a="mus">${S.set.mus ? 'Aan' : 'Uit'}</button></div>
+        <div class="ft-switch"><span>⚙️ Kwaliteit, schaal en meer</span><button class="ft-b alt" data-a="gear">Instellingen</button></div>
         <div class="ft-switch"><span>☁️ Opslaan</span><button class="ft-b alt" data-a="save">Nu opslaan</button></div>
         <p class="ft-note">${db ? (ok ? `Laatst in de cloud bewaard om ${String(tm.getHours()).padStart(2, '0')}:${String(tm.getMinutes()).padStart(2, '0')}.` : cloudStatus === 'fail' ? 'Cloud-opslag lukt nu niet. Je voortgang staat wel veilig op dit apparaat.' : 'Je voortgang wordt elke minuut ook in de cloud bewaard.') : 'Je voortgang wordt op dit apparaat bewaard.'}</p>
         <p class="ft-note">Spelen met toetsenbord: 1 t/m 9 kiest een bestelling, spatie doet de meest dringende handeling.</p>
@@ -1696,7 +1927,7 @@ export async function foodtruckView(ctx) {
     if (tab === 'svc') { uiUpdate(true); return; }
     if (typing()) return;
     let y = 0; try { y = window.scrollY; } catch { /* */ }
-    paneO.innerHTML = tabHtml(); miniCv = null;
+    paneO.innerHTML = tabHtml(); iconify(paneO); miniCv = null;
     try { window.scrollTo(0, y); } catch { /* */ }
     liveUpdate();
   }
@@ -1725,6 +1956,9 @@ export async function foodtruckView(ctx) {
       case 'slot': tapSlot(int(d.i)); break;
       case 'snd': S.set.snd = S.set.snd ? 0 : 1; audio.set(S.set.snd, S.set.mus); audio.start(); audio.play('tap'); refresh(); uiUpdate(true); break;
       case 'mus': S.set.mus = S.set.mus ? 0 : 1; audio.set(S.set.snd, S.set.mus); audio.start(); refresh(); break;
+      case 'gear': try { if (GX.panel && GX.panel.openSettingsPanel) GX.panel.openSettingsPanel({ title: 'Instellingen Foodtruck', toast }); else toast('Instellingen zijn niet beschikbaar'); } catch (e) { toast('Instellingen zijn niet beschikbaar'); } break;
+      case 'skin': if (WORLD_SKINS[d.v]) { S.set.skin = d.v; g.dirty = true; audio.play('up'); toast(`Uiterlijk: ${WORLD_SKINS[d.v].n}`, 'good'); refresh(); } break;
+      case 'intro': playScene('intro-stad', 'Foodtruck Imperium', 'Van één truck naar een wereldketen', null); break;
       case 'abtog': S.auto.buy = S.auto.buy ? 0 : 1; refresh(); break;
       case 'mclose': closeModal(); break;
       case 'tutskip': S.tut = 99; lastCoach = '-'; uiUpdate(true); refresh(); break;
@@ -1750,11 +1984,11 @@ export async function foodtruckView(ctx) {
       case 'perk': res(g.buyPerk(d.id), 'up'); refresh(); break;
       case 'noprest': toast(D_need(), 'bad'); break;
       case 'prest': modal(`<div class="ft-big">🏅</div><h3>Franchise openen?</h3><p>Je krijgt <b>+${prestigeGain(S)} 🥄</b>, maar je begint opnieuw met één truck, zonder geld, steden, personeel en gerechten. Je prestaties, versiering en lepels blijven.</p><div class="ft-mrow"><button class="ft-b alt" data-a="mclose">Nog niet</button><button class="ft-b gold" data-a="prest2">Ja, open!</button></div>`); break;
-      case 'prest2': { closeModal(); const r = g.prestige(); if (typeof r === 'number') { sc.city = CITY.ams; sc.vis.clear(); saveLocal(); cloudSave(true); modal(`<div class="ft-big">🏅</div><h3>Je franchise is open!</h3><p>+${r} Gouden Lepels. Geef ze uit in ⭐ Meer › Franchise.</p><div class="ft-mrow"><button class="ft-b" data-a="mclose">Aan de slag!</button></div>`); switchTab('more'); sub.more = 'fr'; refresh(); } break; }
+      case 'prest2': { closeModal(); const r = g.prestige(); if (typeof r === 'number') { playScene('victory', 'Franchise geopend!', `+${r} Gouden Lepels`, null); sc.city = CITY.ams; sc.vis.clear(); saveLocal(); cloudSave(true); modal(`<div class="ft-big">🏅</div><h3>Je franchise is open!</h3><p>+${r} Gouden Lepels. Geef ze uit in ⭐ Meer › Franchise.</p><div class="ft-mrow"><button class="ft-b" data-a="mclose">Aan de slag!</button></div>`); switchTab('more'); sub.more = 'fr'; refresh(); } break; }
       case 'save': saveLocal(); cloudSave(true).then(() => { if (alive) { toast(cloudStatus === 'fail' ? 'Cloud lukt nu niet, wel lokaal bewaard' : '☁️ Opgeslagen', cloudStatus === 'fail' ? 'bad' : 'good'); refresh(); } }); toast('💾 Bewaard'); break;
       case 'reset1': modal('<div class="ft-big">🗑️</div><h3>Opnieuw beginnen?</h3><p>Je voortgang gaat verloren.</p><div class="ft-mrow"><button class="ft-b alt" data-a="mclose">Nee, terug</button><button class="ft-b no" data-a="reset2">Ja, wissen</button></div>'); break;
       case 'reset2': closeModal(); modal('<div class="ft-big">⚠️</div><h3>Echt zeker?</h3><p>Dit kan niet ongedaan worden gemaakt.</p><div class="ft-mrow"><button class="ft-b alt" data-a="mclose">Nee, terug</button><button class="ft-b no" data-a="reset3">Definitief wissen</button></div>'); break;
-      case 'reset3': closeModal(); g.hardReset(); S.set = { snd: S.set.snd, mus: S.set.mus }; sc.city = CITY.ams; sc.vis.clear(); tixCap = 0; saveLocal(); cloudSave(true); switchTab('svc'); toast('🚚 Nieuwe start!', 'good'); break;
+      case 'reset3': closeModal(); g.hardReset(); S.set = { snd: S.set.snd, mus: S.set.mus, skin: S.set.skin || 'stad', seen: S.set.seen || [] }; sc.city = CITY.ams; sc.vis.clear(); tixCap = 0; saveLocal(); cloudSave(true); switchTab('svc'); toast('🚚 Nieuwe start!', 'good'); break;
       default: break;
     }
   }
@@ -1800,5 +2034,9 @@ export async function foodtruckView(ctx) {
   every(() => { second(); if (tab === 'mkt' || tab === 'team' || tab === 'city' || tab === 'menu') liveUpdate(); }, 1000);
   every(() => { saveLocal(); }, 8000);
   every(() => { cloudSave(false); }, 20000);
+  try { if (GX.set) offs.push(GX.set.Settings.onChange(() => { sc.cw = 0; lastCoach = '-'; tkCache = []; refresh(); })); } catch (e) { /* stil */ }
+  iconify(view);
+  if (!Array.isArray(S.set.seen)) S.set.seen = [];
+  if (first) { S.set.seen.push('intro'); playScene('intro-stad', 'Foodtruck Imperium', 'Van één truck naar een wereldketen', null); } else if (!S.set.seen.includes('intro')) S.set.seen.push('intro');
   later(() => { showAway(); showDaily(); }, 600);
 }

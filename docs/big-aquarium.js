@@ -2,6 +2,7 @@
 // Opslag: local-first (localStorage `big:aquarium:${uid}`) + Firestore gamesaves/big-aquarium__{uid} (max. 1x per 60 s en bij sluiten).
 // Pure spellogica staat bovenaan (zonder DOM) zodat ze in node te testen is.
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import * as BG from './big-gfx.js?v=1';
 
 /* =====================================================================
    1. DATA
@@ -76,6 +77,24 @@ const RAW = [
   ['kuif', 'Rotspinguïn', 'ping', 'penguin', ['#1f2433', '#ffffff', '#ffd23f'], { p: 'rockhopper', sz: 2, price: 300000, beh: 'ping', sc: 1, e: '🐧', f: 'Hij hupt met twee voetjes tegelijk over de rotsen.' }],
   ['zeehond', 'Zeehond', 'ping', 'seal', ['#8d99a6', '#4d5762', '#d3dae0'], { sz: 4, price: 480000, beh: 'ping', sc: 1.4, e: '🦭', f: 'Een zeehond kan lang zijn adem inhouden onder water.' }],
   ['narwal', 'Narwal', 'ping', 'narwal', ['#9fb2c6', '#4f6479', '#e8eff6'], { sz: 8, price: 3000000, rar: 3, xo: 1, beh: 'cruise', sc: 1.9, e: '🦄', f: 'De spiraalslagtand is in werkelijkheid een lange tand.' }],
+  // ---- fase 2: 17 nieuwe soorten (ids achteraan; opslag gebruikt id's)
+  ['molly', 'Molly', 'zoet', 'fish', ['#2b2b3a', '#ffb347', '#ffe9c4'], { p: 'tailspot', sz: 1, price: 55, beh: 'school', sc: 0.8, e: '🐟', f: 'Mollies zijn vrolijke kleine zwemmers die graag in groepjes blijven.' }],
+  ['gourami', 'Parelgoerami', 'zoet', 'fish', ['#8fb8d6', '#3d6f94', '#eaf6ff'], { p: 'spots', sz: 1, price: 420, beh: 'curious', sc: 0.9, e: '🐠', f: 'Zijn lange voelspriet-vinnen werken als tastzintuig.' }],
+  ['moerasschild', 'Moerasschildpad', 'zoet', 'turtle', ['#4f7a4a', '#8fbf7f', '#d9c27a'], { sz: 2, price: 1600, beh: 'cruise', sc: 0.95, e: '🐢', f: 'Moerasschildpadden zonnen graag op een boomstam.' }],
+  ['piranha', 'Piranha', 'zoet', 'fish', ['#b8433a', '#4a4a55', '#ffd9c9'], { p: 'stripes', sz: 2, price: 4200, beh: 'school', sc: 1.05, e: '🐟', f: 'Piranha\'s zijn minder gevaarlijk dan in de films.' }],
+  ['arapaima', 'Arapaima', 'zoet', 'fish', ['#5b7f4a', '#c0492f', '#e8f0cf'], { p: 'scales', sz: 4, price: 120000, rar: 2, xo: 1, beh: 'cruise', sc: 1.5, h: 0.2, e: '🐟', f: 'Deze reus uit de Amazone komt elke paar minuten lucht happen.' }],
+  ['garnaal', 'Garnaal', 'zout', 'lobster', ['#ff9e7a', '#ffd0b8', '#fff3ec'], { sz: 1, price: 90, beh: 'floor', sc: 0.65, e: '🦀', f: 'Garnalen zijn de schoonmakers van het aquarium.' }],
+  ['inktvis', 'Pijlinktvis', 'zout', 'octo', ['#8a6bd6', '#c9b3ff', '#efe7ff'], { sz: 2, price: 9000, beh: 'hover', sc: 0.95, e: '🐙', f: 'Een inktvis spuit inkt om te ontsnappen als hij schrikt.' }],
+  ['pijlstaart', 'Pijlstaartrog', 'zout', 'ray', ['#7e8c9a', '#aab8c4', '#eef2f5'], { p: 'spots', sz: 4, price: 45000, beh: 'cruise', sc: 1.25, e: '🐟', f: 'Een pijlstaartrog begraaft zich graag half in het zand.' }],
+  ['reuzeninktvis', 'Reuzeninktvis', 'zout', 'octo', ['#c0392b', '#ff8a7a', '#ffe0da'], { sz: 5, price: 600000, rar: 3, xo: 1, beh: 'hover', sc: 1.7, e: '🐙', f: 'Reuzeninktvissen hebben de grootste ogen van alle dieren.' }],
+  ['rifkrab', 'Rifkrab', 'rif', 'crab', ['#ff6b81', '#ffc1cc', '#fff0f3'], { sz: 1, price: 2200, beh: 'floor', sc: 0.85, e: '🦀', f: 'Rifkrabben verstoppen zich in kleine holletjes in het koraal.' }],
+  ['purperster', 'Purperen zeester', 'rif', 'star', ['#9b59d6', '#d2a8ff', '#f3e6ff'], { sz: 1, price: 4500, beh: 'floor', sc: 1.0, e: '⭐', f: 'Een zeester kan zijn maag buiten zijn lijf stulpen om te eten.' }],
+  ['trompet', 'Trompetvis', 'rif', 'eel', ['#e0b04a', '#8a6a1f', '#fff2c4'], { p: 'mottle', sz: 2, price: 18000, beh: 'hover', sc: 0.95, e: '🐟', f: 'De trompetvis staat graag rechtop tussen de koraaltakken.' }],
+  ['bulhaai', 'Bulhaai', 'haai', 'shark', ['#7d8b99', '#4f5d6b', '#e3eaef'], { sz: 5, price: 40000, beh: 'cruise', sc: 1.45, e: '🦈', f: 'Bulhaaien kunnen zowel in zout als in zoet water zwemmen.' }],
+  ['tijgerhaai', 'Tijgerhaai', 'haai', 'shark', ['#6f8aa0', '#3d556b', '#e5eef4'], { p: 'saw', sz: 6, price: 100000, beh: 'cruise', sc: 1.6, e: '🦈', f: 'Jonge tijgerhaaien hebben strepen, net als een tijger.' }],
+  ['adelaar', 'Adelaarsrog', 'haai', 'ray', ['#1f3a5f', '#4a78b0', '#f2f7fb'], { p: 'manta', sz: 6, price: 220000, rar: 2, xo: 1, beh: 'cruise', sc: 1.8, e: '🐟', f: 'Een adelaarsrog lijkt te vliegen door het water.' }],
+  ['macaroni', 'Macaronipinguïn', 'ping', 'penguin', ['#1f2433', '#ffffff', '#ffb52e'], { p: 'rockhopper', sz: 2, price: 150000, beh: 'ping', sc: 1.05, e: '🐧', f: 'Zijn gele kuif lijkt op een macaroni-pruik uit vroeger tijd.' }],
+  ['zeeleeuw', 'Zeeleeuw', 'ping', 'seal', ['#a07850', '#6d5236', '#e8d9c4'], { sz: 4, price: 900000, rar: 2, xo: 1, beh: 'ping', sc: 1.5, e: '🦭', f: 'Zeeleeuwen klappen in hun flippers als ze blij zijn.' }],
 ];
 export const SP = RAW.map(([id, n, hab, art, cols, o]) => ({
   id, n, hab, art, cols, p: o.p || '', sz: o.sz, price: o.price, rar: o.rar || 0, xo: !!o.xo, beh: o.beh, sc: o.sc, h: o.h || 0, e: o.e, f: o.f,
@@ -96,6 +115,10 @@ export const DECO = {
   igloo: { n: 'Iglo', e: '🛖', base: 3000, b: 0.18, only: ['ping'] },
   wrak: { n: 'Scheepswrak', e: '🚢', base: 5000, b: 0.20, only: ['zout', 'rif', 'haai'] },
   tunnel: { n: 'Glazen tunnel', e: '🫧', base: 20000, b: 0.25, not: [] },
+  schelp: { n: 'Reuzenschelp', e: '🐚', base: 900, b: 0.11, not: ['ping'], ic: 'shell' },
+  palm: { n: 'Palmeilandje', e: '🌴', base: 3500, b: 0.16, not: ['ping'], ic: 'palm' },
+  fontein: { n: 'Waterfontein', e: '⛲', base: 10000, b: 0.22, not: [], ic: 'fountain' },
+  vuurtoren: { n: 'Vuurtoren', e: '🗼', base: 40000, b: 0.30, not: ['ping'], ic: 'lighthouse' },
 };
 export const decoOk = (id, hab) => { const d = DECO[id]; return d && (!d.only || d.only.includes(hab)) && (!d.not || !d.not.includes(hab)); };
 
@@ -112,6 +135,11 @@ export const UP = {
   st_feed: { n: 'Voerder', e: '🧑‍🍳', g: 'staf', d: 'Voert automatisch alle tanks', base: 1500, gr: 1, max: 1 },
   st_clean: { n: 'Schoonmaker', e: '🧽', g: 'staf', d: 'Houdt het water automatisch fris', base: 2500, gr: 1, max: 1 },
   st_vet: { n: 'Dierenarts', e: '🩺', g: 'staf', d: 'Geneest zieke dieren vanzelf', base: 6000, gr: 1, max: 1 },
+  ijs: { n: 'IJskraam', e: '🍦', g: 'inc', d: 'Een ijsje bij het verlaten van de hal', base: 600, gr: 2.0, max: 30 },
+  foto: { n: 'Fotohoek', e: '📷', g: 'inc', d: 'Bezoekers nemen foto\'s bij de tanks', base: 1200, gr: 2.0, max: 30 },
+  resto: { n: 'Pizzeria', e: '🍕', g: 'inc', d: 'Lekker eten met uitzicht op de haaien', base: 15000, gr: 2.2, max: 30 },
+  vip: { n: 'VIP-rondleiding', e: '👑', g: 'inc', d: '+8% inkomsten per niveau', base: 100000, gr: 3, max: 15 },
+  uv: { n: 'UV-lampen', e: '💡', g: 'zorg', d: 'Het water blijft nog langer schoon', base: 800, gr: 2.4, max: 10 },
   sub: { n: 'Onderzeeër', e: '🚤', g: 'reis', d: 'Snellere reizen, meer vondsten, extra plek op 3 en 6', base: 2000, gr: 3.2, max: 10 },
 };
 export const UP_KEYS = Object.keys(UP);
@@ -123,6 +151,7 @@ export const PK = {
   exp: { n: 'Zeekaarten', e: '🗺️', d: '-8% reistijd per niveau', max: 8 },
   tips: { n: 'Gouden schepje', e: '✨', d: '+25% fooi bij het voeren', max: 10 },
   off: { n: 'Nachtploeg', e: '🌙', d: '+5% opbrengst als je weg bent', max: 8 },
+  art: { n: 'Kunstenaarsoog', e: '🎨', d: '+10% effect van decoraties per niveau', max: 10 },
   keep: { n: 'Vast personeel', e: '🎩', d: 'Je personeel blijft bij verhuizen', max: 1 },
 };
 
@@ -130,8 +159,10 @@ export const REGIONS = [
   { id: 'amazone', n: 'Amazone-delta', e: '🌴', cost: 4000, dur: 120, loot: { axolotl: 40, zrog: 30, aal: 20, arowana: 8, koi: 2 } },
   { id: 'rif', n: 'Verre koraalrif', e: '🏝️', cost: 30000, dur: 360, loot: { napoleon: 45, nautilus: 35, mandarijn: 10, lichtkwal: 10 } },
   { id: 'diep', n: 'De diepzee', e: '🌌', cost: 15000, dur: 900, loot: { octopus: 25, murene: 25, schildpad: 25, kreeft: 15, lantaarn: 10 } },
-  { id: 'oceaan', n: 'Open oceaan', e: '⛵', cost: 300000, dur: 1800, loot: { hamer: 35, manta: 30, zaagvis: 25, walvishaai: 10 } },
-  { id: 'pool', n: 'Poolzee', e: '🧊', cost: 1000000, dur: 3600, loot: { ezel: 25, keizerp: 25, kuif: 20, zeehond: 20, narwal: 10 } },
+  { id: 'oceaan', n: 'Open oceaan', e: '⛵', cost: 300000, dur: 1800, loot: { hamer: 35, manta: 30, zaagvis: 25, walvishaai: 10, adelaar: 14 } },
+  { id: 'pool', n: 'Poolzee', e: '🧊', cost: 1000000, dur: 3600, loot: { ezel: 25, keizerp: 25, kuif: 20, zeehond: 20, narwal: 10, zeeleeuw: 14 } },
+  { id: 'mangrove', n: 'Mangrovebos', e: '🌴', cost: 12000, dur: 600, loot: { arapaima: 30, axolotl: 40, aal: 30 } },
+  { id: 'kelp', n: 'Kelpwoud', e: '🌊', cost: 60000, dur: 1200, loot: { reuzeninktvis: 12, schildpad: 35, murene: 30, kreeft: 23 } },
 ];
 export const REGM = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
 
@@ -180,6 +211,17 @@ export const GOALS = [
   ['g30', 'Ontdek alle soorten', discN, SP.length, 300000, 150],
   ['g31', 'Voltooi 10 expedities', (s) => s.st.exps, 10, 100000, 150],
   ['g32', 'Verdien 1 biljoen', (s) => s.te, 1e12, 500000, 200],
+  // fase 2
+  ['g33', 'Bouw de ijskraam', (s) => s.up.ijs, 1, 400, 30],
+  ['g34', 'Bouw de fotohoek', (s) => s.up.foto, 1, 800, 40],
+  ['g35', 'Heb 8 decoraties', decoN, 8, 15000, 80],
+  ['g36', 'Heb 6 tanks', (s) => s.T.length, 6, 30000, 100],
+  ['g37', 'Bouw de pizzeria', (s) => s.up.resto, 1, 20000, 100],
+  ['g38', 'Breng een tank naar niveau 10', maxLv, 10, 500000, 150],
+  ['g39', 'Ontdek 40 soorten', discN, 40, 150000, 150],
+  ['g40', 'Voltooi 25 expedities', (s) => s.st.exps, 25, 400000, 150],
+  ['g41', 'Heb 300 dieren', animalsTotal, 300, 1e6, 200],
+  ['g42', 'Verdien 1 biljard', (s) => s.te, 1e15, 5e6, 200],
 ];
 export const GOALM = Object.fromEntries(GOALS.map((g) => [g[0], g]));
 
@@ -195,6 +237,8 @@ export const ACH = [
   ['a_p1', 'Nieuw begin', '🦪', (s) => s.st.pres, 1], ['a_p2', 'Parelduiker', '🤿', (s) => s.st.pres, 5],
   ['a_d1', 'Dagelijkse bezoeker', '📅', (s) => s.dy.best, 7], ['a_dec', 'Binnenhuisarchitect', '🏰', decoN, 10],
   ['a_leg', 'Legendarisch!', '✨', (s) => discRar(s, 3), 1], ['a_v1', 'Drukke dag', '👥', (s) => s.st.vis, 1000], ['a_v2', 'Uitverkocht', '🎟️', (s) => s.st.vis, 100000],
+  ['a_dc2', 'Kunstgalerij', '🎨', decoN, 25], ['a_up2', 'Parkeigenaar', '🏆', upLevels, 100], ['a_te5', 'Biljardair', '👑', (s) => s.te, 1e15],
+  ['a_x4', 'Zeewolf', '🧭', (s) => s.st.exps, 100], ['a_an4', 'Dierentuin vol', '🐧', animalsTotal, 500], ['a_v3', 'Volle zalen', '🎟️', (s) => s.st.vis, 1e6], ['a_sp4', 'Dierenkenner', '📖', discN, 40],
 ];
 
 /* =====================================================================
@@ -259,10 +303,10 @@ export const tankUnits = (t) => { let u = 0; for (const k in t.a) u += t.a[k] * 
 export const tankCap = (t) => 6 + 3 * (t.l - 1);
 export const decoSlots = (t) => Math.min(6, 3 + Math.floor(t.l / 3));
 export const MAX_TANK_LV = 10;
-export function tankBase(t) {
+export function tankBase(t, s) {
   let a = 0, kinds = 0;
   for (const k in t.a) if (t.a[k] > 0) { a += t.a[k] * SPM[k].ap; kinds++; }
-  const deco = t.d.reduce((x, d) => x + (DECO[d] ? DECO[d].b : 0), 0);
+  const deco = t.d.reduce((x, d) => x + (DECO[d] ? DECO[d].b : 0), 0) * (1 + 0.1 * ((s && s.pk && s.pk.art) || 0));
   return a * (1 + deco) * (1 + Math.min(0.5, 0.05 * Math.max(0, kinds - 1)));
 }
 export function tankFactor(t) {
@@ -279,12 +323,15 @@ export const pvOf = (s) => {
   let pv = 2 * Math.pow(1.25, u.ticket || 0);
   if (u.shop) pv += 1.2 * Math.pow(1.25, u.shop - 1);
   if (u.cafe) pv += 3 * Math.pow(1.25, u.cafe - 1);
-  return pv * (1 + 0.1 * (u.guide || 0));
+  if (u.ijs) pv += 0.7 * Math.pow(1.25, u.ijs - 1);
+  if (u.foto) pv += 1.8 * Math.pow(1.25, u.foto - 1);
+  if (u.resto) pv += 6 * Math.pow(1.25, u.resto - 1);
+  return pv * (1 + 0.1 * (u.guide || 0)) * (1 + 0.08 * (u.vip || 0));
 };
 export const hallCap = (s) => 25 * Math.pow(1.45, s.up.hal || 0) / 40;   // bezoekers per seconde zonder drukte
 export function economy(s, ideal = false) {
   let A = 0;
-  for (const t of s.T) A += tankBase(t) * (ideal ? 1 : tankFactor(t));
+  for (const t of s.T) A += tankBase(t, s) * (ideal ? 1 : tankFactor(t));
   const want = (0.2 + 0.05 * A) * (1 + 0.25 * (s.up.mk || 0));
   const cap = hallCap(s);
   const vps = want <= cap ? want : cap + (want - cap) * 0.25;
@@ -295,7 +342,7 @@ export function economy(s, ideal = false) {
 export function stepTank(s, t, dt, ev) {
   const u = tankUnits(t), fl = s.up.filt || 0;
   t.f = Math.max(0, t.f - dt * 100 / 300);
-  t.w = Math.max(0, t.w - dt * (0.08 + 0.007 * u) / (1 + 0.3 * fl));
+  t.w = Math.max(0, t.w - dt * (0.08 + 0.007 * u) / (1 + 0.3 * fl + 0.25 * (s.up.uv || 0)));
   if (s.up.st_feed && t.f < 45) t.f = 100;
   if (s.up.st_clean && t.w < 45) t.w = 100;
   if (t.w < 20) t.sk += dt; else t.sk = Math.max(0, t.sk - dt);
@@ -433,7 +480,7 @@ export function feedTank(s, ti) {
 }
 export function fillFood(s, ti) { const t = s.T[ti]; if (t) t.f = 100; }
 export function cleanTank(s, ti) { const t = s.T[ti]; if (!t) return; t.w = 100; if (!t.s) t.sk = 0; }
-export function treatCost(s, t) { return Math.ceil(20 + economy(s).ips * 45 * (tankBase(t) / Math.max(1, economy(s, true).A))); }
+export function treatCost(s, t) { return Math.ceil(20 + economy(s).ips * 45 * (tankBase(t, s) / Math.max(1, economy(s, true).A))); }
 export function treatTank(s, ti) {
   const t = s.T[ti]; if (!t || !t.s) return no('Deze tank is gezond.');
   if (!spend(s, treatCost(s, t))) return no('Nog te weinig munten voor medicijn.');
@@ -883,8 +930,28 @@ export function layoutOf(k, W, H) {
   if (k === 'ping') return { top: H * 0.3, floorY, shelf: { x1: W * 0.36, y: H * 0.3, y2: H * 0.52 } };
   return { top: 6, floorY, shelf: null };
 }
-export function drawBG(g, k, W, H, t, lay) {
-  const T = TT[k], top = lay.top, fl = lay.floorY;
+// 4 uiterlijken: kleur van het water en het zand per wereld (de wereld zelf komt uit docs/gfx/themes.js)
+export const LOOKS = [
+  { id: 'klassiek', name: 'Klassiek', emoji: '🐠', world: 'onderwater', d: 'Het vertrouwde blauwe water.', tint: null },
+  { id: 'lagune', name: 'Lagune', emoji: '🌴', world: 'jungle', d: 'Warm, groenblauw tropisch water.', tint: '#2de0b0', amt: 0.38, sand: '#fff0c8' },
+  { id: 'snoep', name: 'Snoepbaai', emoji: '🍭', world: 'snoepland', d: 'Roze water en suikerzand.', tint: '#ff7ac8', amt: 0.42, sand: '#ffd1e8' },
+  { id: 'neon', name: 'Neon-nacht', emoji: '🌙', world: 'neon', d: 'Donker water met gloeiende deeltjes.', tint: '#3b0a8a', amt: 0.62, sand: '#2a1058', glow: true },
+];
+let LOOK = LOOKS[0];
+export function setLookId(id) { LOOK = LOOKS.find((l) => l.id === id) || LOOKS[0]; TINTS.clear(); }
+const TINTS = new Map();
+function mixHex(a, b, t) {
+  const pa = parseInt(a.slice(1), 16), pb = parseInt(b.slice(1), 16), f = (sh) => Math.round(((pa >> sh) & 255) * (1 - t) + ((pb >> sh) & 255) * t);
+  return '#' + [16, 8, 0].map((sh) => f(sh).toString(16).padStart(2, '0')).join('');
+}
+export function waterOf(k) {
+  const T = TT[k]; if (!LOOK.tint) return T;
+  let v = TINTS.get(k);
+  if (!v) { v = { ...T, sky: T.sky.map((c) => mixHex(c, LOOK.tint, LOOK.amt)), sand: mixHex(T.sand, LOOK.sand, 0.75) }; TINTS.set(k, v); }
+  return v;
+}
+export function drawBG(g, k, W, H, t, lay, px = 0) {
+  const T = waterOf(k), top = lay.top, fl = lay.floorY;
   const gr = g.createLinearGradient(0, top, 0, fl); gr.addColorStop(0, T.sky[0]); gr.addColorStop(0.45, T.sky[1]); gr.addColorStop(1, T.sky[2]);
   g.fillStyle = gr; g.fillRect(0, 0, W, H);
   if (k === 'ping') {
@@ -892,7 +959,7 @@ export function drawBG(g, k, W, H, t, lay) {
     for (let i = 0; i < 12; i++) { const x = (i * 97 + t * 6) % (W + 20) - 10, y = (i * 53 + t * 12) % top; oval(g, x, y, 1.6, 1.6, 'rgba(255,255,255,0.95)'); }
   }
   g.save(); g.globalAlpha = 0.09 + 0.03 * Math.sin(t * 0.6);
-  for (let i = 0; i < 4; i++) { const x = W * (0.12 + i * 0.26) + Math.sin(t * 0.3 + i) * 12; poly(g, [[x, top], [x + 28, top], [x + 80, fl], [x + 20, fl]], '#fff'); }
+  for (let i = 0; i < 4; i++) { const x = W * (0.12 + i * 0.26) + Math.sin(t * 0.3 + i) * 12 + px * (0.5 + i * 0.25); poly(g, [[x, top], [x + 28, top], [x + 80, fl], [x + 20, fl]], '#fff'); }
   g.restore();
   g.beginPath(); g.moveTo(0, top + 3); for (let x = 0; x <= W; x += 12) g.lineTo(x, top + 3 + Math.sin(x * 0.06 + t * 1.5) * 1.8); g.lineTo(W, top - 2); g.lineTo(0, top - 2); g.closePath(); g.fillStyle = 'rgba(255,255,255,0.35)'; g.fill();
   const sand = g.createLinearGradient(0, fl - 8, 0, H); sand.addColorStop(0, shade(T.sand, 0.05)); sand.addColorStop(1, shade(T.sand, -0.25));
@@ -924,7 +991,7 @@ export function drawDeco(g, id, x, y, t, i, W, topY) {
     case 'ijs': poly(g, [[-22, 4], [-14, -22], [-6, -12], [4, -34], [16, -10], [24, 4]], 'rgba(235,248,255,0.92)'); poly(g, [[4, -34], [16, -10], [8, -8]], 'rgba(190,225,245,0.9)'); break;
     case 'sneeuw': oval(g, 0, -6, 12, 11, '#fff'); oval(g, 0, -22, 8, 8, '#fff'); oval(g, -3, -24, 1.2, 1.2, '#222'); oval(g, 3, -24, 1.2, 1.2, '#222'); poly(g, [[0, -22], [8, -21], [0, -20]], '#ff8a3d'); poly(g, [[-9, -17], [9, -17], [9, -14], [-9, -14]], '#d94c4c'); break;
     case 'igloo': g.beginPath(); g.arc(0, 4, 26, Math.PI, TAU); g.fillStyle = '#f2f9ff'; g.fill(); g.strokeStyle = 'rgba(150,190,220,0.8)'; g.lineWidth = 1.2; for (let r = 0; r < 3; r++) { g.beginPath(); g.arc(0, 4, 26 - r * 8, Math.PI + 0.15, TAU - 0.15); g.stroke(); } g.beginPath(); g.arc(0, 4, 8, Math.PI, TAU); g.fillStyle = '#334a66'; g.fill(); break;
-    default: break;
+    default: { const d = DECO[id]; if (d && d.ic) { BG.drawIcon(g, d.ic, 0, -26, 56, { shadow: true }); if (id === 'vuurtoren') BG.glow(g, 0, -52, 34 + Math.sin(t * 2) * 4, '#fff3a0', 0.45); if (id === 'fontein') for (let b = 0; b < 4; b++) oval(g, Math.sin(t * 2 + b * 1.6) * 9, -50 - ((t * 24 + b * 9) % 26), 2, 2, 'rgba(210,240,255,0.8)'); } break; }
   }
   g.restore();
 }
@@ -1052,7 +1119,20 @@ const CSS = `
 .aq-ach div.on{opacity:1;background:color-mix(in srgb,var(--accent) 18%,var(--card))}
 .aq-ship{display:flex;align-items:center;gap:.6rem}
 .aq-ship .aq-bar{flex:1}
+.aq-root{padding-bottom:calc(8.6rem * var(--gfx-scale,1) * 1.1);font-size:calc(1rem * var(--gfx-font,1))}
+.aq-row .aq-ico{width:68px;height:46px}.aq-ico.emo{font-size:1.7rem}
+.aq-btn,.aq-act button,.aq-rb button{min-height:44px}
+.aq-dc{padding:.7rem .3rem;font-size:.85rem}.aq-dc em{font-size:2rem}.aq-dc em .gfx-ei{width:2.2rem;height:2.2rem}
+.aq-chip{padding:.45rem .85rem;font-size:1rem;min-height:44px}
+.aq-nav button{font-size:1.5rem;min-height:52px}.aq-nav button small{font-size:.7rem}
+.aq-ib{min-width:44px;min-height:44px;font-size:1.25rem}
+.aq-ach div{font-size:1.9rem}.aq-ach div .gfx-ei{width:2rem;height:2rem}
+.aq-bk{font-size:.8rem}.aq-bk img{height:56px}
+.aq-stats{gap:.35rem}.aq-ib{padding:.2rem .4rem}
+@media(max-width:430px){#aqVis{display:none}}
+.aq-root::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;background:linear-gradient(180deg,var(--aq-w1,transparent),var(--aq-w2,transparent));opacity:.09}
 `;
+const CSS2 = CSS + BG.uiCss(['.aq-dockin', '.aq-card', '.aq-chips', '.aq-tut', '.aq-mbox', '.aq-h', '.aq-act', '.aq-line'], 1.08);
 
 /* =====================================================================
    8. DE VIEW
@@ -1067,8 +1147,15 @@ export async function aquariumView(ctx) {
   const U = String(ctx.uid || 'anon');
   const lsKey = `big:aquarium:${U}`;
   const docRef = () => doc(db, 'gamesaves', 'big-aquarium__' + U);
-  if (!document.getElementById('aq-style')) { const st = document.createElement('style'); st.id = 'aq-style'; st.textContent = CSS; document.head.appendChild(st); }
+  if (!document.getElementById('aq-style')) { const st = document.createElement('style'); st.id = 'aq-style'; st.textContent = CSS2; document.head.appendChild(st); }
   view.classList.add('aq-root');
+  setLookId(BG.getLook('aquarium', LOOKS).id);
+  const applyWorldVars = () => { try { const w = BG.Themes.world(LOOK.world); view.style.setProperty('--aq-w1', w.bg[0]); view.style.setProperty('--aq-w2', w.bg[w.bg.length - 1]); } catch (e) { /* stil */ } };
+  applyWorldVars();
+  const stopIcons = BG.iconify(view);
+  const FX = new BG.Particles();
+  const offGfx = BG.Settings.onChange(() => { Wd.sig = ''; });
+  const milestone = (kind, o) => { try { BG.milestone(view, kind, o); } catch (e) { /* geen scene */ } };
   view.innerHTML = '<div class="aq-load">🐠 Aquarium laden…</div>';
 
   let S = null, destroyed = false, lastLocal = 0, lastCloud = Date.now(), lastForced = 0, cloudBusy = false;
@@ -1238,7 +1325,7 @@ export async function aquariumView(ctx) {
   function updateWorld(dt) {
     const t = S.T[ti]; if (!t) return;
     if (Wd.sig !== sigOf(t)) syncEnts();
-    Wd.t += dt;
+    Wd.t += dt; Wd.dt = dt;
     // scholen
     const seen = {};
     for (const e of Wd.ents) if (e.sp.beh === 'school') seen[e.sp.id] = 1;
@@ -1265,7 +1352,7 @@ export async function aquariumView(ctx) {
     if ((Wd.fc = (Wd.fc || 0) + 1) % 40 === 0 && cv.parentNode && Math.abs(cv.parentNode.clientWidth - CW) > 2 && cv.parentNode.clientWidth > 100) { resize(); syncEnts(); }
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
     const W = CW, H = CH, T = Wd.t;
-    drawBG(g, t.k, W, H, T, LAY);
+    drawBG(g, t.k, W, H, T, LAY, (ptr.x ? (ptr.x - W / 2) * -0.06 : 0));
     // decoraties
     t.d.forEach((id, i) => { if (id === 'lamp') return; drawDeco(g, id, decoSlotX(i, W) * 1, LAY.floorY + 2, T, i, W, LAY.top); });
     for (const b of Wd.bubbles) { g.beginPath(); g.arc(b.x, b.y, b.r * u, 0, TAU); g.strokeStyle = 'rgba(255,255,255,0.55)'; g.lineWidth = 1; g.stroke(); }
@@ -1288,6 +1375,15 @@ export async function aquariumView(ctx) {
       else { g.font = `${14 * u}px serif`; g.fillText(p.txt, p.x, p.y); }
       g.globalAlpha = 1;
     }
+    // sfeer: gloeiende deeltjes (Neon-uiterlijk), zachte lichtvlek, muntjes
+    if (BG.GFX.q >= 1 && !BG.GFX.reduce) {
+      const nG = LOOK.glow ? (BG.GFX.q === 2 ? 26 : 14) : (BG.GFX.q === 2 ? 8 : 0);
+      for (let i = 0; i < nG; i++) {
+        const gx = ((i * 97.3 + T * (4 + i % 5)) % (W + 20)) - 10, gy = LAY.top + ((i * 53.7 + Math.sin(T * 0.6 + i) * 18 + T * 3) % Math.max(20, LAY.floorY - LAY.top));
+        BG.glow(g, gx, gy, 5 + (i % 3) * 2, LOOK.glow ? ['#7df9ff', '#f0abfc', '#a78bfa'][i % 3] : '#ffffff', LOOK.glow ? 0.55 : 0.2);
+      }
+    }
+    FX.update(Math.min(0.05, Wd.dt || 0.016)); FX.draw(g);
     // glasglans
     g.save(); g.globalAlpha = 0.07; poly(g, [[W * 0.06, 0], [W * 0.16, 0], [W * 0.02, LAY.floorY], [0, LAY.floorY]], '#fff'); g.restore();
     if (t.s) { g.fillStyle = `rgba(200,60,60,${0.1 + 0.05 * Math.sin(T * 3)})`; g.fillRect(0, 0, W, LAY.floorY + 4); }
@@ -1310,7 +1406,7 @@ export async function aquariumView(ctx) {
     if (!modalCv || !modalCv.isConnected || !modalSp) return;
     const c = modalCv.getContext('2d'); if (!c) return;
     const w = modalCv.width, h = modalCv.height, sp = modalSp, T = performance.now() / 1000;
-    const tt = TT[sp.hab];
+    const tt = waterOf(sp.hab);
     const gr = c.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, tt.sky[0]); gr.addColorStop(0.5, tt.sky[1]); gr.addColorStop(1, tt.sky[2]); c.fillStyle = gr; c.fillRect(0, 0, w, h);
     c.fillStyle = tt.sand; c.fillRect(0, h * 0.86, w, h * 0.14);
     const ext = { shark: 76, narwal: 110, ray: 52, seal: 58, lobster: 62, eel: 66, turtle: 56 }[sp.art] || 48, k = Math.min(3, (w * 0.62) / ext);
@@ -1350,7 +1446,7 @@ export async function aquariumView(ctx) {
     return S.T.map((t, i) => `<button class="aq-chip ${i === ti ? 'on' : ''}" data-a="sel" data-i="${i}">${TT[t.k].e} ${i + 1}${t.s ? ' 🤒' : ''}</button>`).join('');
   }
   function statHTML() {
-    const t = S.T[ti], e = economy(S), share = e.A > 0 ? tankBase(t) * tankFactor(t) / e.A : 0;
+    const t = S.T[ti], e = economy(S), share = e.A > 0 ? tankBase(t, S) * tankFactor(t) / e.A : 0;
     const u2 = tankUnits(t), cap = tankCap(t);
     const sick = t.s ? `<div class="aq-sick">🤒 Deze tank is ziek: de dieren verdienen minder. Geef medicijn!</div>` : '';
     return `<div class="aq-card"><h3>${tankName(t, ti)} <span class="aq-tag">niveau ${t.l}</span></h3>
@@ -1509,7 +1605,7 @@ export async function aquariumView(ctx) {
   const TAB_FN = { tank: tabTank, park: tabPark, reis: tabReis, boek: tabBoek, doel: tabDoel, parel: tabParel };
   function shell() {
     view.innerHTML = `<div id="aqTut"></div><div id="aqMain"></div>
-      <div class="aq-dock"><div class="aq-dockin"><div class="aq-stats"><span class="aq-coins" id="aqCoins">🪙 0</span><span class="aq-sub" id="aqIps"></span><span class="aq-sp"></span><span class="aq-sub" id="aqVis"></span><button class="aq-ib" data-a="snd" id="aqSnd">🔊</button></div>
+      <div class="aq-dock"><div class="aq-dockin"><div class="aq-stats"><span class="aq-coins" id="aqCoins">🪙 0</span><span class="aq-sub" id="aqIps"></span><span class="aq-sp"></span><span class="aq-sub" id="aqVis"></span><button class="aq-ib" data-a="looks" aria-label="Uiterlijk">🎨</button><button class="aq-ib" data-a="gear" aria-label="Instellingen">⚙️</button><button class="aq-ib" data-a="snd" id="aqSnd">🔊</button></div>
       <div class="aq-nav">${TABS.map(([k, e, n]) => `<button data-a="tab" data-t="${k}" id="aqt-${k}"><span>${e}</span><small>${n}</small></button>`).join('')}</div></div></div>`;
   }
   function render() {
@@ -1543,9 +1639,10 @@ export async function aquariumView(ctx) {
     if (!S || !$('#aqCoins')) return;
     const e = economy(S);
     const c = fmt(S.c); if (c !== lastTopC || force) { $('#aqCoins').textContent = '🪙 ' + c; lastTopC = c; }
-    $('#aqIps').textContent = `+${fmt(e.ips)}/s`;
-    $('#aqVis').textContent = `👥 ${fmt(e.vps)}/s`;
-    $('#aqSnd').textContent = sound.on ? '🔊' : '🔇';
+    const setT = (el, t) => { if (el && el.textContent !== t) el.textContent = t; };
+    setT($('#aqIps'), `+${fmt(e.ips)}/s`);
+    setT($('#aqVis'), `👥 ${fmt(e.vps)}/s`);
+    setT($('#aqSnd'), sound.on ? '🔊' : '🔇');
     view.querySelectorAll('[data-cost]').forEach((el) => { const dis = S.c < +el.dataset.cost || el.dataset.fit === '0'; if (el.disabled !== dis) el.disabled = dis; });
     if (tab === 'tank' && S.T[ti]) {
       const t = S.T[ti], w = $('#aqW'), f = $('#aqF');
@@ -1572,7 +1669,7 @@ export async function aquariumView(ctx) {
   /* ---------- acties ---------- */
   function afterChange(rerender = true) {
     S.at = Date.now();
-    for (const a of checkAch(S)) { toast(`🏆 ${a[2]} ${a[1]}! (+2% inkomsten)`); sound.play('win'); }
+    for (const a of checkAch(S)) { toast(`🏆 ${a[2]} ${a[1]}! (+2% inkomsten)`); sound.play('win'); milestone('new-record', { title: a[1], sub: 'Prestatie behaald (+2% inkomsten)' }); }
     if (rerender) { if (tab === 'tank') { Wd.sig = ''; renderTank(); } else render(); }
     refresh(true);
   }
@@ -1584,6 +1681,7 @@ export async function aquariumView(ctx) {
     const px = x != null ? x : rnd(CW * 0.25, CW * 0.75), py = y != null ? y : LAY.top + 8;
     for (let i = 0; i < 3 && Wd.food.length < 16; i++) Wd.food.push({ x: px + rnd(-14, 14) * u, y: Math.max(LAY.top + 4, py + rnd(-6, 6) * u), age: 0, p: rnd(0, 6) });
     addPart(px, py, '+' + fmt(tip), 'up');
+    BG.coinBurst(FX, px, py, 3);
     ptr.x = px; ptr.y = py; ptr.t = Wd.t;
     if (Math.random() < 0.3) sound.play('coin');
     markTutorialFeed(); refresh();
@@ -1614,6 +1712,8 @@ export async function aquariumView(ctx) {
     const a = b.dataset.a, id = b.dataset.id, i = b.dataset.i != null ? +b.dataset.i : null;
     let r;
     switch (a) {
+      case 'gear': BG.openGear({ title: 'Instellingen', toast }); break;
+      case 'looks': BG.openLooks({ gameId: 'aquarium', looks: LOOKS, onPick: (l) => { setLookId(l.id); applyWorldVars(); toast(`${l.emoji} Uiterlijk: ${l.name}`); } }); break;
       case 'tab': tab = b.dataset.t; tabsVisited.add(tab); prestConfirm = false; render(); window.scrollTo && window.scrollTo(0, 0); break;
       case 'sel': ti = i; Wd.sig = ''; render(); break;
       case 'goto': ti = i; tab = 'tank'; render(); break;
@@ -1625,25 +1725,25 @@ export async function aquariumView(ctx) {
       case 'place': r = placeFromInv(S, ti, id); if (r.ok) { sound.play('buy'); afterChange(true); } else fail(r); break;
       case 'autoplace': { const k = autoPlace(id); if (k >= 0) { sound.play('buy'); toast(`${SPM[id].n} woont nu in ${tankName(S.T[k], k)}.`); afterChange(true); } else fail({ msg: `Geen vrije plek in een ${TT[SPM[id].hab].n.toLowerCase()}-tank. Bouw of breid een tank uit.` }); break; }
       case 'deco': r = buyDeco(S, ti, id); if (r.ok) { sound.play('buy'); afterChange(true); } else fail(r); break;
-      case 'tup': r = upgradeTank(S, ti); if (r.ok) { sound.play('win'); toast('🔧 De tank is groter geworden!'); afterChange(true); } else fail(r); break;
+      case 'tup': r = upgradeTank(S, ti); if (r.ok) { sound.play('win'); milestone('levelup', { title: 'Tank niveau ' + S.T[ti].l + '!', sub: 'Meer plek voor dieren' }); toast('🔧 De tank is groter geworden!'); afterChange(true); } else fail(r); break;
       case 'build': r = buildTank(S, b.dataset.k); if (r.ok) { sound.play('win'); toast('🏗️ Nieuwe tank gebouwd! Vul hem met dieren.'); ti = r.index; tab = 'tank'; Wd.sig = ''; afterChange(true); render(); } else fail(r); break;
       case 'up': r = buyUp(S, id); if (r.ok) { sound.play('buy'); afterChange(true); } else fail(r); break;
       case 'exp': r = startExp(S, id); if (r.ok) { sound.play('horn'); toast('⛵ Het schip vertrekt!'); afterChange(true); } else fail(r); break;
       case 'collect': {
         r = collectExp(S, i); if (!r.ok) { fail(r); break; }
-        sound.play('win');
+        sound.play('win'); milestone('chest-open', { title: 'De schat is binnen!', sub: r.found.map((f) => SPM[f.id].n).join(', ') });
         const rows = r.found.map((f) => { const k = autoPlace(f.id); return `<div class="aq-row">${iconHTML(f.id)}<div class="aq-rm"><b>${SPM[f.id].n}${f.isNew ? '<span class="aq-tag new">Nieuw!</span>' : ''}</b><small>${k >= 0 ? 'Woont nu in ' + tankName(S.T[k], k) : 'In je voorraad: geen vrije plek'}</small></div></div>`; }).join('');
         openModal(`<h2>${REGM[r.region].e} De expeditie is terug!</h2>${rows}`);
         afterChange(true); break;
       }
-      case 'goal': r = claimGoal(S, id); if (r.ok) { sound.play('coin'); toast(`🎯 +${fmt(r.reward)} munten!`); afterChange(true); } else fail(r); break;
-      case 'daily': r = claimDaily(S); if (r.ok) { sound.play('win'); openModal(`<h2>🎁 Dagelijkse beloning</h2><p style="font-size:1.3rem">🪙 +${fmt(r.reward)}</p><div class="aq-line">Dag ${r.streak} op rij.</div>${r.pet ? `<div class="aq-row">${iconHTML(r.pet)}<div class="aq-rm"><b>Verrassing: ${SPM[r.pet].n}!</b><small>Staat in je voorraad (Reizen).</small></div></div>` : ''}`); afterChange(true); } else fail(r); break;
+      case 'goal': r = claimGoal(S, id); if (r.ok) { sound.play('coin'); milestone('coins-rain', { title: 'Doel gehaald!', sub: '+' + fmt(r.reward) + ' munten' }); toast(`🎯 +${fmt(r.reward)} munten!`); afterChange(true); } else fail(r); break;
+      case 'daily': r = claimDaily(S); if (r.ok) { sound.play('win'); milestone('daily-bonus', { title: 'Dagelijkse beloning!', sub: 'Dag ' + r.streak + ' op rij', force: true }); openModal(`<h2>🎁 Dagelijkse beloning</h2><p style="font-size:1.3rem">🪙 +${fmt(r.reward)}</p><div class="aq-line">Dag ${r.streak} op rij.</div>${r.pet ? `<div class="aq-row">${iconHTML(r.pet)}<div class="aq-rm"><b>Verrassing: ${SPM[r.pet].n}!</b><small>Staat in je voorraad (Reizen).</small></div></div>` : ''}`); afterChange(true); } else fail(r); break;
       case 'perk': r = buyPerk(S, id); if (r.ok) { sound.play('buy'); afterChange(true); } else fail(r); break;
       case 'prest1': prestConfirm = true; render(); break;
       case 'prest0': prestConfirm = false; render(); break;
       case 'prest2': {
         r = doPrestige(S); prestConfirm = false;
-        if (r.ok) { ti = 0; Wd.sig = ''; Wd.ents = []; sound.play('win'); openModal(`<h2>🦪 Nieuw aquarium!</h2><p style="font-size:1.3rem">+${r.gain} parel${r.gain === 1 ? '' : 'en'}</p><div class="aq-line">Je inkomsten zijn nu x${fmt(multOf(S))} en je kunt parels uitgeven aan voordelen.</div>`); lastLocal = 0; afterChange(true); writeLocal(); writeCloud('soft'); } else fail(r);
+        if (r.ok) { ti = 0; Wd.sig = ''; Wd.ents = []; sound.play('win'); milestone('victory', { title: 'Nieuw aquarium!', sub: '+' + r.gain + ' parels', force: true }); openModal(`<h2>🦪 Nieuw aquarium!</h2><p style="font-size:1.3rem">+${r.gain} parel${r.gain === 1 ? '' : 'en'}</p><div class="aq-line">Je inkomsten zijn nu x${fmt(multOf(S))} en je kunt parels uitgeven aan voordelen.</div>`); lastLocal = 0; afterChange(true); writeLocal(); writeCloud('soft'); } else fail(r);
         break;
       }
       case 'bfilter': bookFilter = b.dataset.k; render(); break;
@@ -1677,7 +1777,7 @@ export async function aquariumView(ctx) {
     }
     // meldingen
     if (S.st.ticks % 8 === 0) {
-      for (const a of checkAch(S)) { toast(`🏆 ${a[2]} ${a[1]}! (+2% inkomsten)`); sound.play('win'); }
+      for (const a of checkAch(S)) { toast(`🏆 ${a[2]} ${a[1]}! (+2% inkomsten)`); sound.play('win'); milestone('new-record', { title: a[1], sub: 'Prestatie behaald (+2% inkomsten)' }); }
       for (const x of GOALS) if (!goalSeen.has(x[0]) && x[2](S) >= x[3]) { goalSeen.add(x[0]); toast(`🎯 Doel gehaald: ${x[1]}`); sound.play('coin'); break; }
       S.x.forEach((x, i) => { if (x.t1 <= now && !expSeen.has(x.t1)) { expSeen.add(x.t1); toast('🧭 Een schip is terug in de haven!'); sound.play('horn'); } });
     }
@@ -1722,6 +1822,7 @@ export async function aquariumView(ctx) {
       goalSeen = new Set(Object.keys(S.gl)); ti = 0; Wd.sig = ''; lastLocal = 0; render(); toast('☁️ Nieuwere voortgang van een ander apparaat geladen.');
     }
   });
+  if (isNew) later(() => { try { BG.intro(view, 'aquarium', 'intro-onderwater', { title: 'Aquarium Tycoon', sub: 'Maak het mooiste aquarium!' }); } catch (e) { /* geen intro */ } }, 400);
   writeLocal();
 
   addCleanup(() => {
@@ -1731,6 +1832,7 @@ export async function aquariumView(ctx) {
     view.removeEventListener('click', onClick); view.removeEventListener('pointerdown', onModalBackdrop); cv.removeEventListener('pointerdown', onCanvasDown);
     window.removeEventListener('resize', onResize); window.removeEventListener('pagehide', onPageHide); document.removeEventListener('visibilitychange', onHide);
     if (ro) ro.disconnect();
+    try { stopIcons(); offGfx(); } catch (e) { /* weg */ }
     try { writeLocal(); writeCloud(true); } catch (e) { /* ok */ }
     sound.close();
   });

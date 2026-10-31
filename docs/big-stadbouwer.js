@@ -2,6 +2,7 @@
 // Firestore: gamesaves/big-stadbouwer__{uid} = { game:'big-stadbouwer', uid, data:<JSON-string, max 18000>, updated:ms }
 // Dit bestand bevat (1) pure spellogica (ook getest in node), (2) tekenwerk op canvas, (3) de view met UI en geluid.
 import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import * as BG from './big-gfx.js?v=1';
 
 /* =====================================================================
    1. DATA EN PURE LOGICA (geen DOM)
@@ -61,6 +62,33 @@ def('A', { n: 'Waterpomp', e: '🚰', cat: 'nuts', c: 75, u: 0.1, wat: 14, noRoa
 def('L', { n: 'Watertoren', e: '🗼', cat: 'nuts', c: 440, u: 0.3, wat: 60, noRoad: 1, unl: 100, d: 'Water voor een wijk (60).' });
 def('R', { n: 'Zuivering', e: '💧', cat: 'nuts', c: 1400, u: 1, wat: 220, noRoad: 1, unl: 400, d: 'Water voor een stad (220).' });
 def('H', { n: 'Stadhuis', e: '🏛️', cat: 'x', c: 0, pwr: 6, wat: 6, noRoad: 1, fixed: 1, d: 'Het hart van je stad.' });
+// ---- fase 2: 26 nieuwe gebouwen (nieuwe tekens achteraan; de kaart wordt als tekenreeks bewaard)
+def('u', { n: 'Tentenkamp', e: '⛺', cat: 'wonen', c: 45, res: 6, unl: 10, d: 'Gezellig kamperen: plek voor 6 inwoners.' });
+def('D', { n: 'Kasteelvilla', e: '🏰', cat: 'wonen', c: 1100, res: 10, taxm: 3.6, unl: 700, d: 'Een echt kasteeltje: rijke bewoners, veel belasting.' });
+def('G', { n: 'Penthouse-toren', e: '🏢', cat: 'wonen', c: 3600, res: 220, unl: 1300, d: 'Plek voor 220 inwoners.' });
+def('I', { n: 'Bakkerij', e: '🍞', cat: 'werk', c: 110, jobs: 14, inc: 0.07, unl: 20, d: '14 banen en heerlijk brood.' });
+def('J', { n: 'Zuivelfabriek', e: '🥛', cat: 'werk', c: 190, jobs: 24, inc: 0.075, poll: 0.5, unl: 70, d: '24 banen, een beetje geur.' });
+def('N', { n: 'Mijn', e: '⛏️', cat: 'werk', c: 650, jobs: 60, inc: 0.09, poll: 1.8, unl: 160, d: '60 banen, maar het is stoffig.' });
+def('K', { n: 'Robotfabriek', e: '🤖', cat: 'werk', c: 2600, jobs: 120, inc: 0.14, poll: 1, edu: 1, unl: 700, d: '120 banen. Beter met scholen.' });
+def('M', { n: 'Ruimtehaven', e: '🚀', cat: 'werk', c: 12000, jobs: 400, inc: 0.24, edu: 1, unl: 3000, d: '400 banen en raketten naar de maan.' });
+def('Q', { n: 'IJssalon', e: '🍦', cat: 'winkel', c: 85, shop: 30, rev: 0.06, k: 'shop', r: 5, unl: 20, d: 'IJsjes voor 30 klanten.' });
+def('T', { n: 'Pizzeria', e: '🍕', cat: 'winkel', c: 200, shop: 60, rev: 0.06, k: 'shop', r: 6, unl: 100, d: 'Pizza voor 60 klanten.' });
+def('U', { n: 'Speelgoedwinkel', e: '🧩', cat: 'winkel', c: 520, shop: 120, rev: 0.05, k: 'shop', r: 8, unl: 180, d: 'Winkel voor 120 klanten.' });
+def('V', { n: 'Marktplein', e: '🍎', cat: 'winkel', c: 800, shop: 220, rev: 0.045, k: 'shop', r: 9, unl: 260, d: 'Kraampjes voor 220 klanten.' });
+def('1', { n: 'Kliniek', e: '🏥', cat: 'zorg', c: 260, u: 1, k: 'health', r: 6, unl: 70, d: 'Dokter om de hoek.' });
+def('2', { n: 'Universiteit', e: '🔬', cat: 'zorg', c: 2200, u: 3, k: 'school', r: 12, edu: 400, unl: 800, d: 'Onderwijs voor een grote wijk.' });
+def('3', { n: 'Kunstmuseum', e: '🎨', cat: 'zorg', c: 800, u: 0.8, k: 'culture', r: 9, edu: 60, tour: 20, unl: 350, d: 'Kunst en bezoekers.' });
+def('4', { n: 'Dierentuin', e: '🦁', cat: 'groen', c: 3000, u: 3, k: 'fun', r: 12, tour: 200, unl: 1000, d: 'Leeuwen, giraffen en veel bezoekers.' });
+def('5', { n: 'Achtbaan', e: '🎢', cat: 'groen', c: 2400, u: 3, k: 'fun', r: 10, tour: 150, unl: 700, d: 'Gillen van plezier.' });
+def('6', { n: 'Draaimolen', e: '🎠', cat: 'groen', c: 400, u: 0.4, k: 'fun', r: 7, tour: 25, unl: 200, d: 'Rondjes draaien voor de kleintjes.' });
+def('7', { n: 'Bloementuin', e: '🌷', cat: 'groen', c: 70, u: 0.1, k: 'green', r: 5, noRoad: 1, unl: 30, d: 'Kleurige bloemen, blije buren.' });
+def('8', { n: 'Zwembad', e: '🌊', cat: 'groen', c: 520, u: 0.6, k: 'green', r: 6, tour: 15, unl: 250, d: 'Plons! Fris en gezellig.' });
+def('9', { n: 'Muziekzaal', e: '🎹', cat: 'groen', c: 900, u: 1, k: 'culture', r: 8, edu: 20, tour: 40, unl: 400, d: 'Concerten in de stad.' });
+def('0', { n: 'Metrostation', e: '🚆', cat: 'ov', c: 1900, u: 2, k: 'transit', r: 14, transit: 700, unl: 600, d: 'Onder de grond, boven de files.' });
+def('Y', { n: 'Luchthaven', e: '✈️', cat: 'ov', c: 7000, u: 6, k: 'transit', r: 16, transit: 900, tour: 250, unl: 2000, d: 'Vliegtuigen, toeristen en minder files.' });
+def('s', { n: 'Biogascentrale', e: '🔥', cat: 'nuts', c: 500, u: 0.6, pwr: 90, poll: 0.5, noRoad: 1, unl: 150, d: 'Stroom (90) uit afval.' });
+def('O', { n: 'Kerncentrale', e: '⚡', cat: 'nuts', c: 4800, u: 5, pwr: 900, poll: 1, noRoad: 1, unl: 1500, d: 'Heel veel stroom (900).' });
+def('y', { n: 'Stuwmeer', e: '🌧️', cat: 'nuts', c: 3200, u: 1.5, wat: 500, noRoad: 1, unl: 1000, d: 'Water voor een grote stad (500).' });
 export const BUILDABLE = Object.keys(BD).filter((c) => !BD[c].fixed);
 const RESIDENTIAL = 'hjfkv', JOBCH = 'baioC', SHOPCH = 'mneq';
 
@@ -74,6 +102,11 @@ export const UPG = [
   { id: 'fire', n: 'Brandpreventie', e: '🧯', d: 'Minder branden en groter bereik', base: 200, g: 2.3, max: 5 },
   { id: 'grow', n: 'Welkomstpakket', e: '🧳', d: 'Nieuwe inwoners komen sneller', base: 150, g: 2.2, max: 8 },
   { id: 'off', n: 'Nachtploeg', e: '🌙', d: 'Meer verdienen als je weg bent (+10%)', base: 260, g: 2.4, max: 5 },
+  { id: 'tour', n: 'Toeristenbureau', e: '🗺️', d: '+10% toeristeninkomsten per niveau', base: 300, g: 2.3, max: 8 },
+  { id: 'mkt', n: 'Marktkramen', e: '🍎', d: '+8% opbrengst van winkels', base: 280, g: 2.3, max: 8 },
+  { id: 'sol', n: 'Zonnepanelen', e: '☀️', d: '+8% stroom per niveau', base: 240, g: 2.3, max: 8 },
+  { id: 'beurs', n: 'Studiebeurzen', e: '📘', d: 'Onderwijs telt 10% zwaarder', base: 260, g: 2.3, max: 6 },
+  { id: 'fest', n: 'Feestcomité', e: '🎈', d: '+2 blijdschap voor iedereen', base: 320, g: 2.4, max: 6 },
 ];
 export const PERKS = [
   { id: 'start', n: 'Startkapitaal', e: '💰', d: '+250 startgeld per niveau', max: 10 },
@@ -262,7 +295,7 @@ export function calc(S) {
     if (ch === 't') { treeAt[i] = 1; continue; }
     if (ch === 'r') { roads++; roadCap += 8 * m; upk += B.u * m; continue; }
     upk += B.u * Math.pow(m, 0.8);
-    if (B.pwr) pwr += B.pwr * m * nets * (ch === 'W' ? storm : 1);
+    if (B.pwr) pwr += B.pwr * m * nets * (1 + 0.08 * (up.sol || 0)) * (ch === 'W' ? storm : 1);
     if (B.wat) wat += B.wat * m * nets * drought;
     const conn = B.noRoad || adj(x, y);
     if (!conn) { disc.push(i); continue; }
@@ -281,7 +314,7 @@ export function calc(S) {
   const demP = pop * 0.08 + jobs * 0.05 + nsv * 0.8, demW = pop * 0.07 + jobs * 0.03 + nsv * 0.4;
   const pr = demP > 0 ? Math.min(1, pwr / demP) : 1, wr = demW > 0 ? Math.min(1, wat / demW) : 1;
   const employed = Math.min(workers, jobs), unemp = workers > 0 ? Math.max(0, 1 - jobs / workers) : 0;
-  const eduNeed = pop * 0.25, eduR = eduNeed > 0 ? Math.min(1, edu / eduNeed) : 1;
+  const eduNeed = pop * 0.25, eduR = eduNeed > 0 ? Math.min(1, edu * (1 + 0.1 * (up.beurs || 0)) / eduNeed) : 1;
   // verkeer
   const load = employed * 0.8 + pop * 0.25 + tour * 0.2, eff = Math.max(load * 0.4, load - transit);
   const ti = roadCap > 0 ? eff / roadCap : (load > 0 ? 3 : 0), pen = Math.min(1.2, Math.max(0, ti - 0.9));
@@ -290,7 +323,7 @@ export function calc(S) {
   const crunchPrev = S.money < 0.5 && S.lastNet < 0;
   const moodEv = (ev.fest > 0 ? 10 : 0) - (ev.bad > 0 ? 6 : 0);
   let gadj = -40 * (1 - pr) - 40 * (1 - wr) - (pop > 15 ? 26 * unemp : 0) - (rate > 10 ? (rate - 10) * 3 : -(10 - rate) * 1.5)
-    - 22 * Math.min(1, pen) + 3 * (up.hap || 0) + moodEv - (crunchPrev ? 10 : 0);
+    - 22 * Math.min(1, pen) + 3 * (up.hap || 0) + 2 * (up.fest || 0) + moodEv - (crunchPrev ? 10 : 0);
   gadj = Math.round(gadj * 100) / 100;
   // per woning
   let capSum = 0, hSum = 0, target = 0, capAll = 0, taxmSum = 0;
@@ -328,8 +361,8 @@ export function calc(S) {
   const filled = jobs > 0 ? Math.min(1, workers / jobs) : 0;
   let jobInc = 0; for (const j of J) jobInc += j.jobs * j.inc * filled * (j.edu ? 0.5 + 0.5 * eduR : 1) * ut;
   const demand = pop * 0.9 + tour, sFill = shopCap > 0 ? Math.min(1, demand / shopCap) : 0;
-  let shopInc = 0; for (const s of SH) shopInc += s.cap * s.rev * sFill * ut;
-  const tourInc = (shopCap > 0 || tour > 0 ? tour * 0.06 : 0);
+  let shopInc = 0; for (const s of SH) shopInc += s.cap * s.rev * sFill * ut * (1 + 0.08 * (up.mkt || 0));
+  const tourInc = (shopCap > 0 || tour > 0 ? tour * 0.06 * (1 + 0.1 * (up.tour || 0)) : 0);
   const biz = (jobInc + shopInc + tourInc) * (1 + 0.1 * (up.biz || 0)) * cp;
   const inc = INC + (1 - INC) * Math.exp(-pop / 120);   // vroeg ruimer, later strakker
   const taxI = tax * pm * festM * inc, bizI = biz * pm * festM * inc;
@@ -432,6 +465,20 @@ export const GOALS = [
   { t: 'Bouw een pretpark', e: '🎡', r: 80000, f: (S, st) => [nC(st, 'P'), 1] },
   { t: 'Bereik 2500 inwoners', e: '🌆', r: 120000, f: (S) => [Math.floor(S.pop), 2500] },
   { t: 'Start een Nieuwe Stad met sterren (Meer-tab)', e: '🌟', r: 0, f: (S) => [S.prest > 0 ? 1 : 0, 1] },
+  // fase 2 (achteraan: S.goal is een index)
+  { t: 'Bouw een tentenkamp', e: '⛺', r: 200, f: (S, st) => [nC(st, 'u'), 1] },
+  { t: 'Bouw een bakkerij', e: '🍞', r: 300, f: (S, st) => [nC(st, 'I'), 1] },
+  { t: 'Bouw een kliniek', e: '🏥', r: 700, f: (S, st) => [nC(st, '1'), 1] },
+  { t: 'Bouw een zwembad', e: '🌊', r: 1500, f: (S, st) => [nC(st, '8'), 1] },
+  { t: 'Bouw een metrostation', e: '🚆', r: 8000, f: (S, st) => [nC(st, '0'), 1] },
+  { t: 'Bouw een universiteit', e: '🔬', r: 12000, f: (S, st) => [nC(st, '2'), 1] },
+  { t: 'Bouw een achtbaan', e: '🎢', r: 14000, f: (S, st) => [nC(st, '5'), 1] },
+  { t: 'Bouw een dierentuin', e: '🦁', r: 20000, f: (S, st) => [nC(st, '4'), 1] },
+  { t: 'Bouw een robotfabriek', e: '🤖', r: 30000, f: (S, st) => [nC(st, 'K'), 1] },
+  { t: 'Bouw een kerncentrale', e: '⚡', r: 40000, f: (S, st) => [nC(st, 'O'), 1] },
+  { t: 'Bouw een luchthaven', e: '✈️', r: 90000, f: (S, st) => [nC(st, 'Y'), 1] },
+  { t: 'Bouw een ruimtehaven', e: '🚀', r: 200000, f: (S, st) => [nC(st, 'M'), 1] },
+  { t: 'Bereik 5000 inwoners', e: '🌍', r: 300000, f: (S) => [Math.floor(S.pop), 5000] },
 ];
 export const ACHS = [
   { id: 'h1', n: 'Eerste huis', e: '🏠', r: 25, f: (S, st) => nC(st, RESIDENTIAL) >= 1 },
@@ -458,6 +505,17 @@ export const ACHS = [
   { id: 'pre1', n: 'Nieuw begin', e: '🔄', r: 0, f: (S) => S.prest >= 1 },
   { id: 'daily3', n: 'Trouwe burgemeester', e: '📅', r: 1500, f: (S) => (S.daily && S.daily.s >= 3) },
   { id: 'star5', n: 'Sterrenstad', e: '🌟', r: 0, f: (S) => S.stars >= 5 },
+  { id: 'tent', n: 'Kampeerders', e: '⛺', r: 150, f: (S, st) => nC(st, 'u') >= 1 },
+  { id: 'bakker', n: 'Warm brood', e: '🍞', r: 300, f: (S, st) => nC(st, 'I') >= 2 },
+  { id: 'bloem', n: 'Bloemenstad', e: '🌷', r: 800, f: (S, st) => nC(st, '7') >= 5 },
+  { id: 'zoo', n: 'Dierenvriend', e: '🦁', r: 9000, f: (S, st) => nC(st, '4') >= 1 },
+  { id: 'coast', n: 'Gillen!', e: '🎢', r: 7000, f: (S, st) => nC(st, '5') >= 1 },
+  { id: 'metro', n: 'Onder de grond', e: '🚆', r: 5000, f: (S, st) => nC(st, '0') >= 1 },
+  { id: 'air', n: 'Vliegveld', e: '✈️', r: 40000, f: (S, st) => nC(st, 'Y') >= 1 },
+  { id: 'space', n: 'Ruimtevaart', e: '🚀', r: 100000, f: (S, st) => nC(st, 'M') >= 1 },
+  { id: 'atoom', n: 'Veel stroom', e: '⚡', r: 15000, f: (S, st) => nC(st, 'O') >= 1 },
+  { id: 'uni', n: 'Studentenstad', e: '🔬', r: 6000, f: (S, st) => nC(st, '2') >= 1 },
+  { id: 'kunst', n: 'Cultuurstad', e: '🎨', r: 3000, f: (S, st) => nC(st, '39') >= 2 },
 ];
 // geeft lijst van nieuwe prestaties; kent geld toe
 export function checkAch(S, st) {
@@ -561,7 +619,7 @@ function circ(c, x, y, r, fill) { c.fillStyle = fill; c.beginPath(); c.arc(x, y,
 function poly(c, pts, fill) { c.fillStyle = fill; c.beginPath(); c.moveTo(pts[0], pts[1]); for (let k = 2; k < pts.length; k += 2) c.lineTo(pts[k], pts[k + 1]); c.closePath(); c.fill(); }
 // 3D-blok in schuine projectie: voetafdruk [x,y,w,d], hoogte h; dak = top, voorkant = front
 function box(c, x, y, w, d, h, top, front) {
-  c.fillStyle = 'rgba(20,30,10,.2)'; c.fillRect(x + h * 0.25 + 1, y + d * 0.2, w, d);
+  if (BG.GFX.q >= 1) BG.groundShadow(c, x + w / 2 + h * 0.18, y + d * 0.95, w * 0.62, d * 0.38 + h * 0.06, 0.3); else { c.fillStyle = 'rgba(20,30,10,.2)'; c.fillRect(x + h * 0.25 + 1, y + d * 0.2, w, d); }
   c.fillStyle = front; c.fillRect(x, y - h + d, w, h);
   c.fillStyle = 'rgba(0,0,0,.14)'; c.fillRect(x + w * 0.72, y - h + d, w * 0.28, h);
   c.fillStyle = top; c.fillRect(x, y - h, w, d);
@@ -585,14 +643,20 @@ function wins(c, x, y, w, h, cols, rows, o, seed, day = '#cde6f7') {
 function smoke(c, x, y, r, t, n = 3, col = '255,255,255') {
   for (let k = 0; k < n; k++) { const p = (t * 0.35 + k / n) % 1; c.fillStyle = `rgba(${col},${(0.5 * (1 - p)).toFixed(2)})`; c.beginPath(); c.arc(x + Math.sin(p * 5 + k) * r * 0.6 + p * r * 0.8, y - p * r * 4, r * (0.5 + p), 0, 6.2832); c.fill(); }
 }
+// emoji als 3D-icoon (px = formaat); valt terug op de emoji zelf
+function emo(c, e, x, y, px) {
+  if (px == null) { px = parseFloat(c.font) || 16; }
+  if (BG.cEmoji(c, e, x, y, px)) return;
+  c.font = `${Math.round(px)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(e, x, y);
+}
 function badge(c, x, y, s, emoji) {
-  circ(c, x, y, s * 0.17, 'rgba(255,255,255,.85)'); c.font = `${Math.round(s * 0.24)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(emoji, x, y + s * 0.01);
+  circ(c, x, y, s * 0.19, 'rgba(255,255,255,.88)'); emo(c, emoji, x, y + s * 0.01, s * 0.3);
 }
 function tree(c, x, y, r, i = 0, sway = 0) {
-  c.fillStyle = 'rgba(20,40,10,.22)'; c.beginPath(); c.ellipse(x + r * 0.3, y + r * 0.2, r * 0.9, r * 0.4, 0, 0, 6.2832); c.fill();
+  BG.groundShadow(c, x + r * 0.2, y + r * 0.2, r * 0.9, r * 0.4, 0.28);
   c.fillStyle = '#7a5230'; c.fillRect(x - r * 0.12, y - r * 0.5, r * 0.24, r * 0.7);
-  const g = ['#3f9a4d', '#4aa957', '#37894a'][i % 3];
-  circ(c, x + sway, y - r * 1.1, r * 0.85, g); circ(c, x - r * 0.35 + sway, y - r * 0.8, r * 0.55, '#3a8f4a'); circ(c, x + r * 0.35 + sway, y - r * 0.85, r * 0.55, '#4fb25d');
+  const lf = LOOK.leaf || ['#3f9a4d', '#4aa957', '#37894a'], g = lf[i % 3];
+  circ(c, x + sway, y - r * 1.1, r * 0.85, g); circ(c, x - r * 0.35 + sway, y - r * 0.8, r * 0.55, lf[(i + 1) % 3]); circ(c, x + r * 0.35 + sway, y - r * 0.85, r * 0.55, lf[(i + 2) % 3]);
   circ(c, x - r * 0.2 + sway, y - r * 1.35, r * 0.25, 'rgba(255,255,255,.18)');
 }
 function lvDots(c, x, y, s, lv) { for (let k = 1; k < lv; k++) circ(c, x + s * 0.12 + (k - 1) * s * 0.13, y + s * 0.88, s * 0.05, '#ffd24a'); }
@@ -719,7 +783,7 @@ const DRAW = {
   },
   t(c, x, y, s, o) { tree(c, x + s * 0.5, y + s * 0.78, s * (0.25 + 0.06 * hsh(o.i, 4)), o.i, Math.sin(o.t * 1.3 + o.i) * 0.8); },
   d(c, x, y, s, o) {
-    c.fillStyle = '#efd9a0'; rrect(c, x + 2, y + 2, s - 4, s - 4, s * 0.15); c.fill();
+    c.fillStyle = LOOK.edge; rrect(c, x + 2, y + 2, s - 4, s - 4, s * 0.15); c.fill();
     c.strokeStyle = '#d24a4a'; c.lineWidth = Math.max(1.5, s * 0.05); c.beginPath(); c.moveTo(x + s * 0.2, y + s * 0.8); c.lineTo(x + s * 0.2, y + s * 0.3); c.lineTo(x + s * 0.55, y + s * 0.3); c.lineTo(x + s * 0.65, y + s * 0.8); c.stroke();
     c.strokeStyle = '#4a7fd2'; c.beginPath(); c.moveTo(x + s * 0.75, y + s * 0.85); c.lineTo(x + s * 0.75, y + s * 0.3); c.moveTo(x + s * 0.95, y + s * 0.85); c.lineTo(x + s * 0.95, y + s * 0.3); c.moveTo(x + s * 0.7, y + s * 0.3); c.lineTo(x + s, y + s * 0.3); c.stroke();
     const sw = Math.sin(o.t * 2.2) * s * 0.06; c.strokeStyle = '#444'; c.lineWidth = 1; c.beginPath(); c.moveTo(x + s * 0.82, y + s * 0.3); c.lineTo(x + s * 0.82 + sw, y + s * 0.55); c.stroke(); circ(c, x + s * 0.82 + sw, y + s * 0.57, s * 0.04, '#ffcf3a');
@@ -792,6 +856,130 @@ const DRAW = {
     smoke(c, x + s * 0.5, y + s * 0.5, s * 0.06, o.t, 3, '120,120,120');
   },
 };
+// ---- fase 2: 26 nieuwe gebouwen. Generieke bouwstijlen + het 3D-icoon van het gebouw erbovenop.
+function icoTop(c, ch, x, y, s, dy = 0.14, k = 0.4) { emo(c, BD[ch].e, x + s * 0.5, y + s * dy, s * k); }
+function softSh(c, x, y, s, w = 0.4) { BG.groundShadow(c, x + s * 0.5, y + s * 0.9, s * w, s * 0.09, 0.28); }
+// woon-/winkel-/publiek gebouw: muren, dak (of platdak), ramen, optioneel luifel
+function dWall(c, x, y, s, o, sp) {
+  const hgt = s * (sp.h + 0.07 * (o.lv - 1)), w = s * sp.w, d = s * 0.46, bx = x + (s - w) / 2, by = y + s * 0.4;
+  softSh(c, x, y, s, sp.w * 0.55);
+  box(c, bx, by, w, d, hgt, sp.roof ? '#000' : sp.top || '#cfd6df', sp.wall);
+  if (sp.roof) roof(c, bx, by, w, d, hgt, sp.roof, s * 0.04);
+  wins(c, bx + w * 0.08, by + d - hgt * 0.88, w * 0.84, hgt * 0.62, sp.cols || 3, sp.rows || 1, o, sp.seed || 40);
+  if (sp.awn) { const n = 5; for (let k = 0; k < n; k++) { c.fillStyle = k % 2 ? '#fff' : sp.awn; c.fillRect(bx + w * k / n, by + d - hgt * 0.32, w / n, hgt * 0.16); } }
+  if (sp.cross) { c.fillStyle = '#e63946'; c.fillRect(bx + w * 0.44, by - hgt + d * 0.1, w * 0.12, d * 0.8); c.fillRect(bx + w * 0.3, by - hgt + d * 0.38, w * 0.4, d * 0.24); }
+  if (sp.col) for (let k = 0; k < 4; k++) { c.fillStyle = '#fffaf0'; c.fillRect(bx + w * (0.1 + 0.22 * k), by + d - hgt * 0.8, w * 0.07, hgt * 0.6); }
+  icoTop(c, sp.ch, x, y, s, sp.dy == null ? 0.2 : sp.dy, sp.k || 0.4); lvDots(c, x, y, s, o.lv);
+}
+function dTower(c, x, y, s, o, sp) {
+  const hgt = s * (sp.h + 0.2 * (o.lv - 1)), w = s * 0.62, d = s * 0.44, bx = x + s * 0.19, by = y + s * 0.44;
+  softSh(c, x, y, s, 0.4);
+  const g = c.createLinearGradient(bx, by - hgt, bx + w, by + d); g.addColorStop(0, sp.c1); g.addColorStop(1, sp.c2);
+  box(c, bx, by, w, d, hgt, sp.top, g); wins(c, bx + w * 0.07, by + d - hgt * 0.95, w * 0.86, hgt * 0.9, 4, 7, o, sp.seed || 41, '#e8f4ff');
+  c.fillStyle = sp.top; c.fillRect(bx + w * 0.4, by - hgt - s * 0.12, w * 0.2, s * 0.12); circ(c, bx + w / 2, by - hgt - s * 0.12, s * 0.025, Math.sin(o.t * 4) > 0 ? '#ff4d4d' : '#702');
+  icoTop(c, sp.ch, x, y, s, 0.08, 0.3); lvDots(c, x, y, s, o.lv);
+}
+function dFactory(c, x, y, s, o, sp) {
+  const hgt = s * (sp.h + 0.08 * (o.lv - 1)), w = s * 0.78, d = s * 0.42, bx = x + s * 0.1, by = y + s * 0.5;
+  softSh(c, x, y, s, 0.5);
+  box(c, bx, by, w, d, hgt, sp.top || '#9aa3b5', sp.wall); wins(c, bx + w * 0.06, by + d - hgt * 0.8, w * 0.88, hgt * 0.4, 5, 1, o, sp.seed || 42);
+  for (let k = 0; k < (sp.chim || 1); k++) { const cx = bx + w * (0.2 + 0.25 * k); c.fillStyle = sp.chimc || '#7a7f8a'; c.fillRect(cx, by - hgt - s * 0.26, s * 0.1, s * 0.26); smoke(c, cx + s * 0.05, by - hgt - s * 0.26, s * 0.05, o.t + k, 3, sp.smoke || '210,210,210'); }
+  icoTop(c, sp.ch, x, y, s, 0.14, 0.36); lvDots(c, x, y, s, o.lv);
+}
+function dPlot(c, x, y, s, o, sp) { // vlak terrein met een kleur, rand en icoon
+  c.fillStyle = sp.ground; rrect(c, x + 2, y + 2, s - 4, s - 4, 5); c.fill();
+  c.strokeStyle = sp.edge || 'rgba(0,0,0,.18)'; c.lineWidth = 1.5; c.stroke();
+  if (sp.deco) sp.deco(c, x, y, s, o);
+  icoTop(c, sp.ch, x, y, s, sp.dy == null ? 0.46 : sp.dy, sp.k || 0.5); lvDots(c, x, y, s, o.lv);
+}
+Object.assign(DRAW, {
+  u(c, x, y, s, o) { // tentenkamp
+    softSh(c, x, y, s, 0.45);
+    c.fillStyle = '#8fcf6a'; rrect(c, x + 3, y + s * 0.5, s - 6, s * 0.42, 5); c.fill();
+    [[0.28, 0.72, '#e8483a'], [0.68, 0.76, '#3a7fe0'], [0.5, 0.58, '#f2c94c']].forEach(([px, py, col], k) => { const bx = x + s * px, by = y + s * py, r = s * (k === 2 ? 0.14 : 0.17); poly(c, [bx - r, by, bx + r, by, bx, by - r * 1.5], col); poly(c, [bx - r * 0.25, by, bx + r * 0.25, by, bx, by - r * 0.8], 'rgba(0,0,0,.45)'); });
+    if (o.night > 0.3) { circ(c, x + s * 0.5, y + s * 0.82, s * 0.05, '#ff9a3c'); }
+    icoTop(c, 'u', x, y, s, 0.22, 0.38); lvDots(c, x, y, s, o.lv);
+  },
+  D(c, x, y, s, o) { // kasteelvilla
+    const hgt = s * (0.42 + 0.08 * (o.lv - 1)), w = s * 0.66, d = s * 0.4, bx = x + s * 0.17, by = y + s * 0.42; softSh(c, x, y, s, 0.45);
+    box(c, bx, by, w, d, hgt, '#d8cdb8', '#efe4cf');
+    for (const tx of [bx - s * 0.06, bx + w - s * 0.1]) { c.fillStyle = '#e3d7bf'; c.fillRect(tx, by - hgt - s * 0.12, s * 0.16, hgt + d + s * 0.12); poly(c, [tx - s * 0.03, by - hgt - s * 0.12, tx + s * 0.19, by - hgt - s * 0.12, tx + s * 0.08, by - hgt - s * 0.34], '#8b5cf6'); }
+    wins(c, bx + w * 0.2, by + d - hgt * 0.8, w * 0.6, hgt * 0.5, 3, 1, o, 43); c.fillStyle = '#6d4026'; c.fillRect(bx + w * 0.42, by + d - hgt * 0.4, w * 0.16, hgt * 0.4);
+    poly(c, [bx + w / 2, by - hgt - s * 0.3, bx + w / 2 + s * 0.16 + Math.sin(o.t * 3) * 2, by - hgt - s * 0.25, bx + w / 2, by - hgt - s * 0.2], '#ff5a7a'); lvDots(c, x, y, s, o.lv);
+  },
+  G(c, x, y, s, o) { dTower(c, x, y, s, o, { ch: 'G', h: 1.5, c1: '#f3dc9a', c2: '#c9a24a', top: '#e8d8a8', seed: 44 }); },
+  I(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: 'I', w: 0.7, h: 0.3, wall: '#f1d9b0', roof: '#c8553d', awn: '#e8483a', cols: 2, seed: 45 }); smoke(c, x + s * 0.74, y + s * 0.2, s * 0.05, o.t, 3); },
+  J(c, x, y, s, o) { dFactory(c, x, y, s, o, { ch: 'J', h: 0.34, wall: '#e8f1fa', top: '#9fc4e8', chim: 1, seed: 46 }); c.fillStyle = '#cfd8e3'; rrect(c, x + s * 0.74, y + s * 0.14, s * 0.16, s * 0.5, 4); c.fill(); },
+  K(c, x, y, s, o) { dFactory(c, x, y, s, o, { ch: 'K', h: 0.5, wall: '#6f7a8c', top: '#8f9aac', chim: 2, smoke: '160,200,255', seed: 47 }); circ(c, x + s * 0.88, y + s * 0.18, s * 0.03, Math.sin(o.t * 5) > 0 ? '#4ade80' : '#14532d'); },
+  M(c, x, y, s, o) { // ruimtehaven
+    softSh(c, x, y, s, 0.5); c.fillStyle = '#a7adbb'; rrect(c, x + 2, y + s * 0.6, s - 4, s * 0.32, 5); c.fill(); c.fillStyle = '#e8483a'; c.fillRect(x + s * 0.4, y + s * 0.6, s * 0.2, s * 0.32);
+    const lift = (Math.sin(o.t * 0.8) + 1) * 0.5 * s * 0.1, rx = x + s * 0.5;
+    poly(c, [rx - s * 0.1, y + s * 0.62 - lift, rx + s * 0.1, y + s * 0.62 - lift, rx + s * 0.1, y + s * 0.26 - lift, rx, y + s * 0.08 - lift, rx - s * 0.1, y + s * 0.26 - lift], '#f1f3f5');
+    poly(c, [rx - s * 0.1, y + s * 0.52 - lift, rx - s * 0.22, y + s * 0.64 - lift, rx - s * 0.1, y + s * 0.62 - lift], '#e63946'); poly(c, [rx + s * 0.1, y + s * 0.52 - lift, rx + s * 0.22, y + s * 0.64 - lift, rx + s * 0.1, y + s * 0.62 - lift], '#e63946');
+    circ(c, rx, y + s * 0.3 - lift, s * 0.05, '#8ecae6'); smoke(c, rx, y + s * 0.66, s * 0.07, o.t, 4, '255,230,180'); lvDots(c, x, y, s, o.lv);
+  },
+  N(c, x, y, s, o) { // mijn
+    softSh(c, x, y, s, 0.5); poly(c, [x + s * 0.04, y + s * 0.9, x + s * 0.3, y + s * 0.3, x + s * 0.5, y + s * 0.5, x + s * 0.7, y + s * 0.2, x + s * 0.96, y + s * 0.9], '#8b7355'); poly(c, [x + s * 0.7, y + s * 0.2, x + s * 0.8, y + s * 0.42, x + s * 0.62, y + s * 0.4], '#f4efe6');
+    c.fillStyle = '#2b2118'; rrect(c, x + s * 0.4, y + s * 0.62, s * 0.2, s * 0.28, 3); c.fill(); c.strokeStyle = '#6d4026'; c.lineWidth = 2; c.strokeRect(x + s * 0.38, y + s * 0.6, s * 0.24, s * 0.3);
+    const cx = x + s * (0.15 + ((o.t * 0.12) % 1) * 0.2); c.fillStyle = '#555'; c.fillRect(cx, y + s * 0.82, s * 0.12, s * 0.07); circ(c, cx + s * 0.03, y + s * 0.92, s * 0.02, '#222'); circ(c, cx + s * 0.09, y + s * 0.92, s * 0.02, '#222');
+    icoTop(c, 'N', x, y, s, 0.2, 0.36); lvDots(c, x, y, s, o.lv);
+  },
+  Q(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: 'Q', w: 0.6, h: 0.28, wall: '#ffe3ef', roof: '#ff70a6', awn: '#ff70a6', cols: 2, seed: 48 }); },
+  T(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: 'T', w: 0.66, h: 0.3, wall: '#fff0d6', roof: '#c0392b', awn: '#2f9e44', cols: 2, seed: 49 }); },
+  U(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: 'U', w: 0.78, h: 0.34, wall: '#dbe4ff', roof: '#4361ee', awn: '#ffb703', cols: 3, seed: 50 }); },
+  V(c, x, y, s, o) { // marktplein
+    softSh(c, x, y, s, 0.5); c.fillStyle = '#d9c9a3'; rrect(c, x + 2, y + s * 0.4, s - 4, s * 0.52, 5); c.fill();
+    ['#e8483a', '#2f9e44', '#ffb703'].forEach((col, k) => { const sx = x + s * (0.08 + 0.3 * k); c.fillStyle = '#8a6b45'; c.fillRect(sx + s * 0.02, y + s * 0.6, s * 0.02, s * 0.22); c.fillRect(sx + s * 0.2, y + s * 0.6, s * 0.02, s * 0.22); poly(c, [sx, y + s * 0.6, sx + s * 0.24, y + s * 0.6, sx + s * 0.2, y + s * 0.46, sx + s * 0.04, y + s * 0.46], col); circ(c, sx + s * 0.12, y + s * 0.78, s * 0.04, ['#ff595e', '#8ac926', '#ffd23f'][k]); });
+    icoTop(c, 'V', x, y, s, 0.2, 0.4); lvDots(c, x, y, s, o.lv);
+  },
+  '1'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '1', w: 0.62, h: 0.3, wall: '#f4f7fb', top: '#e5ebf3', cross: 1, cols: 3, seed: 51, dy: 0.12, k: 0.3 }); },
+  '2'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '2', w: 0.86, h: 0.42, wall: '#d9c9b2', roof: '#9a8466', col: 1, cols: 4, seed: 52 }); },
+  '3'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '3', w: 0.8, h: 0.36, wall: '#f1e8d6', roof: '#b9a98c', col: 1, cols: 3, seed: 53 }); },
+  '4'(c, x, y, s, o) { dPlot(c, x, y, s, o, { ch: '4', ground: '#86c866', edge: '#5a8f3f', deco: (c2, x2, y2, s2) => { c2.strokeStyle = '#7a5230'; c2.lineWidth = 1.5; c2.strokeRect(x2 + s2 * 0.1, y2 + s2 * 0.12, s2 * 0.8, s2 * 0.76); tree(c2, x2 + s2 * 0.2, y2 + s2 * 0.8, s2 * 0.12, 1); tree(c2, x2 + s2 * 0.82, y2 + s2 * 0.34, s2 * 0.11, 2); } }); },
+  '5'(c, x, y, s, o) { // achtbaan
+    softSh(c, x, y, s, 0.5); const pts = [[0.06, 0.9], [0.2, 0.3], [0.35, 0.7], [0.5, 0.15], [0.68, 0.75], [0.82, 0.3], [0.94, 0.9]];
+    c.strokeStyle = '#7a4a2a'; c.lineWidth = 1.5; for (const [px] of pts) { c.beginPath(); c.moveTo(x + s * px, y + s * 0.92); c.lineTo(x + s * px, y + s * 0.5); c.stroke(); }
+    c.strokeStyle = '#e63946'; c.lineWidth = Math.max(2, s * 0.05); c.lineJoin = 'round'; c.beginPath(); pts.forEach(([px, py], k) => (k ? c.lineTo(x + s * px, y + s * py * 0.9) : c.moveTo(x + s * px, y + s * py * 0.9))); c.stroke();
+    const tt = (o.t * 0.25) % 1, k = Math.min(5, Math.floor(tt * 6)), f = tt * 6 - k, a = pts[k], b = pts[k + 1]; circ(c, x + s * (a[0] + (b[0] - a[0]) * f), y + s * (a[1] + (b[1] - a[1]) * f) * 0.9 - s * 0.03, s * 0.045, '#ffd23f');
+    icoTop(c, '5', x, y, s, 0.14, 0.3); lvDots(c, x, y, s, o.lv);
+  },
+  '6'(c, x, y, s, o) { // draaimolen
+    softSh(c, x, y, s, 0.4); c.fillStyle = '#f2b7c9'; c.beginPath(); c.ellipse(x + s * 0.5, y + s * 0.72, s * 0.38, s * 0.14, 0, 0, 6.2832); c.fill();
+    for (let k = 0; k < 4; k++) { const a = o.t * 1.2 + k * 1.5708; circ(c, x + s * (0.5 + Math.cos(a) * 0.28), y + s * (0.68 + Math.sin(a) * 0.09), s * 0.04, ['#ff595e', '#ffca3a', '#4cc9f0', '#8ac926'][k]); }
+    poly(c, [x + s * 0.12, y + s * 0.5, x + s * 0.88, y + s * 0.5, x + s * 0.5, y + s * 0.2], '#e8508a'); c.fillStyle = '#fff'; c.fillRect(x + s * 0.48, y + s * 0.5, s * 0.04, s * 0.2); icoTop(c, '6', x, y, s, 0.12, 0.28); lvDots(c, x, y, s, o.lv);
+  },
+  '7'(c, x, y, s, o) { dPlot(c, x, y, s, o, { ch: '7', ground: '#8fd07a', edge: '#5aa05a', k: 0.34, dy: 0.34, deco: (c2, x2, y2, s2, o2) => { for (let k = 0; k < 9; k++) { const fx = x2 + s2 * (0.14 + 0.24 * (k % 3)), fy = y2 + s2 * (0.52 + 0.17 * Math.floor(k / 3)) + Math.sin(o2.t * 2 + k) * 0.8; circ(c2, fx, fy, s2 * 0.05, ['#ff595e', '#ffca3a', '#c77dff', '#ff9ec7', '#ffffff'][k % 5]); } } }); },
+  '8'(c, x, y, s, o) { // zwembad
+    softSh(c, x, y, s, 0.45); c.fillStyle = '#e8e2d0'; rrect(c, x + 2, y + s * 0.3, s - 4, s * 0.62, 5); c.fill(); c.fillStyle = '#34b3e8'; rrect(c, x + s * 0.1, y + s * 0.4, s * 0.8, s * 0.42, 4); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.6)'; c.lineWidth = 1.3; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(x + s * 0.16, y + s * (0.5 + k * 0.1)); for (let n = 0; n <= 6; n++) c.lineTo(x + s * (0.16 + n * 0.11), y + s * (0.5 + k * 0.1) + Math.sin(o.t * 2 + n + k) * 1.5); c.stroke(); }
+    icoTop(c, '8', x, y, s, 0.2, 0.32); lvDots(c, x, y, s, o.lv);
+  },
+  '9'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '9', w: 0.7, h: 0.34, wall: '#f4e0ff', roof: '#7b2cbf', cols: 3, seed: 54 }); const n = (o.t * 0.8) % 1; c.fillStyle = `rgba(123,44,191,${(1 - n).toFixed(2)})`; c.font = `${Math.round(s * 0.2)}px serif`; c.fillText('♪', x + s * 0.8, y + s * 0.3 - n * s * 0.18); },
+  '0'(c, x, y, s, o) { // metrostation
+    softSh(c, x, y, s, 0.45); c.fillStyle = '#c9ced8'; rrect(c, x + 2, y + s * 0.5, s - 4, s * 0.42, 5); c.fill(); poly(c, [x + s * 0.2, y + s * 0.8, x + s * 0.8, y + s * 0.8, x + s * 0.7, y + s * 0.45, x + s * 0.3, y + s * 0.45], '#3d4252'); c.fillStyle = '#ffd23f'; c.fillRect(x + s * 0.28, y + s * 0.5, s * 0.44, s * 0.05);
+    const tx = ((o.t * 0.3) % 1.4 - 0.2) * s; c.fillStyle = '#e8483a'; rrect(c, x + Math.max(s * 0.1, Math.min(s * 0.5, tx)), y + s * 0.6, s * 0.4, s * 0.14, 3); c.fill();
+    c.fillStyle = '#2f6fe0'; rrect(c, x + s * 0.34, y + s * 0.22, s * 0.32, s * 0.2, 4); c.fill(); icoTop(c, '0', x, y, s, 0.1, 0.3); lvDots(c, x, y, s, o.lv);
+  },
+  Y(c, x, y, s, o) { // luchthaven
+    c.fillStyle = '#5b6272'; c.fillRect(x, y + s * 0.62, s, s * 0.22); c.fillStyle = '#fff'; for (let k = 0; k < 5; k++) c.fillRect(x + s * (0.06 + 0.2 * k), y + s * 0.72, s * 0.1, s * 0.03);
+    const px = x + ((o.t * 0.18) % 1.3 - 0.15) * s, py = y + s * 0.5 - Math.max(0, ((o.t * 0.18) % 1.3 - 0.6)) * s * 0.4; poly(c, [px - s * 0.12, py, px + s * 0.12, py, px + s * 0.18, py - s * 0.05, px + s * 0.1, py - s * 0.06], '#f1f3f5'); poly(c, [px - s * 0.02, py - s * 0.02, px + s * 0.04, py - s * 0.12, px + s * 0.07, py - s * 0.12, px + s * 0.07, py - s * 0.02], '#c9ced8');
+    box(c, x + s * 0.08, y + s * 0.28, s * 0.5, s * 0.28, s * 0.2, '#4a5568', '#e7e1d6'); wins(c, x + s * 0.1, y + s * 0.38, s * 0.46, s * 0.1, 5, 1, o, 55); pole_(c, x + s * 0.7, y + s * 0.62, y + s * 0.16); icoTop(c, 'Y', x, y, s, 0.1, 0.3);
+  },
+  s(c, x, y, s2, o) { const s = s2; // biogascentrale
+    softSh(c, x, y, s, 0.45); [[0.28, 0.66], [0.66, 0.66]].forEach(([px, py], k) => { c.fillStyle = k ? '#9ccf6a' : '#7fbf4f'; rrect(c, x + s * (px - 0.18), y + s * (py - 0.3), s * 0.36, s * 0.4, 8); c.fill(); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(x + s * (px - 0.14), y + s * (py - 0.26), s * 0.05, s * 0.3); });
+    c.strokeStyle = '#6c757d'; c.lineWidth = 2; c.beginPath(); c.moveTo(x + s * 0.28, y + s * 0.78); c.lineTo(x + s * 0.66, y + s * 0.78); c.stroke(); icoTop(c, 's', x, y, s, 0.2, 0.34); lvDots(c, x, y, s, o.lv);
+  },
+  O(c, x, y, s, o) { // kerncentrale
+    softSh(c, x, y, s, 0.5); for (const px of [0.3, 0.7]) { poly(c, [x + s * (px - 0.2), y + s * 0.9, x + s * (px + 0.2), y + s * 0.9, x + s * (px + 0.12), y + s * 0.4, x + s * (px - 0.12), y + s * 0.4], '#d9dde6'); poly(c, [x + s * (px + 0.06), y + s * 0.9, x + s * (px + 0.2), y + s * 0.9, x + s * (px + 0.12), y + s * 0.4, x + s * (px + 0.04), y + s * 0.4], 'rgba(0,0,0,.12)'); smoke(c, x + s * px, y + s * 0.4, s * 0.07, o.t + px, 3); }
+    c.fillStyle = '#7b7f8a'; c.fillRect(x + s * 0.1, y + s * 0.78, s * 0.8, s * 0.12); icoTop(c, 'O', x, y, s, 0.14, 0.3); lvDots(c, x, y, s, o.lv);
+  },
+  y(c, x, y, s, o) { // stuwmeer
+    c.fillStyle = '#9aa3b0'; rrect(c, x + 2, y + s * 0.2, s - 4, s * 0.7, 5); c.fill(); c.fillStyle = '#3f9fd8'; rrect(c, x + s * 0.1, y + s * 0.3, s * 0.8, s * 0.5, 6); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(x + s * 0.18, y + s * (0.42 + 0.1 * k)); for (let n = 0; n <= 5; n++) c.lineTo(x + s * (0.18 + n * 0.13), y + s * (0.42 + 0.1 * k) + Math.sin(o.t * 2 + n + k) * 1.4); c.stroke(); }
+    icoTop(c, 'y', x, y, s, 0.5, 0.3); lvDots(c, x, y, s, o.lv);
+  },
+});
+function pole_(c, x, y0, y1) { c.strokeStyle = '#555'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(x, y0); c.lineTo(x, y1); c.stroke(); circ(c, x, y1, 2.2, '#e8483a'); }
 const ICON_ONLY = new Set(['g', 'd', 'F', 'P', 'Z', 'W', 'L', 'R', 'A', 'B', 'X', 't', 'x']);
 
 function drawFlame(c, x, y, s, t, k) {
@@ -803,10 +991,20 @@ function drawFlame(c, x, y, s, t, k) {
 }
 
 // Eén hele frame tekenen. g = {S, st, cam, t, night, cars, floaters, tool, ghost, sel, layer, W, H, glow}
+// 4 uiterlijken (werelden): grondkleuren, water, zandrand, boomkleuren; achtergrond komt uit Themes
+export const LOOKS = [
+  { id: 'klassiek', name: 'Klassiek', emoji: '🌳', world: 'bos', d: 'Het vertrouwde groene land.', g1: '#93d072', g2: '#8bc96a', water: '#3f9fd8', edge: '#efd9a0', bg: '#5aa05a', leaf: null },
+  { id: 'woestijn', name: 'Woestijn', emoji: '🌵', world: 'woestijn', d: 'Zand, palmen en een blauwe oase.', g1: '#ecd08f', g2: '#e5c57f', water: '#46b6c4', edge: '#fbeec4', bg: '#e0a458', leaf: ['#7aa047', '#8bb356', '#6d9140'] },
+  { id: 'ijs', name: 'Sneeuwstad', emoji: '❄️', world: 'ijs', d: 'Witte daken, bevroren water.', g1: '#eef5fa', g2: '#e1ecf4', water: '#7fb6dc', edge: '#ffffff', bg: '#cfe3f2', leaf: ['#2f7d4f', '#3a9a62', '#2a6f46'] },
+  { id: 'snoep', name: 'Snoepstad', emoji: '🍭', world: 'snoepland', d: 'Roze gras en suikertuinen.', g1: '#f7b3d4', g2: '#f49fc7', water: '#8fd3ff', edge: '#fff1c9', bg: '#f9a8d4', leaf: ['#ff9ec7', '#c8f7a0', '#ffd23f'] },
+];
+let LOOK = LOOKS[0];
+export function setLookId(id) { LOOK = LOOKS.find((l) => l.id === id) || LOOKS[0]; }
 export function drawCity(c, g) {
   const { S, st, cam, t, night, W, H } = g, N = S.size, z = cam.z;
   c.setTransform(g.dpr, 0, 0, g.dpr, 0, 0);
-  c.fillStyle = '#5aa05a'; c.fillRect(0, 0, W, H);
+  c.fillStyle = LOOK.bg; c.fillRect(0, 0, W, H);
+  if (LOOK.id !== 'klassiek') { try { c.save(); BG.Themes.paintBackground(c, W, H, BG.Themes.world(LOOK.world), t); c.restore(); } catch (e) { /* geen achtergrond */ } }
   const ox = W / 2 - cam.x * z, oy = H / 2 - cam.y * z;
   const x0 = Math.max(0, Math.floor((-ox) / z)), y0 = Math.max(0, Math.floor((-oy) / z) - 1), x1 = Math.min(N - 1, Math.ceil((W - ox) / z)), y1 = Math.min(N - 1, Math.ceil((H - oy) / z) + 2);
   c.font = '12px sans-serif';
@@ -815,16 +1013,16 @@ export function drawCity(c, g) {
   for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
     const i = y * N + x, px = ox + x * z, py = oy + y * z, ch = gr[i];
     if (ch === 'w') {
-      c.fillStyle = '#3f9fd8'; c.fillRect(px, py, z + 0.6, z + 0.6);
+      c.fillStyle = LOOK.water; c.fillRect(px, py, z + 0.6, z + 0.6);
       c.fillStyle = 'rgba(255,255,255,.22)'; const wv = Math.sin(t * 1.5 + x * 1.3 + y * 0.7) * z * 0.1; c.fillRect(px + z * 0.15 + wv, py + z * 0.3, z * 0.4, 1.6); c.fillRect(px + z * 0.45 - wv, py + z * 0.7, z * 0.35, 1.6);
     } else {
-      c.fillStyle = (x + y) & 1 ? '#93d072' : '#8bc96a'; c.fillRect(px, py, z + 0.6, z + 0.6);
+      c.fillStyle = (x + y) & 1 ? LOOK.g1 : LOOK.g2; c.fillRect(px, py, z + 0.6, z + 0.6);
       if (ch === '.' && hsh(i) < 0.18) { circ(c, px + z * hsh(i, 1), py + z * hsh(i, 2), z * 0.025, hsh(i, 3) < 0.5 ? '#ffffff' : '#ffd0e0'); }
       // zandrand
-      if (x > 0 && gr[i - 1] === 'w') { c.fillStyle = '#efd9a0'; c.fillRect(px, py, z * 0.12, z); }
-      if (x < N - 1 && gr[i + 1] === 'w') { c.fillStyle = '#efd9a0'; c.fillRect(px + z * 0.88, py, z * 0.12, z); }
-      if (y > 0 && gr[i - N] === 'w') { c.fillStyle = '#efd9a0'; c.fillRect(px, py, z, z * 0.12); }
-      if (y < N - 1 && gr[i + N] === 'w') { c.fillStyle = '#efd9a0'; c.fillRect(px, py + z * 0.88, z, z * 0.12); }
+      if (x > 0 && gr[i - 1] === 'w') { c.fillStyle = LOOK.edge; c.fillRect(px, py, z * 0.12, z); }
+      if (x < N - 1 && gr[i + 1] === 'w') { c.fillStyle = LOOK.edge; c.fillRect(px + z * 0.88, py, z * 0.12, z); }
+      if (y > 0 && gr[i - N] === 'w') { c.fillStyle = LOOK.edge; c.fillRect(px, py, z, z * 0.12); }
+      if (y < N - 1 && gr[i + N] === 'w') { c.fillStyle = LOOK.edge; c.fillRect(px, py + z * 0.88, z, z * 0.12); }
     }
   }
   // wegen
@@ -847,7 +1045,7 @@ export function drawCity(c, g) {
     const fn = DRAW[ch]; if (!fn) continue; const px = ox + x * z, py = oy + y * z;
     o.lv = S.lv[i]; o.i = i;
     c.save(); fn(c, px, py, z, o); c.restore();
-    if (st && st.disc && st.disc.length && g.discSet && g.discSet.has(i)) { const bob = Math.sin(t * 4) * 2; c.font = `${Math.round(z * 0.32)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText('⚠️', px + z * 0.5, py + z * 0.15 + bob); }
+    if (st && st.disc && st.disc.length && g.discSet && g.discSet.has(i)) { const bob = Math.sin(t * 4) * 2; c.font = `${Math.round(z * 0.32)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; emo(c, '⚠️', px + z * 0.5, py + z * 0.15 + bob); }
     if (g.sel === i) { c.strokeStyle = '#fff'; c.lineWidth = 2.5; c.setLineDash([5, 4]); c.strokeRect(px + 1, py + 1, z - 2, z - 2); c.setLineDash([]); c.strokeStyle = '#ffcf3a'; c.lineWidth = 1.5; c.strokeRect(px + 3, py + 3, z - 6, z - 6); }
     if (ch === 'x') { /* puin */ }
   }
@@ -861,14 +1059,14 @@ export function drawCity(c, g) {
   }
   // branden, cadeau, takken
   const ev = S.ev || {};
-  if (ev.fire) for (const f of ev.fire) { const x = f.i % N, y = (f.i / N) | 0; drawFlame(c, ox + x * z, oy + y * z, z, t, f.i); if (f.cov) { c.font = `${Math.round(z * 0.4)}px serif`; c.textAlign = 'center'; c.fillText('🚒', ox + (x + 0.5) * z + Math.sin(t * 6) * 2, oy + (y + 0.15) * z); } }
-  if (ev.gift) { const x = ev.gift.i % N, y = (ev.gift.i / N) | 0, bob = Math.abs(Math.sin(t * 3)) * z * 0.15; circ(c, ox + (x + 0.5) * z, oy + (y + 0.8) * z, z * 0.18, 'rgba(0,0,0,.15)'); c.font = `${Math.round(z * 0.62)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('🎁', ox + (x + 0.5) * z, oy + (y + 0.5) * z - bob); c.strokeStyle = `rgba(255,220,80,${(0.5 + 0.4 * Math.sin(t * 5)).toFixed(2)})`; c.lineWidth = 2; c.beginPath(); c.arc(ox + (x + 0.5) * z, oy + (y + 0.55) * z, z * (0.4 + 0.06 * Math.sin(t * 5)), 0, 6.28); c.stroke(); }
+  if (ev.fire) for (const f of ev.fire) { const x = f.i % N, y = (f.i / N) | 0; drawFlame(c, ox + x * z, oy + y * z, z, t, f.i); if (f.cov) { c.font = `${Math.round(z * 0.4)}px serif`; c.textAlign = 'center'; emo(c, '🚒', ox + (x + 0.5) * z + Math.sin(t * 6) * 2, oy + (y + 0.15) * z); } }
+  if (ev.gift) { const x = ev.gift.i % N, y = (ev.gift.i / N) | 0, bob = Math.abs(Math.sin(t * 3)) * z * 0.15; circ(c, ox + (x + 0.5) * z, oy + (y + 0.8) * z, z * 0.18, 'rgba(0,0,0,.15)'); c.font = `${Math.round(z * 0.62)}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; emo(c, '🎁', ox + (x + 0.5) * z, oy + (y + 0.5) * z - bob); c.strokeStyle = `rgba(255,220,80,${(0.5 + 0.4 * Math.sin(t * 5)).toFixed(2)})`; c.lineWidth = 2; c.beginPath(); c.arc(ox + (x + 0.5) * z, oy + (y + 0.55) * z, z * (0.4 + 0.06 * Math.sin(t * 5)), 0, 6.28); c.stroke(); }
   for (const di of S.deb) { const x = di % N, y = (di / N) | 0; if (x < x0 || x > x1 || y < y0 || y > y1) continue; const px = ox + x * z, py = oy + y * z; c.strokeStyle = '#7a5230'; c.lineWidth = Math.max(1.5, z * 0.05); c.beginPath(); c.moveTo(px + z * 0.2, py + z * 0.7); c.lineTo(px + z * 0.7, py + z * 0.4); c.moveTo(px + z * 0.3, py + z * 0.45); c.lineTo(px + z * 0.8, py + z * 0.75); c.stroke(); circ(c, px + z * 0.5, py + z * 0.55, z * 0.08, '#6a9a3a'); circ(c, px + z * 0.35, py + z * 0.6, z * 0.06, '#8ab04a'); }
   // grond-grens en slot
   const lx = ox + (cen - R) * z, ly = oy + (cen - R) * z, lw = (2 * R + 1) * z;
   c.fillStyle = 'rgba(15,25,45,.38)'; c.fillRect(ox, oy, N * z, ly - oy); c.fillRect(ox, ly + lw, N * z, oy + N * z - ly - lw); c.fillRect(ox, ly, lx - ox, lw); c.fillRect(lx + lw, ly, ox + N * z - lx - lw, lw);
   c.strokeStyle = 'rgba(255,214,90,.9)'; c.lineWidth = 2; c.setLineDash([8, 6]); c.strokeRect(lx, ly, lw, lw); c.setLineDash([]);
-  if (S.land < Math.max(0, Math.ceil((N / 2 - 5) / 2))) { c.font = `${Math.round(Math.max(12, z * 0.4))}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(255,255,255,.85)'; c.fillText('🔒', lx + lw / 2, ly - z * 0.45); }
+  if (S.land < Math.max(0, Math.ceil((N / 2 - 5) / 2))) { c.font = `${Math.round(Math.max(12, z * 0.4))}px serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = 'rgba(255,255,255,.85)'; emo(c, '🔒', lx + lw / 2, ly - z * 0.45); }
   // blijdschapskaart
   if (g.layer === 'blij' && st) {
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) { const i = y * N + x; if (!st.hm[i]) continue; const h = st.hm[i] + st.gadj; const hue = Math.max(0, Math.min(120, (h - 20) * 1.6)); c.fillStyle = `hsla(${hue},85%,50%,.55)`; c.fillRect(ox + x * z, oy + y * z, z, z); }
@@ -1040,7 +1238,19 @@ const CSS = `
 .sb-mc .big{font-size:2.6rem;line-height:1.1}
 .sb-slider{width:100%;accent-color:var(--accent)}
 .sb-news{font-size:.82rem;opacity:.9;padding:2px 0;border-bottom:1px solid var(--line)}
+.sb-root{font-size:15px}
+.sb-pill{padding:5px 11px;border-radius:14px}
+.sb-btn{min-height:44px;min-width:44px;font-size:1.25rem}
+.sb-tab{font-size:.78rem}.sb-tab span{font-size:1.6rem}.sb-tab span .gfx-ei{width:1.75rem;height:1.75rem}
+.sb-card{min-height:104px;padding:9px 5px}.sb-card .e{font-size:2.1rem}.sb-card .e .gfx-ei{width:2.6rem;height:2.6rem}.sb-card b{font-size:.9rem}
+.sb-grid{grid-template-columns:repeat(auto-fill,minmax(108px,1fr));gap:9px}
+.sb-chip{padding:8px 14px;font-size:.95rem;min-height:44px}
+.sb-b{padding:10px 14px;font-size:1rem;min-height:44px}
+.sb-ach .e{font-size:1.9rem}.sb-ach .e .gfx-ei{width:2.2rem;height:2.2rem}
+.sb-mc .big .gfx-ei{width:3.4rem;height:3.4rem}
+.sb-tool .e .gfx-ei{width:2.2rem;height:2.2rem}
 `;
+const CSS2 = CSS + BG.uiCss(['.sb-hud', '.sb-tabs', '.sb-sheet', '.sb-tool', '.sb-info', '.sb-msgs', '.sb-mc'], 1.1);
 
 export async function stadbouwerView(ctx) {
   const { db, me, esc, view, addCleanup } = ctx;
@@ -1089,12 +1299,12 @@ export async function stadbouwerView(ctx) {
   S.ev = S.ev || {}; S.last = Date.now(); lastCloud = Date.now() - 30000;
 
   /* ---------- opbouw van de UI ---------- */
-  view.innerHTML = `<style>${CSS}</style><div class="sb-root">
+  view.innerHTML = `<style>${CSS2}</style><div class="sb-root">
     <canvas class="sb-cv"></canvas>
     <div class="sb-hud">
       <div class="sb-pill" data-h="money"></div><div class="sb-pill" data-h="pop"></div><div class="sb-pill" data-h="happy"></div>
       <div class="sb-pill" data-h="pw"></div><div class="sb-pill" data-h="wt"></div><div class="sb-pill" data-h="tr"></div>
-      <div class="sb-pill" data-h="time"></div><button class="sb-btn" data-a="snd" aria-label="Geluid"></button><button class="sb-btn" data-a="center" aria-label="Midden">🎯</button>
+      <div class="sb-pill" data-h="time"></div><button class="sb-btn" data-a="snd" aria-label="Geluid"></button><button class="sb-btn" data-a="center" aria-label="Midden">🎯</button><button class="sb-btn" data-a="looks" aria-label="Uiterlijk">🎨</button><button class="sb-btn" data-a="gear" aria-label="Instellingen">⚙️</button>
     </div>
     <div class="sb-msgs"><div class="sb-tut" data-h="tut" style="display:none"></div><div data-h="toasts" style="display:flex;flex-direction:column;gap:5px;align-items:center;width:100%"></div></div>
     <div class="sb-tool" data-h="tool"></div><div class="sb-info" data-h="info"></div>
@@ -1109,6 +1319,11 @@ export async function stadbouwerView(ctx) {
   const q = (k) => root.querySelector(`[data-h="${k}"]`);
   const El = { money: q('money'), pop: q('pop'), happy: q('happy'), pw: q('pw'), wt: q('wt'), tr: q('tr'), time: q('time'), tut: q('tut'), toasts: q('toasts'), tool: q('tool'), info: q('info'), sheet: q('sheet'), shtitle: q('shtitle'), sc: q('sc'), modal: q('modal') };
   glow = makeGlow();
+  setLookId(BG.getLook('stadbouwer', LOOKS).id);
+  const stopIcons = BG.iconify(root); cleanups.push(stopIcons);
+  const FX = new BG.Particles();
+  const milestone = (kind, o) => { try { BG.milestone(root, kind, o); } catch (e) { /* geen scene */ } };
+  const coinsAt = (i, n = 4) => { const Nn = S.size, x = (i % Nn) + 0.5, y = Math.floor(i / Nn) + 0.4; BG.coinBurst(FX, W / 2 + (x - cam.x) * cam.z, H / 2 + (y - cam.y) * cam.z, n); };
 
   /* ---------- hulpjes ---------- */
   const N = () => S.size, fmtN = (n) => { n = Math.floor(n); const a = Math.abs(n); if (a < 10000) return String(n); if (a < 1e6) return (n / 1e3).toFixed(a < 1e5 ? 1 : 0).replace('.0', '') + 'k'; if (a < 1e9) return (n / 1e6).toFixed(a < 1e7 ? 2 : 1) + 'M'; return (n / 1e9).toFixed(2) + 'B'; };
@@ -1145,14 +1360,14 @@ export async function stadbouwerView(ctx) {
   function hud() {
     if (!S || !st) return;
     const net = st.net, hh = clock(), hr = Math.floor(hh), mn = Math.floor((hh - hr) * 60);
-    El.money.className = 'sb-pill' + (st.crunch ? ' red' : ''); El.money.innerHTML = `💰 ${fmtN(S.money)} <small>${net >= 0 ? '+' : ''}${f1(net)}/s</small>`;
-    El.pop.innerHTML = `👥 ${fmtN(S.pop)} <small>/${fmtN(st.cap)}</small>`;
-    El.happy.innerHTML = `${faceOf(st.happy)} ${Math.round(st.happy)}%`;
-    El.pw.className = 'sb-pill ' + pctC(st.pr); El.pw.innerHTML = `⚡ ${Math.round(st.pr * 100)}%`;
-    El.wt.className = 'sb-pill ' + pctC(st.wr); El.wt.innerHTML = `💧 ${Math.round(st.wr * 100)}%`;
-    El.tr.className = 'sb-pill ' + (st.ti > 1.15 ? 'red' : st.ti > 0.9 ? 'amb' : ''); El.tr.innerHTML = `🚗 ${st.ti > 1.15 ? 'file' : st.ti > 0.9 ? 'druk' : 'vrij'}`;
-    El.time.innerHTML = `${nightNow() > 0.5 ? '🌙' : '☀️'} <small>dag ${Math.floor(S.clock / DAYLEN) + 1} · ${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}</small>`;
-    root.querySelector('[data-a="snd"]').textContent = S.snd ? '🔊' : '🔇';
+    El.money.className = 'sb-pill' + (st.crunch ? ' red' : ''); BG.setHtml(El.money, `💰 ${fmtN(S.money)} <small>${net >= 0 ? '+' : ''}${f1(net)}/s</small>`);
+    BG.setHtml(El.pop, `👥 ${fmtN(S.pop)} <small>/${fmtN(st.cap)}</small>`);
+    BG.setHtml(El.happy, `${faceOf(st.happy)} ${Math.round(st.happy)}%`);
+    El.pw.className = 'sb-pill ' + pctC(st.pr); BG.setHtml(El.pw, `⚡ ${Math.round(st.pr * 100)}%`);
+    El.wt.className = 'sb-pill ' + pctC(st.wr); BG.setHtml(El.wt, `💧 ${Math.round(st.wr * 100)}%`);
+    El.tr.className = 'sb-pill ' + (st.ti > 1.15 ? 'red' : st.ti > 0.9 ? 'amb' : ''); BG.setHtml(El.tr, `🚗 ${st.ti > 1.15 ? 'file' : st.ti > 0.9 ? 'druk' : 'vrij'}`);
+    BG.setHtml(El.time, `${nightNow() > 0.5 ? '🌙' : '☀️'} <small>dag ${Math.floor(S.clock / DAYLEN) + 1} · ${String(hr).padStart(2, '0')}:${String(mn).padStart(2, '0')}</small>`);
+    { const sb = root.querySelector('[data-a="snd"]'); const t0 = S.snd ? '🔊' : '🔇'; if (sb.textContent !== t0) sb.textContent = t0; }
   }
 
   /* ---------- tutorial ---------- */
@@ -1197,7 +1412,7 @@ export async function stadbouwerView(ctx) {
         const f = S.ev.fire.find((z) => z.i === i);
         if (douse(S, st, i)) { floatAt(i, '💦 Gebluste brand!', '#9fe3ff'); sfx('splash'); toast(f.cov ? 'Samen met de brandweer geblust!' : 'Goed gedaan! Je blusde de brand zelf. 🪣', 'ok'); changed(); return; }
       }
-      if (S.ev.gift && S.ev.gift.i === i) { const v = takeGift(S, i); floatAt(i, `+${v} 💰`, '#ffe066'); sfx('coin'); toast(`Een cadeautje! +${v} munten 🎁`, 'ok'); changed(); return; }
+      if (S.ev.gift && S.ev.gift.i === i) { const v = takeGift(S, i); coinsAt(i, 6); floatAt(i, `+${v} 💰`, '#ffe066'); sfx('coin'); toast(`Een cadeautje! +${v} munten 🎁`, 'ok'); changed(); return; }
       if (S.deb.includes(i)) { const v = clearDebris(S, i); floatAt(i, `+${v}`, '#ffe066'); sfx('click'); changed(); return; }
     }
     if (tool === 'sloop') {
@@ -1225,8 +1440,8 @@ export async function stadbouwerView(ctx) {
   }
   function paintTool() {
     if (!tool) { El.tool.classList.remove('show'); return; }
-    if (tool === 'sloop') { El.tool.innerHTML = `<span class="e">🧹</span><div><b>Slopen</b><br><small>Tik of sleep over gebouwen. Je krijgt een deel van de kosten terug.</small></div><button class="sb-b" data-a="tool0">Klaar</button>`; }
-    else { const B = BD[tool]; El.tool.innerHTML = `<span class="e">${B.e}</span><div><b>${B.n}</b> · 💰 ${fmtN(buildCost(S, tool))}<br><small>${B.d}${PAINT.has(tool) ? ' Sleep om meer te bouwen.' : ''}</small></div><button class="sb-b" data-a="tool0">Klaar</button>`; }
+    if (tool === 'sloop') { BG.setHtml(El.tool, `<span class="e">🧹</span><div><b>Slopen</b><br><small>Tik of sleep over gebouwen. Je krijgt een deel van de kosten terug.</small></div><button class="sb-b" data-a="tool0">Klaar</button>`); }
+    else { const B = BD[tool]; BG.setHtml(El.tool, `<span class="e">${B.e}</span><div><b>${B.n}</b> · 💰 ${fmtN(buildCost(S, tool))}<br><small>${B.d}${PAINT.has(tool) ? ' Sleep om meer te bouwen.' : ''}</small></div><button class="sb-b" data-a="tool0">Klaar</button>`); }
     El.tool.classList.add('show');
   }
   function paintInfo() {
@@ -1357,6 +1572,8 @@ export async function stadbouwerView(ctx) {
     const b = e.target.closest('[data-a]'); if (!b || !root.contains(b) || b.tagName === 'INPUT') return;
     const a = b.dataset.a, v = b.dataset.v; audio.start();
     switch (a) {
+      case 'gear': BG.openGear({ title: 'Instellingen', toast: (t) => toast(t) }); break;
+      case 'looks': BG.openLooks({ gameId: 'stadbouwer', looks: LOOKS, onPick: (l) => { setLookId(l.id); toast(`${l.emoji} Uiterlijk: ${l.name}`, 'ok'); } }); break;
       case 'tab': sfx('click'); setTab(v); break;
       case 'closesheet': setTab(''); break;
       case 'cat': catSel = v; renderSheet(true); break;
@@ -1372,12 +1589,12 @@ export async function stadbouwerView(ctx) {
       case 'tutskip': S.tut = 99; markDirty(); tutCheck(); break;
       case 'tutagain': S.tut = 0; tutCheck(); markDirty(); break;
       case 'upbld': { const r = upgradeBuilding(S, sel); if (r.ok) { floatAt(sel, '⬆️ Niveau ' + S.lv[sel], '#fff'); changed('upg'); } else { toast(r.why, 'warn'); sfx('bad'); } break; }
-      case 'sell': { const r = bulldoze(S, sel); if (r.ok) { if (r.refund) floatAt(sel, `+${r.refund}`, '#ffe066'); sel = -1; changed('sell'); paintInfo(); } break; }
+      case 'sell': { const r = bulldoze(S, sel); if (r.ok) { if (r.refund) { floatAt(sel, `+${r.refund}`, '#ffe066'); coinsAt(sel, 3); } sel = -1; changed('sell'); paintInfo(); } break; }
       case 'buyup': { const r = buyUp(S, v); if (r.ok) { changed('upg'); renderSheet(true); } else { toast(r.why, 'warn'); sfx('bad'); } break; }
       case 'buyland': { const r = buyLand(S); if (r.ok) { toast('Nieuwe grond gekocht! Je stad kan groeien. 🗺️', 'ok'); changed('unlock'); renderSheet(true); } else { toast(r.why, 'warn'); sfx('bad'); } break; }
       case 'buyproj': { const r = buyProject(S, v); if (r.ok) { toast('Groot project klaar! +15% inkomen 🎉', 'ok'); changed('ach'); renderSheet(true); } else { toast(r.why, 'warn'); sfx('bad'); } break; }
-      case 'claimgoal': { const G = claimGoal(S, st); if (G) { toast(`Doel gehaald: +${fmtN(G.r)} 💰`, 'ok'); changed('coin'); renderSheet(true); } break; }
-      case 'daily': { const r = claimDaily(S); if (r) { toast(`Dagelijkse beloning: +${fmtN(r.reward)} 💰 (dag ${r.next})`, 'ok'); changed('coin'); } closeModal(); renderSheet(true); break; }
+      case 'claimgoal': { const G = claimGoal(S, st); if (G) { toast(`Doel gehaald: +${fmtN(G.r)} 💰`, 'ok'); milestone('coins-rain', { title: 'Doel gehaald!', sub: `+${fmtN(G.r)} munten` }); changed('coin'); renderSheet(true); } break; }
+      case 'daily': { const r = claimDaily(S); if (r) { toast(`Dagelijkse beloning: +${fmtN(r.reward)} 💰 (dag ${r.next})`, 'ok'); milestone('daily-bonus', { title: 'Dagelijkse beloning!', sub: `Dag ${r.next} op rij`, force: true }); changed('coin'); } closeModal(); renderSheet(true); break; }
       case 'modalok': closeModal(); sfx('click'); break;
       case 'choice': { const msg = resolveChoice(S, S.ev.choice, v === '1'); S.ev.choice = null; toast(msg, v === '1' ? 'ok' : ''); closeModal(); changed(v === '1' ? 'party' : 'click'); break; }
       case 'layer': layer = v; renderSheet(true); break;
@@ -1400,6 +1617,7 @@ export async function stadbouwerView(ctx) {
     if (!canPrestige(S)) return;
     cloudDirty = true; const old = S, res = prestige(S, (Math.random() * 2147483647) | 0); S = res.S; S.ev = {}; confirmPrest = false; tool = null; sel = -1; layer = '';
     recalc(); fitCam(); cars.length = 0; setTab(''); paintTool(); paintInfo(); S.last = Date.now(); writeLocal(); cloudSave(true);
+    milestone('victory', { title: 'Een nieuwe stad!', sub: `+${res.gain} sterren`, force: true });
     modal(`<div class="big">🌟</div><h3>Een nieuwe stad!</h3><p>Je won <b>${res.gain} ⭐</b>. Je hebt nu ${S.stars} sterren: +${Math.round(S.stars * 8)}% inkomen.</p><small>Besteed sterren aan erfenissen in Meer.</small><div class="sb-row" style="justify-content:center"><button class="sb-b pri" data-a="modalok">Aan de slag!</button></div>`); sfx('ach'); hud(); void old;
   }
 
@@ -1476,9 +1694,9 @@ export async function stadbouwerView(ctx) {
     }
     recalc();
     const got = checkAch(S, st);
-    for (const a of got) { toast(`Prestatie: ${a.e} ${a.n}${a.r ? ` (+${fmtN(a.r)} 💰)` : ''}`, 'ok', 6500); sfx('ach'); }
+    for (const a of got) { toast(`Prestatie: ${a.e} ${a.n}${a.r ? ` (+${fmtN(a.r)} 💰)` : ''}`, 'ok', 6500); sfx('ach'); milestone('new-record', { title: a.n, sub: 'Prestatie behaald!' }); }
     const up2 = unlockPop(S);
-    if (up2 > lastUnl) { const nb = BUILDABLE.filter((c) => BD[c].unl > lastUnl && BD[c].unl <= up2); if (nb.length) { toast(`Nieuw: ${nb.map((c) => BD[c].e + ' ' + BD[c].n).join(', ')}`, 'ok', 7000); sfx('unlock'); newUnlock = true; } lastUnl = up2; }
+    if (up2 > lastUnl) { const nb = BUILDABLE.filter((c) => BD[c].unl > lastUnl && BD[c].unl <= up2); if (nb.length) { toast(`Nieuw: ${nb.map((c) => BD[c].e + ' ' + BD[c].n).join(', ')}`, 'ok', 7000); sfx('unlock'); newUnlock = true; milestone('levelup', { title: 'Nieuwe gebouwen!', sub: nb.map((c) => BD[c].n).slice(0, 3).join(', ') }); } lastUnl = up2; }
     const gr = goalReady(); if (gr && !lastGoalReady) { toast('Doel gehaald! Tik op 🎯 om te claimen.', 'ok'); sfx('ach'); } lastGoalReady = gr;
     if (S.ev.choice) showChoice();
     tutCheck(); hud(); renderSheet(); if (tool) paintTool(); if (sel >= 0) paintInfo();
@@ -1501,6 +1719,9 @@ export async function stadbouwerView(ctx) {
     for (const f of floaters) f.t += dt; for (let k = floaters.length - 1; k >= 0; k--) if (floaters[k].t > 1.6) floaters.splice(k, 1);
     const range = (() => { const i = tool ? (ghost ? ghost.y * N() + ghost.x : -1) : sel, ch = i >= 0 ? (tool || S.g[i]) : ''; const B = BD[ch]; if (B && B.r && !B.fixed) { const lv = tool ? 1 : S.lv[i]; return { x: (tool ? ghost.x : i % N()), y: (tool ? ghost.y : Math.floor(i / N())), r: B.r + lv - 1 }; } return null; })();
     drawCity(c2, { S, st, cam, t: tAnim, night: nightNow(), cars, floaters, tool, ghost, sel, layer, W, H, dpr, glow, discSet, range });
+    c2.setTransform(dpr, 0, 0, dpr, 0, 0);
+    if (nightNow() < 0.5) BG.cloudShadows(c2, W, H, tAnim, 0.1);
+    FX.update(dt); FX.draw(c2);
   }
   const startRaf = () => { if (!raf) raf = requestAnimationFrame(frame); };
 
@@ -1522,5 +1743,6 @@ export async function stadbouwerView(ctx) {
   tickT = setInterval(tick, 500);
   if (S.snd) { /* muziek start bij de eerste tik/klik (browser eist een gebaar) */ }
   saveT = setInterval(() => { if (S && localDirty) writeLocal(); }, 5000);
+  if (S.tut === 0 && !best) setTimeout(() => { if (alive) { try { BG.intro(root, 'stadbouwer', 'intro-stad', { title: 'Stadbouwer', sub: 'Bouw jouw droomstad!' }); } catch (e) { /* geen intro */ } } }, 300);
   toast(S.tut < 99 ? 'Welkom in Stadbouwer! 🏙️' : 'Welkom terug in je stad! 🏙️', 'ok', 3500);
 }
