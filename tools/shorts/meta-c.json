@@ -1,0 +1,1101 @@
+[
+ {
+  "id": "s201",
+  "t": "Octopus heeft drie harten",
+  "c": "weetjes",
+  "tags": [
+   "octopus",
+   "dieren",
+   "hart"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s202",
+  "t": "Zwaarste dier ter wereld",
+  "c": "weetjes",
+  "tags": [
+   "vinvis",
+   "gewicht",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s203",
+  "t": "Bijen dansen",
+  "c": "weetjes",
+  "tags": [
+   "bij",
+   "dansen",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s204",
+  "t": "Olifanten kunnen niet springen",
+  "c": "weetjes",
+  "tags": [
+   "olifant",
+   "springen",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s205",
+  "t": "Kikker drinkt door zijn huid",
+  "c": "weetjes",
+  "tags": [
+   "kikker",
+   "huid",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s206",
+  "t": "Katten slapen veel",
+  "c": "weetjes",
+  "tags": [
+   "kat",
+   "slapen",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s207",
+  "t": "Uil draait zijn kop",
+  "c": "weetjes",
+  "tags": [
+   "uil",
+   "kop",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s208",
+  "t": "Oude schildpadden",
+  "c": "weetjes",
+  "tags": [
+   "schildpad",
+   "oud",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s209",
+  "t": "Haai ouder dan bomen",
+  "c": "weetjes",
+  "tags": [
+   "haai",
+   "bomen",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s210",
+  "t": "Slak heeft veel tandjes",
+  "c": "weetjes",
+  "tags": [
+   "slak",
+   "tanden",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s211",
+  "t": "Aarde is vooral water",
+  "c": "weetjes",
+  "tags": [
+   "aarde",
+   "water",
+   "aardrijkskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s212",
+  "t": "Nederland onder zeeniveau",
+  "c": "weetjes",
+  "tags": [
+   "nederland",
+   "zeeniveau",
+   "aardrijkskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s213",
+  "t": "Piramide van Gizeh",
+  "c": "weetjes",
+  "tags": [
+   "piramide",
+   "egypte",
+   "geschiedenis"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s214",
+  "t": "Dino's verdwenen",
+  "c": "weetjes",
+  "tags": [
+   "dinosaurus",
+   "uitsterven",
+   "geschiedenis"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s215",
+  "t": "Lava is superheet",
+  "c": "weetjes",
+  "tags": [
+   "vulkaan",
+   "lava",
+   "aardrijkskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s216",
+  "t": "Dobbelsteen is altijd 7",
+  "c": "weetjes",
+  "tags": [
+   "dobbelsteen",
+   "wiskunde",
+   "zeven"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s217",
+  "t": "Seconden in een dag",
+  "c": "weetjes",
+  "tags": [
+   "tijd",
+   "seconden",
+   "wiskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s218",
+  "t": "Het getal pi",
+  "c": "weetjes",
+  "tags": [
+   "pi",
+   "cirkel",
+   "wiskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s219",
+  "t": "Hoeken van een driehoek",
+  "c": "weetjes",
+  "tags": [
+   "driehoek",
+   "hoeken",
+   "wiskunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s220",
+  "t": "Talen op aarde",
+  "c": "weetjes",
+  "tags": [
+   "talen",
+   "taal",
+   "wereld"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s221",
+  "t": "Palindroom",
+  "c": "weetjes",
+  "tags": [
+   "taal",
+   "woorden",
+   "palindroom"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s222",
+  "t": "Aardbei is geen bes",
+  "c": "weetjes",
+  "tags": [
+   "aardbei",
+   "fruit",
+   "planten"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s223",
+  "t": "Wortels waren paars",
+  "c": "weetjes",
+  "tags": [
+   "wortel",
+   "groente",
+   "geschiedenis"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s224",
+  "t": "Appels drijven",
+  "c": "weetjes",
+  "tags": [
+   "appel",
+   "drijven",
+   "natuurkunde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s225",
+  "t": "Watermeloen is water",
+  "c": "weetjes",
+  "tags": [
+   "watermeloen",
+   "water",
+   "fruit"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s226",
+  "t": "Hart klopt vaak",
+  "c": "weetjes",
+  "tags": [
+   "hart",
+   "lichaam",
+   "mens"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s227",
+  "t": "Botten van een mens",
+  "c": "weetjes",
+  "tags": [
+   "botten",
+   "lichaam",
+   "skelet"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s228",
+  "t": "Hersenen als lampje",
+  "c": "weetjes",
+  "tags": [
+   "hersenen",
+   "energie",
+   "lichaam"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s229",
+  "t": "Regenboog is een cirkel",
+  "c": "weetjes",
+  "tags": [
+   "regenboog",
+   "cirkel",
+   "natuur"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s230",
+  "t": "Sneeuwvlok heeft zes armen",
+  "c": "weetjes",
+  "tags": [
+   "sneeuwvlok",
+   "sneeuw",
+   "natuur"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s231",
+  "t": "Bliksem is heet",
+  "c": "weetjes",
+  "tags": [
+   "bliksem",
+   "onweer",
+   "natuur"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s232",
+  "t": "Zonnebloem draait mee",
+  "c": "weetjes",
+  "tags": [
+   "zonnebloem",
+   "zon",
+   "planten"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s233",
+  "t": "Toetsen van een piano",
+  "c": "weetjes",
+  "tags": [
+   "piano",
+   "muziek",
+   "toetsen"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s234",
+  "t": "Eerste Olympische Spelen",
+  "c": "weetjes",
+  "tags": [
+   "olympische spelen",
+   "geschiedenis",
+   "sport"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s235",
+  "t": "Pinguïns hebben knieën",
+  "c": "weetjes",
+  "tags": [
+   "pinguïn",
+   "knieën",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s236",
+  "t": "Quiz: Hoeveel poten heeft een spin?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s237",
+  "t": "Quiz: Welke planeet heet de rode planeet?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s238",
+  "t": "Quiz: Wat is de hoofdstad van Spanje?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s239",
+  "t": "Quiz: Hoeveel dagen heeft een schrikkeljaar?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s240",
+  "t": "Quiz: Welk dier is het zwaarst ter wereld?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s241",
+  "t": "Quiz: Hoeveel is 7 x 8?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s242",
+  "t": "Quiz: Welke kleur krijg je bij blauw + geel?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s243",
+  "t": "Quiz: Welk werelddeel is het grootst?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s244",
+  "t": "Quiz: Welk gas hebben we nodig om te ademen?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s245",
+  "t": "Quiz: In welk land staan de piramides van Gizeh?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s246",
+  "t": "Quiz: Hoeveel snaren heeft een gewone gitaar?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s247",
+  "t": "Quiz: Welke oceaan is de grootste?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s248",
+  "t": "Quiz: Hoe heet het sterren- stelsel van de aarde?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s249",
+  "t": "Quiz: Wat eet een panda vooral?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s250",
+  "t": "Quiz: Hoeveel kleuren heeft een regenboog?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s251",
+  "t": "Quiz: Welk zoogdier legt eieren?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s252",
+  "t": "Quiz: Wat is H2O?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s253",
+  "t": "Quiz: Wie schilderde De Nachtwacht?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s254",
+  "t": "Quiz: Hoeveel graden is een rechte hoek?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s255",
+  "t": "Quiz: Welk landdier is het snelst?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s256",
+  "t": "Quiz: Welk product maakt een bij?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s257",
+  "t": "Quiz: Hoeveel hoeken heeft een zeshoek?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s258",
+  "t": "Quiz: Hoeveel is de helft van 250?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s259",
+  "t": "Quiz: Welke planeet is de grootste?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s260",
+  "t": "Quiz: Wie was de eerste mens op de maan?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s261",
+  "t": "Quiz: Welke vogel kan achteruit vliegen?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s262",
+  "t": "Quiz: Hoeveel tanden heeft een volwassene (alles)?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s263",
+  "t": "Quiz: Wat is de langste rivier van Europa?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s264",
+  "t": "Quiz: Welk getal is een priemgetal?",
+  "c": "quiz",
+  "tags": [
+   "quiz",
+   "vraag",
+   "kennis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s265",
+  "t": "Acht planeten",
+  "c": "ruimte",
+  "tags": [
+   "planeten",
+   "zonnestelsel"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s266",
+  "t": "Zonlicht onderweg",
+  "c": "ruimte",
+  "tags": [
+   "zon",
+   "licht",
+   "aarde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s267",
+  "t": "Een jaar op Neptunus",
+  "c": "ruimte",
+  "tags": [
+   "neptunus",
+   "jaar",
+   "planeten"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s268",
+  "t": "Venus: dag langer dan jaar",
+  "c": "ruimte",
+  "tags": [
+   "venus",
+   "dag",
+   "jaar"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s269",
+  "t": "Mercurius is de kleinste",
+  "c": "ruimte",
+  "tags": [
+   "mercurius",
+   "kleinste",
+   "planeet"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s270",
+  "t": "Naar Mars",
+  "c": "ruimte",
+  "tags": [
+   "mars",
+   "raket",
+   "reis"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s271",
+  "t": "Jupiter de grootste",
+  "c": "ruimte",
+  "tags": [
+   "jupiter",
+   "raket",
+   "planeten"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s272",
+  "t": "Saturnus drijft",
+  "c": "ruimte",
+  "tags": [
+   "saturnus",
+   "drijven",
+   "planeet"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s273",
+  "t": "Hoogste vulkaan op Mars",
+  "c": "ruimte",
+  "tags": [
+   "mars",
+   "vulkaan",
+   "planeet"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s274",
+  "t": "Eerste mens op de maan",
+  "c": "ruimte",
+  "tags": [
+   "maan",
+   "maanlanding",
+   "armstrong"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s275",
+  "t": "Op de maan weeg je minder",
+  "c": "ruimte",
+  "tags": [
+   "maan",
+   "zwaartekracht",
+   "gewicht"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s276",
+  "t": "Voetstappen op de maan",
+  "c": "ruimte",
+  "tags": [
+   "maan",
+   "voetstappen",
+   "wind"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s277",
+  "t": "Astronauten worden langer",
+  "c": "ruimte",
+  "tags": [
+   "astronaut",
+   "ruimte",
+   "lichaam"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s278",
+  "t": "Astronauten vallen",
+  "c": "ruimte",
+  "tags": [
+   "astronaut",
+   "zweven",
+   "baan"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s279",
+  "t": "Geen geluid in de ruimte",
+  "c": "ruimte",
+  "tags": [
+   "geluid",
+   "ruimte",
+   "vacuüm"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s280",
+  "t": "Staart van een komeet",
+  "c": "ruimte",
+  "tags": [
+   "komeet",
+   "staart",
+   "zon"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s281",
+  "t": "Komeet is vuile sneeuwbal",
+  "c": "ruimte",
+  "tags": [
+   "komeet",
+   "ijs",
+   "stof"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s282",
+  "t": "Jupiter versus aarde",
+  "c": "ruimte",
+  "tags": [
+   "jupiter",
+   "aarde",
+   "grootte"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s283",
+  "t": "Zwart gat",
+  "c": "ruimte",
+  "tags": [
+   "zwart gat",
+   "licht",
+   "zwaartekracht"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s284",
+  "t": "ISS draait rond",
+  "c": "ruimte",
+  "tags": [
+   "iss",
+   "ruimtestation",
+   "aarde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s285",
+  "t": "Satelliet in een baan",
+  "c": "ruimte",
+  "tags": [
+   "satelliet",
+   "baan",
+   "aarde"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s286",
+  "t": "Draak bakt pizza",
+  "c": "fantasie",
+  "tags": [
+   "draak",
+   "vuur",
+   "pizza"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s287",
+  "t": "Draak en de taart",
+  "c": "fantasie",
+  "tags": [
+   "draak",
+   "vuur",
+   "taart"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s288",
+  "t": "Pas op, vuurspuwer",
+  "c": "fantasie",
+  "tags": [
+   "draak",
+   "vuur",
+   "kasteel"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s289",
+  "t": "Abracadabra",
+  "c": "fantasie",
+  "tags": [
+   "toverstaf",
+   "magie",
+   "vonken"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s290",
+  "t": "Hocus pocus",
+  "c": "fantasie",
+  "tags": [
+   "toverstaf",
+   "magie",
+   "vonken"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s291",
+  "t": "Simsalabim",
+  "c": "fantasie",
+  "tags": [
+   "toverstaf",
+   "magie",
+   "dieren"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s292",
+  "t": "Schatkist gaat open",
+  "c": "fantasie",
+  "tags": [
+   "schatkist",
+   "goud",
+   "schat"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s293",
+  "t": "Wat zit er in de kist",
+  "c": "fantasie",
+  "tags": [
+   "schatkist",
+   "raadsel",
+   "schat"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s294",
+  "t": "Kasteel in de wolken",
+  "c": "fantasie",
+  "tags": [
+   "kasteel",
+   "wolken",
+   "sprookje"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s295",
+  "t": "Hoog in de lucht",
+  "c": "fantasie",
+  "tags": [
+   "kasteel",
+   "koning",
+   "wolken"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s296",
+  "t": "Toverdrank",
+  "c": "fantasie",
+  "tags": [
+   "toverdrank",
+   "tovenaar",
+   "magie"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s297",
+  "t": "Tovenaar mengt drank",
+  "c": "fantasie",
+  "tags": [
+   "toverdrank",
+   "tovenaar",
+   "eenhoorn"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s298",
+  "t": "Kikker plus ster",
+  "c": "fantasie",
+  "tags": [
+   "toverdrank",
+   "kikker",
+   "fee"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s299",
+  "t": "Eenhoorn regenboog",
+  "c": "fantasie",
+  "tags": [
+   "eenhoorn",
+   "regenboog",
+   "sprookje"
+  ],
+  "s": 8
+ },
+ {
+  "id": "s300",
+  "t": "Eenhoorn rent",
+  "c": "fantasie",
+  "tags": [
+   "eenhoorn",
+   "regenboog",
+   "sterren"
+  ],
+  "s": 8
+ }
+]

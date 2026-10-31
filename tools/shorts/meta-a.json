@@ -1,0 +1,1002 @@
+[
+ {
+  "id": "s001",
+  "t": "Tandwielen",
+  "c": "satisfying",
+  "tags": [
+   "tandwiel",
+   "draaien"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s002",
+  "t": "Speelgoedband",
+  "c": "techniek",
+  "tags": [
+   "speelgoed",
+   "band"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s003",
+  "t": "Kermisavond",
+  "c": "techniek",
+  "tags": [
+   "reuzenrad",
+   "lichtjes"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s004",
+  "t": "Vallende ster",
+  "c": "satisfying",
+  "tags": [
+   "patroon",
+   "ster"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s005",
+  "t": "Kleurenpad",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "pad"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s006",
+  "t": "Zes tandwielen",
+  "c": "satisfying",
+  "tags": [
+   "tandwiel",
+   "zes"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s007",
+  "t": "Gedraaide driehoeken",
+  "c": "satisfying",
+  "tags": [
+   "draaien",
+   "driehoek"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s008",
+  "t": "Tandwielketting",
+  "c": "satisfying",
+  "tags": [
+   "tandwiel",
+   "metaal"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s009",
+  "t": "Aftellen en lanceren",
+  "c": "techniek",
+  "tags": [
+   "raket",
+   "aftellen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s010",
+  "t": "Hoepel na hoepel",
+  "c": "sport",
+  "tags": [
+   "basketbal",
+   "hoepel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s011",
+  "t": "Slingerwaaier",
+  "c": "satisfying",
+  "tags": [
+   "slinger",
+   "kubus"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s012",
+  "t": "Pot vol knikkers",
+  "c": "satisfying",
+  "tags": [
+   "knikkers",
+   "lagen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s013",
+  "t": "Draaitoren",
+  "c": "satisfying",
+  "tags": [
+   "draaien",
+   "toren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s014",
+  "t": "Dominospiraal",
+  "c": "satisfying",
+  "tags": [
+   "domino",
+   "spiraal"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s015",
+  "t": "Halfpipe 720",
+  "c": "sport",
+  "tags": [
+   "skateboard",
+   "draai"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s016",
+  "t": "Kleurenflits",
+  "c": "satisfying",
+  "tags": [
+   "tegels",
+   "flits"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s017",
+  "t": "Gouden spiraal",
+  "c": "satisfying",
+  "tags": [
+   "spiraal",
+   "hypnose"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s018",
+  "t": "Pixelhart",
+  "c": "satisfying",
+  "tags": [
+   "patroon",
+   "hart"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s019",
+  "t": "Strike!",
+  "c": "sport",
+  "tags": [
+   "bowlen",
+   "strike"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s020",
+  "t": "Dubbelzijdig",
+  "c": "satisfying",
+  "tags": [
+   "tegels",
+   "draaien"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s021",
+  "t": "Spare gooien",
+  "c": "sport",
+  "tags": [
+   "bowlen",
+   "spare"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s022",
+  "t": "Hollandse molens",
+  "c": "techniek",
+  "tags": [
+   "molen",
+   "nederland"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s023",
+  "t": "Blokjesgolf",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "blokjes"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s024",
+  "t": "Nachtvlucht",
+  "c": "techniek",
+  "tags": [
+   "helikopter",
+   "nacht"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s025",
+  "t": "Zilveren ringen",
+  "c": "satisfying",
+  "tags": [
+   "ringen",
+   "cirkels"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s026",
+  "t": "Rally",
+  "c": "sport",
+  "tags": [
+   "tafeltennis",
+   "rally"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s027",
+  "t": "Sorteren op hoogte",
+  "c": "satisfying",
+  "tags": [
+   "sorteren",
+   "kleuren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s028",
+  "t": "Dubbele strike",
+  "c": "sport",
+  "tags": [
+   "bowlen",
+   "dubbel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s029",
+  "t": "Balkjes sorteren",
+  "c": "satisfying",
+  "tags": [
+   "sorteren",
+   "balken"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s030",
+  "t": "Hoge sprongen",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "hoog"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s031",
+  "t": "Regenboog op orde",
+  "c": "satisfying",
+  "tags": [
+   "sorteren",
+   "regenboog"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s032",
+  "t": "Lopende band",
+  "c": "techniek",
+  "tags": [
+   "fabriek",
+   "band"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s033",
+  "t": "Drie bakken kubussen",
+  "c": "satisfying",
+  "tags": [
+   "kubussen",
+   "bakken"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s034",
+  "t": "Robot sorteert",
+  "c": "techniek",
+  "tags": [
+   "robot",
+   "kleuren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s035",
+  "t": "Keeper kansloos",
+  "c": "sport",
+  "tags": [
+   "voetbal",
+   "keeper"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s036",
+  "t": "Stuiterrij",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "rij"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s037",
+  "t": "Slingerspel",
+  "c": "satisfying",
+  "tags": [
+   "slinger",
+   "kegels"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s038",
+  "t": "Dubbele klap",
+  "c": "satisfying",
+  "tags": [
+   "newton",
+   "twee"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s039",
+  "t": "Dominoslang",
+  "c": "satisfying",
+  "tags": [
+   "domino",
+   "vallen",
+   "regenboog"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s040",
+  "t": "Golvende kubussen",
+  "c": "satisfying",
+  "tags": [
+   "golf",
+   "kubus"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s041",
+  "t": "Driepunter",
+  "c": "sport",
+  "tags": [
+   "basketbal",
+   "schot"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s042",
+  "t": "Slingers in de maat",
+  "c": "satisfying",
+  "tags": [
+   "slinger",
+   "ritme"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s043",
+  "t": "Vormen sorteren",
+  "c": "satisfying",
+  "tags": [
+   "vormen",
+   "sorteren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s044",
+  "t": "Stuiterende cirkels",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "cirkel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s045",
+  "t": "Drie ballen",
+  "c": "satisfying",
+  "tags": [
+   "newton",
+   "drie"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s046",
+  "t": "Birdie!",
+  "c": "sport",
+  "tags": [
+   "golf",
+   "putt"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s047",
+  "t": "Blokjessmiley",
+  "c": "satisfying",
+  "tags": [
+   "patroon",
+   "smiley"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s048",
+  "t": "Hypnotiserende golf",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "hypnose"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s049",
+  "t": "Blokkentoren bouwen",
+  "c": "techniek",
+  "tags": [
+   "kraan",
+   "toren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s050",
+  "t": "Snelle rally",
+  "c": "sport",
+  "tags": [
+   "tafeltennis",
+   "snel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s051",
+  "t": "Halfpipe",
+  "c": "sport",
+  "tags": [
+   "skateboard",
+   "halfpipe"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s052",
+  "t": "Robotarm",
+  "c": "techniek",
+  "tags": [
+   "robot",
+   "fabriek"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s053",
+  "t": "Motor in kleur",
+  "c": "techniek",
+  "tags": [
+   "motor",
+   "kleuren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s054",
+  "t": "Bloemenspiraal",
+  "c": "satisfying",
+  "tags": [
+   "spiraal",
+   "bloem"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s055",
+  "t": "Langzame rally",
+  "c": "sport",
+  "tags": [
+   "tafeltennis",
+   "ritme"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s056",
+  "t": "Hijskraan",
+  "c": "techniek",
+  "tags": [
+   "kraan",
+   "bouwen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s057",
+  "t": "Penaltyreeks",
+  "c": "sport",
+  "tags": [
+   "voetbal",
+   "penalty"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s058",
+  "t": "Heuvelrit",
+  "c": "techniek",
+  "tags": [
+   "auto",
+   "weg"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s059",
+  "t": "Windmolens",
+  "c": "techniek",
+  "tags": [
+   "wind",
+   "energie"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s060",
+  "t": "Zigzagkolom",
+  "c": "satisfying",
+  "tags": [
+   "golf",
+   "diagonaal"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s061",
+  "t": "Hoekschoppen",
+  "c": "sport",
+  "tags": [
+   "voetbal",
+   "hoek"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s062",
+  "t": "Raketlancering",
+  "c": "techniek",
+  "tags": [
+   "raket",
+   "ruimte"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s063",
+  "t": "Tegelgolf",
+  "c": "satisfying",
+  "tags": [
+   "tegels",
+   "draaien"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s064",
+  "t": "Windpark",
+  "c": "techniek",
+  "tags": [
+   "wind",
+   "park"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s065",
+  "t": "Slingergolf",
+  "c": "satisfying",
+  "tags": [
+   "slinger",
+   "golf"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s066",
+  "t": "Zeshoekentoren",
+  "c": "satisfying",
+  "tags": [
+   "draaien",
+   "zeshoek"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s067",
+  "t": "Newton-wieg",
+  "c": "satisfying",
+  "tags": [
+   "slinger",
+   "newton"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s068",
+  "t": "Bakjes vullen",
+  "c": "satisfying",
+  "tags": [
+   "kleuren",
+   "vallen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s069",
+  "t": "Lange sorteerrij",
+  "c": "satisfying",
+  "tags": [
+   "sorteren",
+   "rij"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s070",
+  "t": "Nachttrein",
+  "c": "techniek",
+  "tags": [
+   "trein",
+   "nacht"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s071",
+  "t": "Rimpelende tegels",
+  "c": "satisfying",
+  "tags": [
+   "golf",
+   "rimpel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s072",
+  "t": "Zee van stippen",
+  "c": "satisfying",
+  "tags": [
+   "spiraal",
+   "stippen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s073",
+  "t": "Skatepark nacht",
+  "c": "sport",
+  "tags": [
+   "skateboard",
+   "nacht"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s074",
+  "t": "Basketbalreeks",
+  "c": "sport",
+  "tags": [
+   "basketbal",
+   "combinatie"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s075",
+  "t": "Trappenbal",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "kleuren"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s076",
+  "t": "Fruitfabriek",
+  "c": "techniek",
+  "tags": [
+   "fruit",
+   "band"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s077",
+  "t": "Bus over de bergen",
+  "c": "techniek",
+  "tags": [
+   "bus",
+   "bergen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s078",
+  "t": "Snelle slinger",
+  "c": "satisfying",
+  "tags": [
+   "newton",
+   "snel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s079",
+  "t": "Reuzenrad",
+  "c": "techniek",
+  "tags": [
+   "reuzenrad",
+   "kermis"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s080",
+  "t": "Regenboogtrap",
+  "c": "satisfying",
+  "tags": [
+   "stuiteren",
+   "regenboog"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s081",
+  "t": "Zuigers",
+  "c": "techniek",
+  "tags": [
+   "motor",
+   "zuiger"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s082",
+  "t": "Gyroscoop",
+  "c": "satisfying",
+  "tags": [
+   "ringen",
+   "draaien"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s083",
+  "t": "Darts: 180!",
+  "c": "sport",
+  "tags": [
+   "darts",
+   "bullseye"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s084",
+  "t": "Zeven ringen",
+  "c": "satisfying",
+  "tags": [
+   "ringen",
+   "regenboog"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s085",
+  "t": "Tractor op het land",
+  "c": "techniek",
+  "tags": [
+   "tractor",
+   "boer"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s086",
+  "t": "Zonnebloemzaadjes",
+  "c": "satisfying",
+  "tags": [
+   "spiraal",
+   "zonnebloem"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s087",
+  "t": "Dubbel twintig",
+  "c": "sport",
+  "tags": [
+   "darts",
+   "dubbel"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s088",
+  "t": "Draaiende raderen",
+  "c": "satisfying",
+  "tags": [
+   "tandwiel",
+   "raderen"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s089",
+  "t": "Pakketdienst",
+  "c": "techniek",
+  "tags": [
+   "helikopter",
+   "cadeau"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s090",
+  "t": "Golf bij zonsondergang",
+  "c": "sport",
+  "tags": [
+   "golf",
+   "avond"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s091",
+  "t": "Spitse pagode",
+  "c": "satisfying",
+  "tags": [
+   "draaien",
+   "piramide"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s092",
+  "t": "Zigzagdominos",
+  "c": "satisfying",
+  "tags": [
+   "domino",
+   "zigzag"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s093",
+  "t": "Wervelende staafjes",
+  "c": "satisfying",
+  "tags": [
+   "spiraal",
+   "staafjes"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s094",
+  "t": "Midden in de roos",
+  "c": "sport",
+  "tags": [
+   "darts",
+   "roos"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s095",
+  "t": "Helikopter",
+  "c": "techniek",
+  "tags": [
+   "helikopter"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s096",
+  "t": "Truck op reis",
+  "c": "techniek",
+  "tags": [
+   "truck",
+   "weg"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s097",
+  "t": "Trein over de brug",
+  "c": "techniek",
+  "tags": [
+   "trein",
+   "brug"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s098",
+  "t": "Bloem van bolletjes",
+  "c": "satisfying",
+  "tags": [
+   "patroon",
+   "bloem"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s099",
+  "t": "Dominogolf",
+  "c": "satisfying",
+  "tags": [
+   "domino",
+   "golf"
+  ],
+  "s": 10
+ },
+ {
+  "id": "s100",
+  "t": "Omklappende vlakjes",
+  "c": "satisfying",
+  "tags": [
+   "tegels",
+   "kleuren"
+  ],
+  "s": 10
+ }
+]
