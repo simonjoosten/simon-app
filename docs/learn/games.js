@@ -4,6 +4,7 @@
 import { Profile, Prog, Snd, TTS, Kits, allKits, getKit, pick, rng, qkey, bindCtx, fmt, esc } from './core.js?v=1';
 import * as Shop from './games-shop.js?v=1';
 import * as Duel from './games-duel.js?v=1';
+import * as KM from './games-kitmaker.js?v=1';
 
 export const GAME_IDS = ['klassiek', 'toren', 'baas', 'race', 'vissen', 'vlag', 'pizza', 'monster', 'regen', 'memory', 'ruimte', 'bom', 'slang', 'boerderij', 'vlieg', 'schat', 'escape', 'miljonair'];
 // reservemeta zodat de kaarten meteen getoond worden; het spelbestand zelf wint zodra het geladen is
@@ -180,6 +181,8 @@ export async function learnSpelView(ctx) {
     return k;
   }
   const currentKit = () => getKitById(S.kitId);
+  const kmOpts = () => ({ toast, snd, onChange: () => { kitCache.clear(); loadKitList().then(() => { if (!dead) render(); }); } });
+  function openMaker(opts) { KM.openKitMaker(kmOpts(), opts || {}).catch(() => toast('De kit-maker laden lukt niet')); }
 
   /* --- kleine UI-hulpen --- */
   function toast(msg) {
@@ -267,7 +270,7 @@ export async function learnSpelView(ctx) {
   function homeHTML() {
     const e = kitEntry();
     let h = questsHTML();
-    h += `<button class="lsp-kitbtn" data-act="kit-open"><span class="e">${esc((e && e.emoji) || '📚')}</span><span class="t"><b>${esc(e ? e.name : 'Kies een kit')}</b><small>${e ? `${e.count > 0 ? e.count + ' vragen · ' : ''}tik om een andere kit te kiezen` : 'Maak een kit in Learn Study'}</small></span><span>▾</span></button>`;
+    h += `<button class="lsp-kitbtn" data-act="kit-open"><span class="e">${esc((e && e.emoji) || '📚')}</span><span class="t"><b>${esc(e ? e.name : 'Kies een kit')}</b><small>${e ? `${e.count > 0 ? e.count + ' vragen · ' : ''}tik om een andere kit te kiezen` : 'Maak hier je eigen kit'}</small></span><span>▾</span></button>`;
     h += `<div class="lsp-chips">${[1, 2, 3].map((l) => `<button class="lsp-chip${S.level === l ? ' on' : ''}" data-act="level" data-v="${l}">${['', '🟢', '🟡', '🔴'][l]} ${Shop.LV_NAMES[l]}</button>`).join('')}</div>`;
     h += `<div class="lsp-chips"><button class="lsp-chip${S.types.size ? '' : ' on'}" data-act="type" data-v="*">Alle vragen</button>${TYPES.map(([k, l]) => `<button class="lsp-chip${S.types.has(k) ? ' on' : ''}" data-act="type" data-v="${k}">${l}</button>`).join('')}</div>`;
     h += `<div class="lsp-tools"><input class="lsp-search" data-inp="gsearch" type="search" placeholder="Zoek een spel…" value="${esc(S.query)}"><button class="lsp-btn" data-act="surprise">🎲 Verras me</button></div>`;
@@ -280,7 +283,7 @@ export async function learnSpelView(ctx) {
     const list = S.kitList.filter((k) => !q || `${k.name} ${k.group || ''}`.toLowerCase().includes(q));
     const groups = {}; for (const k of list) { const g = k.src === 'user' ? '⭐ Mijn kits' : (k.group || 'Overig'); (groups[g] || (groups[g] = [])).push(k); }
     const names = Object.keys(groups).sort((a, b) => (a[0] === '⭐' ? -1 : b[0] === '⭐' ? 1 : a.localeCompare(b)));
-    return `<div class="lsp-sheet-bg" data-act="kit-close"><div class="lsp-sheet" data-act="noop"><b>📚 Kies een kit</b><input class="lsp-search" data-inp="ksearch" type="search" placeholder="Zoek een kit…" value="${esc(S.kq)}" style="margin-top:8px"><div class="lsp-sheet-list">${pickerListHTML(groups, names)}</div><button class="lsp-btn ghost" data-act="kit-close" style="margin-top:8px">Sluiten</button></div></div>`;
+    return `<div class="lsp-sheet-bg" data-act="kit-close"><div class="lsp-sheet" data-act="noop"><b>📚 Kies een kit</b><input class="lsp-search" data-inp="ksearch" type="search" placeholder="Zoek een kit…" value="${esc(S.kq)}" style="margin-top:8px"><div class="lsp-sheet-list">${pickerListHTML(groups, names)}</div><div style="display:flex;gap:6px;margin-top:8px"><button class="lsp-btn" style="flex:1" data-act="kit-new">➕ Nieuwe kit maken</button><button class="lsp-btn" style="flex:1" data-act="kit-import">📥 Kit-code</button></div><button class="lsp-btn ghost" data-act="kit-close" style="margin-top:8px">Sluiten</button></div></div>`;
   }
   function pickerListHTML(groups, names) {
     if (!groups) {
@@ -289,7 +292,7 @@ export async function learnSpelView(ctx) {
       names = Object.keys(groups).sort((a, b) => (a[0] === '⭐' ? -1 : b[0] === '⭐' ? 1 : a.localeCompare(b)));
     }
     if (!names.length) return '<div class="lsp-empty">Geen kits gevonden.</div>';
-    return names.map((g) => `<div class="lsp-lab">${esc(g)}</div>` + groups[g].map((k) => `<button class="lsp-kit${k.id === S.kitId ? ' on' : ''}" data-act="kit-pick" data-id="${esc(k.id)}"><span class="e">${esc(k.emoji || '📚')}</span><span style="flex:1;min-width:0"><b>${esc(k.name)}</b><small>${k.count > 0 ? k.count + ' vragen' : ''}${k.lang && k.lang !== 'nl' ? ' · ' + esc(k.lang) : ''}</small></span></button>`).join('')).join('');
+    return names.map((g) => `<div class="lsp-lab">${esc(g)}</div>` + groups[g].map((k) => `<div style="display:flex;gap:6px;align-items:stretch"><button style="flex:1;min-width:0" class="lsp-kit${k.id === S.kitId ? ' on' : ''}" data-act="kit-pick" data-id="${esc(k.id)}"><span class="e">${esc(k.emoji || '📚')}</span><span style="flex:1;min-width:0"><b>${esc(k.name)}</b><small>${k.count > 0 ? k.count + ' vragen' : ''}${k.lang && k.lang !== 'nl' ? ' · ' + esc(k.lang) : ''}</small></span></button>${k.src === 'user' ? `<button class="lsp-btn" data-act="kit-edit" data-id="${esc(k.id)}" aria-label="Bewerk kit">✏️</button>` : `<button class="lsp-btn" data-act="kit-copy" data-id="${esc(k.id)}" aria-label="Maak een eigen kopie" title="Eigen kopie maken">📝</button>`}</div>`).join('')).join('');
   }
   function rankHTML() {
     const d = store.d, s = d.stats;
@@ -483,6 +486,10 @@ export async function learnSpelView(ctx) {
     },
     'kit-open'() { S.picker = true; S.kq = ''; render(); loadKitList().then(() => { if (S.picker && !dead) render(); }); },
     'kit-close'() { S.picker = false; render(); },
+    'kit-new'() { openMaker(null); },
+    'kit-import'() { KM.openKitImport(kmOpts()).catch(() => toast('Kit-code laden lukt niet')); },
+    async 'kit-edit'(d) { const k = await getKit(d.id); if (!k) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: k }); },
+    async 'kit-copy'(d) { const k = await getKit(d.id); if (!k || !k.qs || !k.qs.length) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: { name: k.name, emoji: k.emoji, desc: k.desc, lang: k.lang, group: undefined, qs: k.qs }, copy: true }); },
     'kit-pick'(d) { S.kitId = d.id; S.picker = false; store.d.lastKit = d.id; store.save(); render(); },
     stop() {
       if (!S.stopArm) { S.stopArm = true; const b = root.querySelector('[data-act="stop"]'); if (b) { b.textContent = 'Echt stoppen?'; b.className = 'arm'; } later(() => { S.stopArm = false; const b2 = root && root.querySelector('[data-act="stop"]'); if (b2 && S.run) { b2.textContent = '✕'; b2.className = ''; } }, 3000); return; }
