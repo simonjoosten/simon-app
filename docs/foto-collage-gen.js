@@ -1,7 +1,7 @@
 // Fotocollage "Genereer"-tab: kies het aantal foto's, kies een van 50 stijlen, de app tekent direct een complete collage met lege vakjes.
 // Tik op een vakje en kies een foto (of meerdere tegelijk), verschuif/zoom/spiegel/draai/wissel per vakje, voeg tekst of emoji toe en bewaar of deel.
 // Alles gebeurt op je eigen toestel: de foto's worden nergens opgeslagen of geüpload.
-import { STYLES, STYLE_GROUPS, RATIOS, FILTERS, makeRng, shapePath, clipShape, shapeContains, drawBackground, drawDecor, applyFilter, bgSwatch } from './foto-collage-styles.js?v=1';
+import { STYLES, STYLE_GROUPS, RATIOS, FILTERS, makeRng, shapePath, clipShape, shapeContains, drawBackground, drawDecor, applyFilter, bgSwatch } from './foto-collage-styles.js?v=2';
 
 const COUNTS = [4, 6, 8, 10, 12, 15];
 const MAXSIDE = 2000, RAD = Math.PI / 180;
@@ -336,7 +336,7 @@ export function collageGenView(ctx) {
     if (!bl) { msg = 'Het plaatje maken lukte niet (te weinig geheugen?). Probeer de gewone kwaliteit of minder foto\'s.'; note(); return; }
     const ext = S.big ? 'jpg' : 'png', file = new File([bl], 'collage.' + ext, { type: bl.type });
     if (share && navigator.canShare && navigator.canShare({ files: [file] })) {
-      try { await navigator.share({ files: [file] }); msg = 'Gedeeld ✓'; note(); return; } catch (e) { if (e && e.name === 'AbortError') { msg = ''; note(); return; } }
+      try { await navigator.share({ files: [file], title: 'Mijn collage' }); msg = 'Gedeeld ✓'; note(); return; } catch (e) { if (e && e.name === 'AbortError') { msg = ''; note(); return; } }
     }
     const u = URL.createObjectURL(bl), a = document.createElement('a'); a.href = u; a.download = 'collage.' + ext; document.body.appendChild(a); a.click(); a.remove();
     later(() => URL.revokeObjectURL(u), 8000); msg = `Opgeslagen als collage.${ext} ✓ (kijk in je Downloads of Foto's).`; note();
@@ -497,4 +497,11 @@ export function collageGenView(ctx) {
     if (scratchCv) { scratchCv.width = 0; scratchCv = null; } if (hitCv) { hitCv.width = 0; hitCv = null; } made = null; canvas = null;
   });
   render();
+  // 3D-iconen voor de wereld-stijlen: laden op de achtergrond, daarna opnieuw tekenen
+  import('./foto-icons.js?v=1').then(async (m) => {
+    await m.preloadIcons([...new Set(m.worlds().flatMap((w) => w.deco))]);
+    if (!alive) return;
+    thumbCache.forEach((cv) => { cv.width = 0; }); thumbCache.clear();
+    if (S.step === 2 && view.querySelector('#cg-gal')) gallery(true); else if (canvas) paint();
+  }).catch(() => { /* zonder iconen blijft het decor leeg */ });
 }

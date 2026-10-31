@@ -1,55 +1,26 @@
-// Tijd: wekker, kookwekker, stopwatch en focus (pomodoro). Alles draait in de browser; geluid via WebAudio.
+// Tijd: klok, wekker, kookwekker, stopwatch, focus, interval, beurtklok, wereldklokken met globe, aftellen en klok leren.
+// Alles draait in de browser; geluid via WebAudio. Entry-bestand: tijdView(ctx). Pure functies: tijd-core.js.
+import { fmt, fmtCs, nextAlarmTime } from './tijd-core.js?v=1';
+import { icon, injectCss, topBar, bindGear, tabsHtml, playScene, GFX } from './tools-ui.js?v=1';
+export { fmt, fmtCs, nextAlarmTime };
 
 const DAGEN = [['Ma', 1], ['Di', 2], ['Wo', 3], ['Do', 4], ['Vr', 5], ['Za', 6], ['Zo', 0]]; // [label, Date.getDay()]
 const dagNaam = (d) => (DAGEN.find((x) => x[1] === d) || ['?'])[0];
 const pad = (n) => String(n).padStart(2, '0');
 
-// ---------- pure hulpfuncties (ook voor tests) ----------
-
-/** Formatteer milliseconden als mm:ss, of hh:mm:ss vanaf een uur. Rondt naar beneden af. */
-export function fmt(ms) {
-  const s = Math.max(0, Math.floor((Number(ms) || 0) / 1000));
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
-  return h > 0 ? `${pad(h)}:${pad(m)}:${pad(r)}` : `${pad(m)}:${pad(r)}`;
-}
-
-/** Stopwatch-formaat mm:ss.cc (honderdsten). */
-export function fmtCs(ms) {
-  const t = Math.max(0, Math.floor((Number(ms) || 0) / 10));
-  const cs = t % 100, s = Math.floor(t / 100);
-  const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), r = s % 60;
-  return `${h > 0 ? pad(h) + ':' : ''}${pad(m)}:${pad(r)}.${pad(cs)}`;
-}
-
-/**
- * Eerstvolgende afgaan van een wekker, strikt na nowDate. alarm = { time:'HH:MM', days:[0..6] } met 0 = zondag
- * (Date.getDay). Lege days = elke dag/eenmalig het eerstvolgende moment. Geeft Date of null bij ongeldige tijd.
- */
-export function nextAlarmTime(alarm, nowDate) {
-  const m = /^(\d{1,2}):(\d{2})$/.exec(String((alarm && alarm.time) || ''));
-  if (!m) return null;
-  const h = +m[1], mi = +m[2];
-  if (h > 23 || mi > 59) return null;
-  const days = Array.isArray(alarm.days) ? alarm.days.filter((d) => d >= 0 && d <= 6) : [];
-  const now = nowDate instanceof Date ? nowDate : new Date(nowDate);
-  for (let i = 0; i <= 7; i++) {
-    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, h, mi, 0, 0);
-    if (d.getTime() > now.getTime() && (!days.length || days.includes(d.getDay()))) return d;
-  }
-  return null;
-}
+// Pure hulpfuncties (fmt, fmtCs, nextAlarmTime) staan in tijd-core.js en blijven hier beschikbaar.
 
 // ---------- module ----------
 
 export function tijdView(ctx) {
-  const { view, esc, uid, addCleanup } = ctx;
+  const { view, esc, uid, db, addCleanup } = ctx;
   const K = (n) => `tijd:${uid}:${n}`;
   const load = (n, def) => { try { const v = JSON.parse(localStorage.getItem(K(n))); return v == null ? def : v; } catch { return def; } };
   const save = (n, v) => { try { localStorage.setItem(K(n), JSON.stringify(v)); } catch {} };
   const todayKey = () => { const d = new Date(); return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; };
   const newId = () => Math.random().toString(36).slice(2, 9);
 
-  let alive = true, tab = 'wekker';
+  let alive = true, tab = 'nu';
   const timeouts = new Set();
   const later = (fn, ms) => { const t = setTimeout(() => { timeouts.delete(t); if (alive) fn(); }, ms); timeouts.add(t); return t; };
 
@@ -72,7 +43,22 @@ export function tijdView(ctx) {
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.04); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
     o.start(t); o2.start(t); o.stop(t + dur + 0.05); o2.stop(t + dur + 0.05);
   }
-  const chime = (vol = 0.3) => { if (!ac || ac.state !== 'running') ensure(); if (!ac) return; [523.25, 659.25, 783.99].forEach((f, i) => note(f, i * 0.22, 1.1, vol)); };
+  // Losse piep (voor interval-timer en beurtklok)
+  function beep(freq = 800, dur = 0.15, vol = 0.25, type = 'square') {
+    ensure(); if (!ac) return;
+    const t = ac.currentTime, g = ac.createGain(), o = ac.createOscillator(); o.type = type; o.frequency.value = freq; o.connect(g); g.connect(master);
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.start(t); o.stop(t + dur + 0.05);
+  }
+  let geluid = load('geluid', 'klok');
+  const SOUNDS = [['klok', 'Klok'], ['bel', 'Bel'], ['piep', 'Piep'], ['melodie', 'Melodie']];
+  function playSound(kind, vol) {
+    ensure(); if (!ac) return;
+    if (kind === 'bel') { [880, 880, 1174.66, 880].forEach((f, i) => note(f, i * 0.35, 0.8, vol)); }
+    else if (kind === 'piep') { [0, 1, 2, 3].forEach((i) => setTimeout(() => beep(1000, 0.12, vol * 0.8), i * 200)); }
+    else if (kind === 'melodie') { [523.25, 587.33, 659.25, 783.99, 659.25, 783.99, 1046.5].forEach((f, i) => note(f, i * 0.2, 0.5, vol)); }
+    else [523.25, 659.25, 783.99].forEach((f, i) => note(f, i * 0.22, 1.1, vol));
+  }
+  const chime = (vol = 0.3) => { if (!ac || ac.state !== 'running') ensure(); if (!ac) return; playSound(geluid, vol); };
   const soft = (vol = 0.2) => { ensure(); if (!ac) return; note(659.25, 0, 0.9, vol); note(880, 0.25, 1.1, vol * 0.9); };
   const buzz = (p) => { try { navigator.vibrate && navigator.vibrate(p); } catch {} };
 
@@ -154,12 +140,12 @@ export function tijdView(ctx) {
 
   function renderWekker(body) {
     body.innerHTML = `
-      <div class="box"><b>Nieuwe wekker</b>
+      <div class="tu-card"><b>Nieuwe wekker</b>
         <div class="row wrap" style="margin-top:.4rem"><input type="time" id="w-time" value="${draft.time}" style="font-size:2rem;padding:.3rem .5rem;border-radius:12px"><input id="w-label" placeholder="Naam (bijv. Opstaan)" maxlength="40" value="${esc(draft.label)}" style="flex:1;min-width:8rem"></div>
         ${dayChips(draft.days, 'data-nd')}
         <div class="row wrap"><button id="w-add" class="pri">Wekker toevoegen</button><small>Geen dag gekozen = eenmalig</small></div></div>
-      ${snooze ? `<div class="box"><span class="chip">😴 Gesluimerd</span> <span id="w-snz"></span> <button id="w-snz-x">Annuleer</button></div>` : ''}
-      <div class="box"><b>Jouw wekkers</b>${wekkers.length ? '' : '<p><small>Nog geen wekkers.</small></p>'}
+      ${snooze ? `<div class="tu-card"><span class="chip">😴 Gesluimerd</span> <span id="w-snz"></span> <button id="w-snz-x">Annuleer</button></div>` : ''}
+      <div class="tu-card"><b>Jouw wekkers</b>${wekkers.length ? '' : '<p><small>Nog geen wekkers.</small></p>'}
         ${wekkers.map((a) => `<div data-w="${a.id}" style="border-top:1px solid var(--line,#ddd);padding:.6rem 0;${a.on ? '' : 'opacity:.6'}">
           <div class="row" style="justify-content:space-between;align-items:center">
             <div><div style="font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums;line-height:1">${esc(a.time)}</div><div>${esc(a.label || 'Wekker')}</div></div>
@@ -167,7 +153,10 @@ export function tijdView(ctx) {
           ${dayChips(a.days || [], `data-d="${a.id}"`)}
           <small>${daysText(a)} · <span data-nx="${a.id}">${esc(nextText(a))}</span></small></div>`).join('')}
       </div>
+      <div class="tu-card"><b>Wekkergeluid</b><div class="row wrap" style="margin-top:.4rem">${SOUNDS.map(([k, l]) => `<button data-snd="${k}" class="tu-big ${k === geluid ? 'pri' : ''}" style="min-height:48px">${l}</button>`).join('')}<button data-sndt class="tu-big" style="min-height:48px">Beluister</button></div></div>
       <p class="center"><small>De wekker werkt alleen als deze app open staat.</small></p>`;
+    body.querySelectorAll('[data-snd]').forEach((b) => b.onclick = () => { geluid = b.dataset.snd; save('geluid', geluid); unlock(); playSound(geluid, 0.3); renderTab(); });
+    body.querySelector('[data-sndt]').onclick = () => { unlock(); playSound(geluid, 0.3); };
     const q = (s) => body.querySelector(s);
     q('#w-time').onchange = (e) => { draft.time = e.target.value || draft.time; };
     q('#w-label').oninput = (e) => { draft.label = e.target.value; };
@@ -224,12 +213,13 @@ export function tijdView(ctx) {
   }
   function renderKook(body) {
     body.innerHTML = `
-      <div class="box"><b>Nieuwe kookwekker</b>
+      <div class="tu-card"><b>Nieuwe kookwekker</b>
         <input id="k-name" placeholder="Naam (bijv. Eieren)" maxlength="40" value="${esc(tName)}" style="width:100%;box-sizing:border-box;margin:.4rem 0">
-        <div class="row wrap">${[1, 3, 5, 10, 15, 30].map((m) => `<button data-q="${m}">${m} min</button>`).join('')}</div>
+        <div class="tu-grid" style="grid-template-columns:repeat(auto-fill,minmax(105px,1fr))">${[['egg', 'Ei zacht', 4], ['egg', 'Ei hard', 9], ['coffee', 'Thee', 3], ['pizza', 'Pizza', 12], ['carrot', 'Groente', 8], ['cake', 'Taart', 35], ['lightbulb', 'Tanden', 2], ['book', 'Huiswerk', 25]].map(([ic, n, m]) => `<button class="tu-tile" data-q="${m}" data-qn="${n}" style="min-height:92px;padding:.4rem">${icon(ic, { size: 40 })}<span style="font-size:.85rem">${n}</span><small>${m} min</small></button>`).join('')}</div>
+        <div class="row wrap" style="margin-top:.5rem">${[1, 3, 5, 10, 15, 30].map((m) => `<button data-q="${m}" class="tu-big" style="min-height:44px">${m} min</button>`).join('')}</div>
         <div class="row wrap" style="margin-top:.4rem"><input id="k-min" type="number" inputmode="decimal" min="0.1" step="any" placeholder="Eigen minuten" style="width:9rem"><button id="k-go" class="pri">Start</button></div></div>
       ${timers.length ? '' : '<p class="center"><small>Geen lopende timers. Kies hierboven een tijd.</small></p>'}
-      ${timers.map((t) => `<div class="box" data-t="${t.id}" style="${t.done ? 'border-color:var(--accent,#6366f1)' : ''}">
+      ${timers.map((t) => `<div class="tu-card" data-t="${t.id}" style="${t.done ? 'border-color:var(--accent,#6366f1)' : ''}">
         <div class="row" style="justify-content:space-between"><b>${esc(t.name || 'Timer')}</b><small>${fmt(t.total)}</small></div>
         <div class="center" data-tl="${t.id}" style="font-size:3rem;font-weight:700;font-variant-numeric:tabular-nums;margin:.2rem 0">${fmt(tLeft(t, Date.now()) + (t.end ? 999 : 0))}</div>
         <div style="height:8px;background:var(--line,#ddd);border-radius:6px;overflow:hidden"><div data-tb="${t.id}" style="height:100%;background:var(--accent,#6366f1);width:0"></div></div>
@@ -239,7 +229,7 @@ export function tijdView(ctx) {
     const q = (s) => body.querySelector(s);
     const name = () => q('#k-name').value.trim();
     q('#k-name').oninput = (e) => { tName = e.target.value; };
-    body.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { addTimer(+b.dataset.q, name()); tName = ''; renderTab(); });
+    body.querySelectorAll('[data-q]').forEach((b) => b.onclick = () => { addTimer(+b.dataset.q, name() || b.dataset.qn || ''); tName = ''; renderTab(); });
     q('#k-go').onclick = () => { const v = parseFloat(String(q('#k-min').value).replace(',', '.')); if (v > 0 && v <= 1440) { addTimer(v, name()); tName = ''; renderTab(); } else q('#k-min').focus(); };
     const find = (id) => timers.find((t) => t.id === id);
     body.querySelectorAll('[data-pa]').forEach((b) => b.onclick = () => { const t = find(b.dataset.pa); if (t && t.end) { t.left = Math.max(0, t.end - Date.now()); t.end = null; saveTimers(); renderTab(); } });
@@ -270,10 +260,10 @@ export function tijdView(ctx) {
         return `<div class="row" style="justify-content:space-between;border-top:1px solid var(--line,#ddd);padding:.4rem 0;font-variant-numeric:tabular-nums"><span>Ronde ${i + 1}</span><span>${tag}</span><b>${fmtCs(p)}</b><small>${fmtCs(sw.laps[i])}</small></div>`;
       }).join('');
     };
-    body.innerHTML = `<div class="box center">
+    body.innerHTML = `<div class="tu-card center">
       <div id="s-t" style="font-size:3.6rem;font-weight:700;font-variant-numeric:tabular-nums;margin:.4rem 0">${fmtCs(swElapsed())}</div>
       <div class="row wrap" style="justify-content:center"><button id="s-go" class="pri" style="min-width:6rem">${sw.running ? '⏸ Stop' : sw.acc ? '▶ Verder' : '▶ Start'}</button><button id="s-lap" ${sw.running ? '' : 'disabled'}>⚑ Ronde</button><button id="s-rs" ${sw.acc || sw.running ? '' : 'disabled'}>↺ Reset</button></div></div>
-      <div class="box"><b>Rondetijden</b><div id="s-laps">${lapHtml()}</div></div>`;
+      <div class="tu-card"><b>Rondetijden</b><div id="s-laps">${lapHtml()}</div></div>`;
     const q = (s) => body.querySelector(s);
     q('#s-go').onclick = () => { if (sw.running) { sw.acc += performance.now() - sw.start; sw.running = false; } else { sw.start = performance.now(); sw.running = true; } renderTab(); };
     q('#s-lap').onclick = () => { if (!sw.running) return; sw.laps.push(swElapsed()); q('#s-laps').innerHTML = lapHtml(); };
@@ -291,10 +281,14 @@ export function tijdView(ctx) {
   const modeMs = (m) => Math.max(1, cfg[m]) * 60000;
   const foLeft = (now) => fo.end ? Math.max(0, fo.end - now) : fo.left;
   function teller() { const t = load('focus-teller', {}); return t && t.dag === todayKey() ? t.n || 0 : 0; }
-  const bumpTeller = () => save('focus-teller', { dag: todayKey(), n: teller() + 1 });
+  const bumpTeller = () => {
+    save('focus-teller', { dag: todayKey(), n: teller() + 1 });
+    const h = load('focus-min', {}); h[todayKey()] = (h[todayKey()] || 0) + cfg.f; const keys = Object.keys(h).sort(); while (keys.length > 14) delete h[keys.shift()]; save('focus-min', h);
+  };
+  const week = () => { const h = load('focus-min', {}), out = []; for (let i = 6; i >= 0; i--) { const d = new Date(); d.setDate(d.getDate() - i); const k = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`; out.push([['zo', 'ma', 'di', 'wo', 'do', 'vr', 'za'][d.getDay()], h[k] || 0]); } return out; };
   function checkFocus(now) {
     if (!fo.end || fo.end > now) return;
-    if (fo.mode === 'f') { bumpTeller(); fo.cycle++; fo.mode = fo.cycle % 4 === 0 ? 'l' : 's'; } else fo.mode = 'f';
+    if (fo.mode === 'f') { bumpTeller(); fo.cycle++; fo.mode = fo.cycle % 4 === 0 ? 'l' : 's'; if (fo.cycle % 4 === 0) playScene(document.body, 'victory', { title: 'Vier rondes gehaald!', sub: 'Tijd voor een lange pauze' }); } else fo.mode = 'f';
     fo.end = null; fo.left = modeMs(fo.mode);
     soft(0.25); buzz([200, 100, 200]);
     if (tab === 'focus') renderTab();
@@ -302,7 +296,7 @@ export function tijdView(ctx) {
   const R = 90, C = 2 * Math.PI * R;
   function renderFocus(body) {
     const now = Date.now(), colour = fo.mode === 'f' ? 'var(--accent,#6366f1)' : '#34d399';
-    body.innerHTML = `<div class="box center">
+    body.innerHTML = `<div class="tu-card center">
       <span class="chip">${modeLabel[fo.mode]}</span>
       <div style="position:relative;width:240px;max-width:80%;margin:.6rem auto">
         <svg viewBox="0 0 200 200" width="100%" aria-hidden="true"><circle cx="100" cy="100" r="${R}" fill="none" stroke="var(--line,#ddd)" stroke-width="12"/>
@@ -311,7 +305,8 @@ export function tijdView(ctx) {
       <div class="row wrap" style="justify-content:center"><button id="f-go" class="pri" style="min-width:7rem">${fo.end ? '⏸ Pauze' : '▶ Start'}</button><button id="f-skip">⏭ Sla over</button><button id="f-rs">↺ Reset</button></div>
       <p>Vandaag afgerond: <b id="f-n">${teller()}</b> ${teller() === 1 ? 'ronde' : 'rondes'}</p>
       <small>Ronde ${(fo.cycle % 4) + (fo.mode === 'f' ? 1 : 0)} van 4 · na 4 rondes volgt een lange pauze</small></div>
-      <div class="box"><b>Duur (minuten)</b>
+      <div class="tu-card"><b>Laatste 7 dagen (minuten focus)</b><div style="display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:.5rem">${(() => { const w = week(), mx = Math.max(30, ...w.map((x) => x[1])); return w.map(([d, m]) => `<div style="flex:1;text-align:center"><div style="height:${Math.round(70 * m / mx)}px;min-height:2px;background:var(--accent);border-radius:6px 6px 0 0"></div><small>${d}</small></div>`).join(''); })()}</div></div>
+      <div class="tu-card"><b>Duur (minuten)</b>
         ${[['f', 'Focus'], ['s', 'Korte pauze'], ['l', 'Lange pauze']].map(([k, l]) => `<div class="row" style="justify-content:space-between;align-items:center;margin:.3rem 0"><span>${l}</span>
           <span class="row" style="align-items:center"><button data-st="${k}" data-dl="-1" aria-label="Minder">−</button><b style="min-width:2.2rem;text-align:center">${cfg[k]}</b><button data-st="${k}" data-dl="1" aria-label="Meer">+</button></span></div>`).join('')}</div>`;
     const q = (s) => body.querySelector(s);
@@ -333,20 +328,32 @@ export function tijdView(ctx) {
   // =====================================================================
   // schil
   // =====================================================================
-  const TABS = [['wekker', '⏰ Wekker'], ['kook', '🍳 Kookwekker'], ['stop', '⏱ Stopwatch'], ['focus', '🎯 Focus']];
-  view.innerHTML = `<div class="row wrap" id="tj-tabs" style="margin-bottom:.4rem"></div><div id="tj-body"></div>`;
+  const TABS = [['nu', 'Klok', 'hourglass'], ['wekker', 'Wekker', 'bell'], ['kook', 'Kookwekker', 'egg'], ['stop', 'Stopwatch', 'bolt'], ['focus', 'Focus', 'target'], ['interval', 'Interval', 'flame'], ['beurt', 'Beurtklok', 'dice'], ['wereld', 'Wereldklok', 'earth'], ['aftellen', 'Aftellen', 'gift'], ['leren', 'Klok leren', 'book']];
+  injectCss(); injectCss('tj-css', '.tj button{min-height:calc(44px * var(--gfx-scale,1))}.tj input[type=time],.tj input[type=date],.tj input[type=number]{min-height:calc(44px * var(--gfx-scale,1))}');
+  view.innerHTML = `<div class="tu tj">${topBar('Tijd', 'hourglass')}<div id="tj-tabs"></div><div id="tj-body"></div></div>`;
+  bindGear(view, 'Instellingen');
+  let tabCleanups = [], renderSeq = 0;
+  const api = { get body() { return view.querySelector('#tj-body'); }, esc, load, save, uid, db, tickFns, unlock, beep, chime, soft, buzz, later, newId, track: (f) => tabCleanups.push(f), rerender: () => renderTab() };
+  const REMOTE = { nu: ['./tijd-clock.js?v=1', 'nowTab'], leren: ['./tijd-clock.js?v=1', 'learnTab'], wereld: ['./tijd-world.js?v=1', 'worldTab'], aftellen: ['./tijd-extra.js?v=1', 'countTab'], interval: ['./tijd-extra.js?v=1', 'intervalTab'], beurt: ['./tijd-extra.js?v=1', 'turnTab'] };
   function renderTab() {
-    tickFns.length = 0;
-    view.querySelector('#tj-tabs').innerHTML = TABS.map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'pri' : ''}" style="flex:1;white-space:nowrap">${l}</button>`).join('');
-    view.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; unlock(); renderTab(); });
+    tickFns.length = 0; tabCleanups.splice(0).forEach((f) => { try { f(); } catch {} }); const seq = ++renderSeq;
+    view.querySelector('#tj-tabs').innerHTML = tabsHtml(TABS, tab);
+    view.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; unlock(); renderTab(); const sc = view.querySelector('.tu-tab.on'); try { sc && sc.scrollIntoView && sc.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch {} });
     const body = view.querySelector('#tj-body');
+    if (REMOTE[tab]) {
+      body.innerHTML = '<div class="tu-card center"><small>Laden…</small></div>';
+      const [file, fn] = REMOTE[tab];
+      import(file).then((m) => { if (!alive || seq !== renderSeq) return; const b2 = view.querySelector('#tj-body'); b2.innerHTML = ''; m[fn]({ ...api, body: b2 }); const now = Date.now(); tickFns.forEach((f) => { try { f(now); } catch {} }); })
+        .catch((e) => { if (alive && seq === renderSeq) body.innerHTML = `<div class="tu-card"><span class="err">Dit onderdeel kon niet laden: ${esc(e.message)}</span></div>`; });
+      return;
+    }
     ({ wekker: renderWekker, kook: renderKook, stop: renderStop, focus: renderFocus })[tab](body);
     const now = Date.now(); tickFns.forEach((f) => { try { f(now); } catch {} });
   }
   renderTab();
 
   addCleanup(() => {
-    alive = false; clearInterval(iv);
+    alive = false; clearInterval(iv); tabCleanups.splice(0).forEach((f) => { try { f(); } catch {} });
     timeouts.forEach(clearTimeout); timeouts.clear();
     if (ringing) { clearInterval(ringing.loop); try { ringing.el.remove(); } catch {} ringing = null; }
     view.removeEventListener('pointerdown', unlock, true); view.removeEventListener('keydown', unlock, true);

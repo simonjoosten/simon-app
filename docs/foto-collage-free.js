@@ -493,7 +493,8 @@ export function collageFreeView(ctx) {
       } else if (o.type === 'text') drawText(c, o, k);
       else if (o.type === 'sticker') {
         setShadow(c, o, k);
-        if (o.art) drawArt(c, o.art, o.col, o.w, o.h);
+        if (o.ic) { const f = globalThis.__fotoIcon; const sz = Math.min(o.w, o.h); if (f) f(c, o.ic, 0, 0, sz, {}); }
+        else if (o.art) drawArt(c, o.art, o.col, o.w, o.h);
         else { c.font = `${Math.round(o.h * .8)}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = '#000'; c.fillText(o.e, 0, o.h * .04); }
       } else if (o.type === 'line') drawLine(c, o, k);
     }
@@ -660,7 +661,7 @@ export function collageFreeView(ctx) {
   const typeLabel = { photo: 'Foto', shape: 'Vorm', text: 'Tekst', sticker: 'Sticker', line: 'Lijn', draw: 'Tekening' };
   function objName(o) {
     if (o.type === 'text') return '“' + (o.text.split('\n')[0] || '').slice(0, 18) + '”';
-    if (o.type === 'sticker') { const a = ARTS.filter((x) => x[0] === o.art)[0]; return 'Sticker ' + (a ? a[1] : o.e); }
+    if (o.type === 'sticker') { const a = ARTS.filter((x) => x[0] === o.art)[0]; return 'Sticker ' + (o.ic ? o.ic : a ? a[1] : o.e); }
     if (o.type === 'shape') { const m = MASKS.filter((x) => x[0] === o.shape)[0]; return m ? m[1] : 'Vorm'; }
     if (o.type === 'line') return o.arrow === 'none' ? 'Lijn' : 'Pijl';
     return typeLabel[o.type] || 'Laag';
@@ -673,6 +674,19 @@ export function collageFreeView(ctx) {
     const o = addObj(baseObj('text', p)); if (!o) return; layoutText(o); paint(); commit(); openProps(true);
   }
   function addEmoji(e) { const o = addObj(baseObj('sticker', { e, w: 230, h: 230 })); if (!o) return; paint(); commit(); refresh(); }
+  let ICO = null, icoCat = 0;
+  function addIcon(n) {
+    const o = addObj(baseObj('sticker', { ic: n, w: 260, h: 260 })); if (!o) return; paint(); commit(); refresh();
+    if (ICO) ICO.preloadIcons([n]).then(() => { if (alive) paint(); });
+  }
+  function applyWorld(w) { // wereld als achtergrond + kader van 3D-iconen
+    S.bg.t = 'grad'; S.bg.c1 = w.bg[0]; S.bg.c2 = w.bg[w.bg.length - 1]; S.bg.ang = 170;
+    const spots = ICO ? ICO.edgeSpots(110, 110, CW - 110, CH - 110, Math.max(220, (CW + CH) / 7)) : [];
+    S.objs = S.objs.filter((o) => !o.worldDeco);
+    spots.slice(0, 10).forEach((pt, i) => { const o = baseObj('sticker', { ic: w.deco[i % w.deco.length], w: 170, h: 170, x: pt.x, y: pt.y, rot: ((i % 5) - 2) * .12, worldDeco: true, fixedPos: true }); if (S.objs.length < MAXOBJ) S.objs.push(o); });
+    if (ICO) ICO.preloadIcons(w.deco).then(() => { if (alive) paint(); });
+    paint(); commit(); refresh(); note(w.name + ' toegepast.');
+  }
   function addArt(key) {
     const a = ARTS.filter((x) => x[0] === key)[0], w = a[3] >= 1 ? 300 : 260; const o = addObj(baseObj('sticker', { art: key, col: a[2], w: w * (a[3] > 1.5 ? 1.2 : 1), h: w * (a[3] > 1.5 ? 1.2 : 1) / a[3] })); if (!o) return;
     paint(); commit(); refresh();
@@ -1118,6 +1132,12 @@ export function collageFreeView(ctx) {
       el('button', { class: 'cf-chip', onclick: () => addText({ text: 'Mooie bocht', font: 'serif', size: 120, curve: 60, col: '#111827', bold: false, it: true }) }, 'Gebogen')));
     p.appendChild(el('div', { class: 'cf-h', 'data-sec': 'stickers' }, '😀 Emoji-stickers'));
     p.appendChild(el('div', { class: 'cf-grid' }, EMOJI.map((e) => el('button', { class: 'cf-gi', onclick: () => addEmoji(e), 'aria-label': 'Sticker ' + e }, e))));
+    p.appendChild(el('div', { class: 'cf-h', 'data-sec': 'stk3d' }, '🧊 3D-stickers'));
+    if (ICO) {
+      const cs = ICO.STICKER_CATS; icoCat = Math.min(icoCat, cs.length - 1);
+      p.appendChild(el('div', { class: 'cf-chips' }, cs.map((c, i) => el('button', { class: 'cf-chip' + (i === icoCat ? ' on' : ''), onclick: () => { icoCat = i; renderPanel(); } }, c.name))));
+      p.appendChild(el('div', { class: 'cf-grid' }, cs[icoCat].items.map((n) => { const src = ICO.iconSrc(n); return el('button', { class: 'cf-gi', title: n, 'aria-label': n, onclick: () => addIcon(n) }, src ? el('img', { src, alt: n, style: 'width:100%;height:100%;object-fit:contain' }) : ICO.iconEmoji(n)); })));
+    } else p.appendChild(el('div', { class: 'cf-hint' }, '3D-stickers laden…'));
     p.appendChild(el('div', { class: 'cf-h' }, '🎨 Getekende stickers'));
     p.appendChild(el('div', { class: 'cf-grid' }, ARTS.map((a) => el('button', { class: 'cf-gi', title: a[1], 'aria-label': a[1], onclick: () => addArt(a[0]) }, el('img', { src: icon('art', a[0]), alt: a[1] })))));
     p.appendChild(el('div', { class: 'cf-h' }, '➖ Lijnen en pijlen'));
@@ -1259,6 +1279,10 @@ export function collageFreeView(ctx) {
     }
     p.appendChild(el('div', { class: 'cf-h', 'data-sec': 'bg' }, 'Achtergrond'));
     const b = S.bg;
+    if (ICO) {
+      p.appendChild(el('div', { class: 'cf-hint' }, 'Wereld-thema: kleurverloop en 3D-kader in één tik'));
+      p.appendChild(el('div', { class: 'cf-chips' }, ICO.worlds().map((w) => el('button', { class: 'cf-chip', onclick: () => applyWorld(w) }, w.emoji + ' ' + w.name))));
+    }
     p.appendChild(chipRow([['color', 'Kleur'], ['grad', 'Verloop'], ['pat', 'Patroon'], ['photo', 'Foto']], b.t, (k) => { b.t = k; paint(); commit(); renderPanel(); }));
     if (b.t === 'color') p.appendChild(colorPick('Achtergrondkleur', () => b.c1, (c) => { b.c1 = c; }));
     else if (b.t === 'grad') {
@@ -1496,4 +1520,8 @@ export function collageFreeView(ctx) {
     if (sceneCv) freeCanvas(sceneCv); if (ovCv) freeCanvas(ovCv); P.clear();
   });
   build();
+  import('./foto-icons.js?v=1').then(async (m) => {
+    ICO = m; await m.preloadIcons(m.worlds().flatMap((w) => w.deco));
+    if (alive) { try { renderPanel(); paint(); } catch (e) { /* paneel nog niet klaar */ } }
+  }).catch(() => { /* zonder 3D-stickers kan alles nog steeds */ });
 }

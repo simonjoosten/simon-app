@@ -12,6 +12,8 @@
 // decor = tekenopdrachten in "eenheidsruimte": x in 0..ratio, y in 0..1, alle maten in eenheden van de canvashoogte.
 //   item.over = true tekent boven de foto's; drawDecor(ctx, decor, w, h, over).
 
+import { makeExtraDefs, EXTRA_GROUPS } from './foto-collage-styles-extra.js?v=1';
+
 const TAU = Math.PI * 2, RAD = Math.PI / 180;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
@@ -387,6 +389,7 @@ const DECOR = {
     const rg = makeRng(d.seed || 1); c.fillStyle = d.color || '#9ca3af'; al(c, d); const lh = d.h / d.rows;
     for (let i = 0; i < d.rows; i++) { const w = d.w * (i === d.rows - 1 ? .35 + rg() * .4 : .88 + rg() * .12); c.beginPath(); rr(c, d.x * u, (d.y + i * lh + lh * .25) * u, w * u, lh * .45 * u, lh * .2 * u); c.fill(); }
   },
+  icon(c, d, u) { const f = globalThis.__fotoIcon; if (!f) return; al(c, d); f(c, d.n, d.x * u, d.y * u, d.s * u, { rot: d.rot || 0, shadow: true }); },
   zigzag(c, d, u) {
     c.beginPath(); for (let i = 0; i <= d.n; i++) { const x = (d.x + d.w * i / d.n) * u, y = (d.y + (i % 2 ? d.amp : -d.amp)) * u; if (i) c.lineTo(x, y); else c.moveTo(x, y); }
     c.strokeStyle = d.color || '#22d3ee'; c.lineWidth = (d.lw || .006) * u; c.lineJoin = 'round'; c.lineCap = 'round'; if (d.glow) { c.shadowColor = d.color; c.shadowBlur = .02 * u; } c.stroke();
@@ -889,6 +892,8 @@ def('Instagram-feed', '3 kolommen met profiel erboven', G[4], (n, W, H, rng, o) 
   return { bgs: solids(rng, ['#ffffff', '#fafafa', '#f3f4f6', '#fff7ed']), decor, slots };
 });
 
+for (const [nm, ds, gr, fn, fl] of makeExtraDefs({ mkSlot, inset, solids, rnd, grad, gridCells, rowsFill, T, RECT, clamp })) def(nm, ds, gr, fn, fl);
+
 export const STYLES = DEFS.map((d, i) => {
   const id = d.name.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
   return {
@@ -906,7 +911,7 @@ export const STYLES = DEFS.map((d, i) => {
     },
   };
 });
-export const STYLE_GROUPS = G;
+export const STYLE_GROUPS = G.concat(EXTRA_GROUPS);
 export const RATIOS = [['1:1', 1], ['4:5', .8], ['9:16', 9 / 16], ['3:2', 1.5]];
 // kleur om een achtergrond-staal mee te tonen
 export const bgSwatch = (bg) => (!bg ? '#fff' : bg.type === 'gradient' ? (bg.from || (bg.stops && bg.stops[0][1]) || '#fff') : bg.color || '#fff');

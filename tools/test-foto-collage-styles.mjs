@@ -9,7 +9,7 @@ import { pathToFileURL, fileURLToPath } from 'node:url';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fcs-'));
 fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
-['foto-collage-styles.js', 'foto-collage-gen.js'].forEach((f) => fs.copyFileSync(path.join(here, '..', 'docs', f), path.join(tmp, f)));
+['foto-collage-styles.js', 'foto-collage-styles-extra.js', 'foto-collage-gen.js'].forEach((f) => fs.copyFileSync(path.join(here, '..', 'docs', f), path.join(tmp, f)));
 const M = await import(pathToFileURL(path.join(tmp, 'foto-collage-styles.js')).href);
 const GEN = await import(pathToFileURL(path.join(tmp, 'foto-collage-gen.js')).href);
 const { STYLES, makeRng, shapePath, clipShape, shapeContains, drawBackground, drawDecor, applyFilter, RATIOS } = M;
@@ -23,12 +23,12 @@ function fakeCtx() {
   return new Proxy(target, { get: (t, k) => (k in t ? t[k] : () => {}), set: () => true });
 }
 
-ok(STYLES.length === 50, 'precies 50 stijlen: ' + STYLES.length);
+ok(STYLES.length === 80, 'precies 80 stijlen: ' + STYLES.length);
 const names = ['Strak raster', 'Brede witte rand', 'Geen ruimte', 'Metselwerk', 'Mozaïek', 'Eén grote foto met kleintjes', 'Filmstrip', 'Contactvel met nummertjes', 'Plakboek', 'Polaroid-stapel', 'Waaier', 'Verspreid op tafel', 'Prikbord met punaises', 'Foto\'s met washi-tape', 'Stapel met bovenste foto groot', 'Puzzelstukjes'];
 names.forEach((nm, i) => ok(STYLES[i].name === nm, `stijl ${i + 1} heet ${nm}, niet ${STYLES[i].name}`));
-ok(new Set(STYLES.map((s) => s.id)).size === 50, 'ids uniek');
+ok(new Set(STYLES.map((s) => s.id)).size === 80, 'ids uniek');
 const groups = {}; STYLES.forEach((s) => { groups[s.group] = (groups[s.group] || 0) + 1; });
-ok(JSON.stringify(Object.values(groups)) === JSON.stringify([8, 8, 7, 15, 12]), 'groepsgroottes ' + JSON.stringify(groups));
+ok(JSON.stringify(Object.values(groups)) === JSON.stringify([8, 8, 7, 15, 12, 18, 12]), 'groepsgroottes ' + JSON.stringify(groups));
 
 const NS = [4, 6, 8, 10, 12, 15], EPS = 0.004;
 const finite = (o) => JSON.stringify(o, (k, v) => (typeof v === 'number' && !Number.isFinite(v) ? '__NaN__' : v)).indexOf('__NaN__') < 0;
@@ -92,7 +92,7 @@ function made0(st) { return st.make(6, 1, makeRng(1), {}).slots.length; }
 {
   let same = 0, diff = 0;
   for (const st of STYLES) { const a = JSON.stringify(st.make(8, 1, makeRng(5), {})), b = JSON.stringify(st.make(8, 1, makeRng(5), {})), c = JSON.stringify(st.make(8, 1, makeRng(6), {})); ok(a === b, st.name + ': niet deterministisch'); if (a !== c) diff++; else same++; }
-  console.log(`seed-variatie: ${diff} van 50 stijlen veranderen met een andere seed`);
+  console.log(`seed-variatie: ${diff} van 80 stijlen veranderen met een andere seed`);
 }
 // de ruimte-factor werkt
 for (const st of STYLES) for (const gap of [0, 2]) { const m = st.make(6, 0.8, makeRng(2), { gap }); ok(finite(m) && m.slots.length >= 6, `${st.name} gap=${gap}`); }

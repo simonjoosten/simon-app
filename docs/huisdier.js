@@ -5,6 +5,7 @@
 // huisdier-extra.js (Steun, Uitlaten, Camera), huisdier-koken.js, huisdier-social.js (vrienden, cadeaus, evenement, hulp).
 import { doc, getDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import { MORE_FOODS, MORE_TOYS, extendRooms, overlaySpots, seasonOf, eventsOn, cleanClaims, claimable, addClaim, eventKey } from './huisdier-more.js?v=1';
 
 /* =====================================================================
    1. DATA
@@ -108,6 +109,7 @@ const FOODS = [
   { id: 'friet', e: '🍟', n: 'Kaasfriet', p: 0, sv: 11, f: [32, 18, 0, -4], dish: 1 },
   { id: 'fruittaart', e: '🥧', n: 'Fruittaartje', p: 0, sv: 14, f: [26, 28, 6, -2], dish: 1 },
 ];
+for (const f of MORE_FOODS) if (!FOODS.some((x) => x.id === f.id)) FOODS.push(f);   // +14 etenswaren (huisdier-more.js)
 const FOOD = Object.fromEntries(FOODS.map((i) => [i.id, i]));
 const RECIPES = {
   'aardappel+wortel': 'stoof', 'appel+honing': 'honingappel', 'aardbei+melk': 'shake', 'banaan+melk': 'bananashake',
@@ -242,6 +244,7 @@ const ACH = [
 function c(s, k) { return (s.st && s.st[k]) || 0; }
 
 const TOYS = [['bal', '⚽', 'Bal'], ['teddy', '🧸', 'Teddy'], ['vlieger', '🪁', 'Vlieger'], ['ballon', '🎈', 'Ballon'], ['puzzel', '🧩', 'Puzzel']];
+for (const t of MORE_TOYS) TOYS.push([t[0], t[1], t[2]]);
 const GIFT_COST = { food: 5, toy: 8, hug: 0 };
 const GAME_DAY_CAP = 60;   // munten per dag uit spelletjes
 const GAME_MAX = 15;       // munten per spel
@@ -601,6 +604,7 @@ const CSS = `
 .hd-roomsvg{position:absolute;inset:0}.hd-roomsvg svg{display:block;width:100%;height:100%}
 .hd-spot{position:absolute;transform:translate(-50%,-100%);width:15%;aspect-ratio:1/1;padding:2px;box-sizing:border-box;border:2px dashed rgba(90,70,120,.55);border-radius:12px;background:rgba(255,255,255,.45);font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;color:rgba(90,70,120,.85);z-index:3}
 .hd-spot svg{width:100%;height:100%;display:block}
+.hd-xf{position:absolute;transform:translate(-50%,-100%);pointer-events:none;z-index:1}.hd-xf svg{display:block;width:100%;height:auto;overflow:visible}
 .hd-walk{--pw:38%;position:absolute;width:var(--pw);aspect-ratio:1/1;left:calc(50% - var(--pw) / 2);top:calc(var(--fy,78) * 1%);margin-top:calc(var(--pw) * -0.925);animation:hd-walk 26s ease-in-out infinite;z-index:2;cursor:pointer}
 .hd-walk.hd-still{animation:none}
 .hd-flip{width:100%;height:100%;animation:hd-flip 26s steps(1) infinite}
@@ -795,6 +799,7 @@ export async function huisdierView(ctx) {
   let tab = 'home', sub = '', edit = false, shopTab = 'eten', ftab = 'vrienden', rankBy = 'age', room = 'woon';
   let gm = null, gmErr = '', soc = null, socErr = '', ev = null, away = null, loadErr = '';
   let ar = null, snd = null, ex = null, kk = null, extraErr = '', kookErr = '';   // optionele modules
+  let gfxm = null, g2 = null, e3d = null;   // huisdier-gfx.js (3D-iconen, scènes, ⚙) en huisdier-minigames.js: optioneel
   let saveT = null, dirty = false, lastDecay = Date.now(), wasSleep = false, wasNight = false, hatching = false, lastEv = 0, lastHelp = 0;
   let sayText = '', sayUntil = 0, phrase = '', phraseAt = 0, phraseMood = '', petKey = '', checking = false, loveUntil = 0;
   let toastQ = [], toastBusy = false, game = null;
@@ -943,11 +948,13 @@ export async function huisdierView(ctx) {
     if (ups.length) {
       sfx('level');
       const [lv, r] = ups[ups.length - 1];
+      playScene('levelup', `Niveau ${lv}!`, `${S.name} is gegroeid`);
       const un = ups.flatMap(([l]) => unlocksAt(l));
       modal(`${confetti()}<div style="font-size:48px">🌟</div><h3>Niveau ${lv}!</h3><p>${esc(S.name)} is gegroeid. Je krijgt <b>${ups.reduce((a, u) => a + u[1], 0)} 🪙</b>${ups.length > 1 ? ' (alle niveaus samen)' : ` (${r})`}.</p>${un.length ? `<p>Nieuw in de winkel: ${un.slice(0, 14).join(' ')}</p>` : ''}<button class="pri" data-do="close">Fijn!</button>`);
     }
     checkAch();
   }
+  function playScene(id, title, sub) { if (!gfxm) return; try { gfxm.playScene(document.body, id, { title, sub }); } catch (e) { console.error(e); } }
   function bump(kind, n = 1) {
     S.st = S.st || {}; S.st[kind] = (S.st[kind] || 0) + n;
     for (const q of S.ql) if (QUEST_BY[q.i] && QUEST_BY[q.i].k === kind && !q.d) q.p = Math.min(q.t, (q.p || 0) + n);
@@ -981,7 +988,7 @@ export async function huisdierView(ctx) {
     const t = $('#hd-top'); if (!t) return;
     if (!S) { t.innerHTML = ''; t.dataset.h = ''; return; }
     const L = levelOf(S.xp);
-    const html = `<div class="hd-who"><b>${esc(S.name)} <small>· niveau ${L.lv}</small></b><div class="hd-xp"><i style="width:${Math.round(L.frac * 100)}%"></i></div></div><span class="chip">🪙 ${S.coins}</span><button data-do="snd" title="Geluid" aria-label="Geluid aan of uit">${pref.on ? '🔊' : '🔇'}</button>`;
+    const html = `<div class="hd-who"><b>${esc(S.name)} <small>· niveau ${L.lv}</small></b><div class="hd-xp"><i style="width:${Math.round(L.frac * 100)}%"></i></div></div><span class="chip">🪙 ${S.coins}</span><button data-do="snd" title="Geluid" aria-label="Geluid aan of uit">${pref.on ? '🔊' : '🔇'}</button><button data-do="gear" class="hd-gear" title="Beeld en kwaliteit" aria-label="Beeld en kwaliteit instellen">⚙️</button>`;
     if (t.dataset.h !== html) { t.dataset.h = html; t.innerHTML = html; }
   }
   function paintNav() {
@@ -996,8 +1003,19 @@ export async function huisdierView(ctx) {
   }
   function paintBanner() {
     const b = $('#hd-banner'); if (!b) return;
-    if (ev && ev.until > Date.now()) b.innerHTML = `<div class="hd-banner">🎉 <b>${esc(ev.title)}</b>: munten ×${Number(ev.mult) || 1} tot ${new Date(ev.until).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}</div>`;
-    else b.innerHTML = '';
+    let html = '';
+    if (ev && ev.until > Date.now()) html += `<div class="hd-banner">🎉 <b>${esc(ev.title)}</b>: munten ×${Number(ev.mult) || 1} tot ${new Date(ev.until).toLocaleDateString('nl-NL', { day: 'numeric', month: 'long' })}</div>`;
+    html += specialHTML();
+    if (b.dataset.h !== html) { b.dataset.h = html; b.innerHTML = html; }
+  }
+  // feestdagen en verjaardag: elk jaar eenmalig een bonus ophalen (bewaard in localStorage, de save zelf blijft ongewijzigd)
+  const claimKey = () => `huisdier:evclaim:${me.uid}`;
+  const getClaims = () => { try { return cleanClaims(JSON.parse(localStorage.getItem(claimKey()) || '[]')); } catch { return []; } };
+  const todayEvents = () => (S && S.h ? eventsOn(new Date(), S.born) : []);
+  function specialHTML() {
+    const evs = todayEvents(); if (!evs.length) return '';
+    const open = claimable(evs, getClaims(), new Date()).map((e) => e.id);
+    return evs.map((e) => `<div class="hd-ev">${gfxm ? gfxm.iconHtml(e.ic, 28) : e.e} <b>${esc(e.n)}${e.age ? ` · ${e.age} jaar!` : ''}</b> <small>${esc(e.say)}</small>${open.includes(e.id) ? ` <button data-do="evclaim" data-v="${e.id}" class="pri">🎁 +${e.bonus} 🪙</button>` : ' <small>✓ opgehaald</small>'}</div>`).join('');
   }
   const paintChrome = () => { paintTop(); paintNav(); paintBanner(); };
 
@@ -1128,6 +1146,15 @@ export async function huisdierView(ctx) {
       <button data-do="awayok" style="padding:5px 12px">Ok, bedankt</button></div>`;
   }
 
+  // meubels uit huisdier-more.js (3D-iconen) staan als plaatje boven de kamer-SVG, die ze zelf niet kent
+  function extraFurnHTML(roomId) {
+    if (!ar || !ar.SLOT_POS) return '';
+    const spots = overlaySpots(fpOf(roomId), ar.SLOT_POS[ROOM[roomId].a], ROOM[roomId].a);
+    return spots.map((p) => `<div class="hd-xf" style="left:${p.x}%;top:${p.y}%;width:${p.w}%">${furnSvg(p.id, 0)}</div>`).join('');
+  }
+  const worldKey = () => `huisdier:world:${me.uid}`;
+  let hworld = ''; try { hworld = localStorage.getItem(`huisdier:world:${me.uid}`) || ''; } catch { /* geen thema */ }
+  const seasonHTML = () => (gfxm ? gfxm.seasonLayerHTML(seasonOf(new Date()), todayEvents()) + (hworld ? gfxm.worldFrameHTML(hworld) : '') : '');
   function renderHome(body) {
     destroyCook(); if (sub === 'koken') sub = '';
     if (!S.h) return renderEgg(body);
@@ -1137,10 +1164,10 @@ export async function huisdierView(ctx) {
     body.innerHTML = `<div class="hd-roombar">${ROOMS.map((r) => `<button data-do="room" data-v="${r.id}" class="${r.id === room ? 'pri' : ''}">${r.e} ${r.n}</button>`).join('')}</div>${awayBoxHTML()}
       <div class="hd-stage" id="hd-stage" style="background:${R.bg}">
         <div class="hd-roomsvg" id="hd-room">${roomSvg(S.hc, room, fpOf(room), nightOf(S, now))}</div>
-        ${spotsHTML(S, room, edit)}${iaHTML(S, room, edit)}
+        ${extraFurnHTML(room)}${spotsHTML(S, room, edit)}${iaHTML(S, room, edit)}
         <div class="hd-bubble" id="hd-bub"></div>
         <div class="hd-walk" id="hd-walk" style="--fy:${fyOf(room)}" data-do="petvoice"><div class="hd-flip" id="hd-pet"></div></div>
-        ${sl ? '<div class="hd-night" id="hd-night"><span>💤</span></div>' : ''}
+        ${sl ? '<div class="hd-night" id="hd-night"><span>💤</span></div>' : ''}${seasonHTML()}
         <div class="hd-fx" id="hd-fx"></div>
       </div>
       <div class="center"><b>${esc(S.name)}</b> <small>· ${stageName()} · ${PERS[S.pe].e} ${PERS[S.pe].n} · <span id="hd-mn"></span></small></div>
@@ -1453,6 +1480,7 @@ export async function huisdierView(ctx) {
     if (award && !g.done && g.score > 0 && S) { g.done = true; const r = rewardGame(g, g.score); toast(`${g.g.emoji} Score ${g.score}: +${r.coins} 🪙`); }
     destroyGame(g);
   }
+  const gamesList = () => (gm && Array.isArray(gm.GAMES) ? gm.GAMES.concat(g2 && g2.GAMES2 ? g2.GAMES2 : []) : []);
   function renderGames(body) {
     if (game) return renderGamePlay(body);
     if (!gm || !Array.isArray(gm.GAMES) || !gm.GAMES.length) {
@@ -1461,7 +1489,7 @@ export async function huisdierView(ctx) {
     }
     const left = S.gc.d === dayKey(Date.now()) ? Math.max(0, GAME_DAY_CAP - S.gc.n) : GAME_DAY_CAP;
     body.innerHTML = `<div class="box center"><b>🎮 Speel met je huisdier</b><br><small>${esc(S.name)} speelt gezellig mee! Je verdient een paar munten, ervaring en ${esc(S.name)} wordt er blijer van. Vandaag nog tot ${left} 🪙 te verdienen.${mult() > 1 ? ` Evenement: ×${mult()}!` : ''}</small></div>
-      <div class="box">${gm.GAMES.map((g) => `<div class="hd-row"><span style="font-size:34px">${esc(g.emoji || '🎮')}</span><div class="grow"><b>${esc(g.name)}</b><br><small>${esc(g.desc || '')}</small><br><small>🏆 Beste: ${S.hs[hsKey(g.id)] || 0}</small></div>${b('Speel', 'play', `data-id="${esc(g.id)}"`, 'pri')}</div>`).join('')}</div>`;
+      <div class="box">${gamesList().map((g) => `<div class="hd-row"><span style="font-size:34px">${esc(g.emoji || '🎮')}</span><div class="grow"><b>${esc(g.name)}</b><br><small>${esc(g.desc || '')}</small><br><small>🏆 Beste: ${S.hs[hsKey(g.id)] || 0}</small></div>${b('Speel', 'play', `data-id="${esc(g.id)}"`, 'pri')}</div>`).join('')}</div>`;
   }
   function hostSize(body) {
     const w = Math.max(240, Math.min(400, body.clientWidth || 360));
@@ -1476,7 +1504,7 @@ export async function huisdierView(ctx) {
     const [w, h] = hostSize(body);
     host.style.width = `${w}px`; host.style.height = `${h}px`;
     const api = {
-      w, h, pet: petApi(),
+      w, h, pet: petApi(), gfx: gfxm ? gfxm.gfxApi : null,
       score(n) { if (game !== cur || cur.done) return; cur.score = Math.max(0, Math.floor(Number(n) || 0)); const e = $('#hd-gs'); if (e) e.textContent = `Score ${cur.score}`; },
       end(n, o) { finishGame(cur, n, o && o.fun); },
     };
@@ -1501,6 +1529,7 @@ export async function huisdierView(ctx) {
     sfx(r.coins ? 'munt' : 'tap');
     if (alive && tab === 'games') {
       const body = $('#hd-body'); if (!body) return;
+      if (r.rec && sc > 0) playScene('new-record', 'Nieuw record!', `${cur.g.name}: ${sc}`);
       body.innerHTML = `<div class="box center">${confetti()}<div style="font-size:44px">${esc(cur.g.emoji || '🎮')}</div><h3>Klaar!</h3><p>Score: <b>${sc}</b>${r.rec ? ' 🎉 nieuw record!' : ''}</p>
         <p>+${r.coins} 🪙 · +${r.xp} xp · 💛 +${r.joy}${mult() > 1 ? ` <small>(×${mult()} evenement)</small>` : ''}</p>${r.capped ? '<small>De daggrens voor munten uit spelletjes is bereikt, morgen weer!</small>' : ''}
         <div class="hd-acts">${b('Nog een keer', 'play', `data-id="${esc(cur.g.id)}"`, 'pri')}${b('Andere spelletjes', 'tab', 'data-v="games"')}</div></div>`;
@@ -1778,6 +1807,8 @@ export async function huisdierView(ctx) {
       <p style="margin:10px 0 2px"><small>Geluid</small></p>
       <div class="row">${b(pref.on ? '🔊 Aan' : '🔇 Uit', 'snd')}<input id="hd-vol" class="hd-in" type="range" min="0" max="100" step="5" value="${Math.round(pref.vol * 100)}" data-in="vol" aria-label="Volume" style="flex:1"${snd ? '' : ' disabled'}></div>
       ${snd ? '' : '<small>Geluid is er nu even niet.</small>'}
+      <p style="margin:10px 0 2px"><small>Beeld</small></p><div class="row">${b('⚙️ Beeld en kwaliteit', 'gear')}</div>
+      ${gfxm ? `<p style="margin:10px 0 2px"><small>Kamer-thema (een wereld rond de kamer)</small></p><div class="row wrap">${b('Geen', 'hworld', 'data-v=""', hworld ? '' : 'pri')}${gfxm.worldList().map((w) => b(`${w.emoji} ${w.name}`, 'hworld', `data-v="${w.id}"`, hworld === w.id ? 'pri' : '')).join('')}</div>` : ''}
     </div>
     <div class="box"><b>Over ${esc(S.name)}</b><p><small>${S.type === 'mix' && S.mix ? `Mix van ${S.mix[0]} en ${S.mix[1]}` : TYPE_NL[S.type]} · ${PERS[S.pe].e} ${PERS[S.pe].n}${S.h ? ` · ${STAGES[stageOf(S, now)].n}, ${Math.floor(ageDays(S, now))} dagen oud` : ' · nog in het ei'}<br>Lievelingseten: ${PERS[S.pe].fav.map((i) => FOOD[i].e).join(' ')} · Lust niet: ${PERS[S.pe].hate.map((i) => FOOD[i].e).join(' ')}<br>Niveau ${level()} · ${S.xp} xp</small></p></div>
     <div class="box"><b>Opnieuw beginnen</b><p><small>Dan krijg je een nieuw ei. Je huidige huisdier, munten en spullen verdwijnen.</small></p>${b('🥚 Opnieuw beginnen', 'restart')}</div>`;
@@ -1854,10 +1885,18 @@ export async function huisdierView(ctx) {
     try {
       let blob;
       try { blob = await toBlob(await draw(true)); } catch { blob = await toBlob(await draw(false)); }
-      const u = URL.createObjectURL(blob); const a = document.createElement('a');
-      a.href = u; a.download = `${S.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'huisdier'}-${room}.png`;
-      document.body.appendChild(a); a.click(); a.remove(); later(() => URL.revokeObjectURL(u), 5000);
-      bump('photo'); addXp(2); toast('📸 Foto opgeslagen!'); sfx('klaar'); changed();
+      const fname = `${S.name.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'huisdier'}-${room}.png`;
+      let shared = false;
+      try { // eerst delen (telefoon: appjes, 'bewaar in foto's'); lukt dat niet, dan downloaden
+        const file = new File([blob], fname, { type: 'image/png' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: `${S.name} in de ${R.n}`, text: `Kijk, ${S.name}!` }); shared = true; }
+      } catch (e) { if (e && e.name === 'AbortError') shared = true; }
+      if (!shared) {
+        const u = URL.createObjectURL(blob); const a = document.createElement('a');
+        a.href = u; a.download = fname;
+        document.body.appendChild(a); a.click(); a.remove(); later(() => URL.revokeObjectURL(u), 5000);
+      }
+      bump('photo'); addXp(2); toast(shared ? '📸 Foto gedeeld!' : '📸 Foto opgeslagen!'); sfx('klaar'); changed();
     } catch (e) { console.error(e); toast('De foto maken lukte niet 😔'); }
   }
 
@@ -2109,12 +2148,25 @@ export async function huisdierView(ctx) {
       const id = el.dataset.v; if (!S.hu.includes(id) || S.hc === id) return;
       S.hc = id; sfx('meubel'); toast(`🏠 ${(HOUSE_A[id] || {}).name || 'Nieuw huis'}: welkom thuis!`); changed(); checkAch(); render();
     },
+    hworld(el) {
+      const id = el.dataset.v || ''; hworld = id && gfxm && gfxm.worldList().some((w) => w.id === id) ? id : '';
+      try { if (hworld) localStorage.setItem(worldKey(), hworld); else localStorage.removeItem(worldKey()); } catch { /* ok */ }
+      sfx('tik'); if (tab === 'settings') renderSettings($('#hd-body'));
+    },
+    gear() { if (gfxm) gfxm.openSettings({ title: 'Beeld en kwaliteit' }); else toast('De instellingen laden niet'); },
+    evclaim(el) {
+      const e = todayEvents().find((x) => x.id === el.dataset.v); if (!e || !gate('evclaim', 800)) return;
+      const cl = getClaims(); if (cl.includes(eventKey(e, new Date()))) return;
+      try { localStorage.setItem(claimKey(), JSON.stringify(addClaim(cl, e, new Date()))); } catch { /* ok */ }
+      const n = earn(e.bonus); addXp(5); S.happy = cp(S.happy + 10); S.bond = cp(S.bond + 2);
+      sfx('munt'); say(e.say); toast(`${e.e} ${e.n}: +${n} 🪙`); playScene('chest-open', e.n, `+${n} munten`); changed(); paintChrome(); commit();
+    },
     // doelen
     daily() {
       const today = dayKey(Date.now()); if (S.sd === today) return;
       S.sk = nextStreak(S.sd, today, S.sk); S.sd = today;
       const n = earn(dailyReward(S.sk)); addXp(10); bump('daily', 0);
-      sfx('munt'); toast(`🎁 +${n} 🪙 · reeks ${S.sk} dag${S.sk === 1 ? '' : 'en'}!`); changed(); render();
+      sfx('munt'); toast(`🎁 +${n} 🪙 · reeks ${S.sk} dag${S.sk === 1 ? '' : 'en'}!`); playScene('daily-bonus', 'Dagelijkse beloning!', `Reeks: ${S.sk} dag${S.sk === 1 ? '' : 'en'}`); changed(); render();
     },
     quest(el) {
       const q = S.ql[Number(el.dataset.i)]; if (!q || q.d || !questProgress(q).done) return;
@@ -2123,7 +2175,7 @@ export async function huisdierView(ctx) {
     // spelletjes en extra
     play(el) {
       if (!gm || !Array.isArray(gm.GAMES)) return;
-      const g = gm.GAMES.find((x) => x.id === el.dataset.id); if (!g) return;
+      const g = gamesList().find((x) => x.id === el.dataset.id); if (!g) return;
       if (game) endGame(false);
       tab = 'games'; game = { g, score: 0, done: false, inst: null }; render();
     },
@@ -2350,6 +2402,7 @@ export async function huisdierView(ctx) {
     for (const i of [...liveGames]) { try { if (i.destroy) i.destroy(); } catch (e) { console.error(e); } }
     liveGames.clear();
     destroyExtra(); destroyCook(); stopLoops();
+    if (e3d) { try { e3d.stop(); } catch { /* ok */ } e3d = null; }
     document.removeEventListener('visibilitychange', onVisible); window.removeEventListener('pagehide', onPageHide);
     view.removeEventListener('error', onImgErr, true); view.removeEventListener('pointerdown', onFirstTap, true);
     view.onclick = null; view.oninput = null; view.onchange = null; view.onkeydown = null;
@@ -2364,11 +2417,14 @@ export async function huisdierView(ctx) {
     import('./huisdier-games.js?v=1').then((m) => { gm = m; }).catch((e) => { console.error(e); gmErr = 'De spelletjes konden niet geladen worden.'; }),
     import('./huisdier-social.js?v=1').then((m) => { soc = m; }).catch((e) => { console.error(e); socErr = 'De vriendenfunctie kon niet geladen worden.'; }),
     import('./huisdier-art-pets.js?v=1').then((m) => { setArt(m); }).catch((e) => { console.error(e); }),
-    import('./huisdier-art-rooms.js?v=2').then((m) => { ar = m; for (const f of m.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
+    import('./huisdier-art-rooms.js?v=2').then((m) => { ar = extendRooms(m, (n) => (gfxm ? gfxm.urlOf(n) : null)); for (const f of ar.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
     import('./huisdier-sound.js?v=2').then((m) => { snd = m.createSound(); snd.setEnabled(pref.on); snd.setVolume(pref.vol); }).catch((e) => { console.error(e); snd = null; }),
     ensureExtra(),
+    import('./huisdier-gfx.js?v=1').then((m) => { gfxm = m; m.ensureCss(); }).catch((e) => { console.error(e); gfxm = null; }),
+    import('./huisdier-minigames.js?v=1').then((m) => { g2 = m; }).catch((e) => { console.error(e); g2 = null; }),
   ]);
   if (!alive) return;
+  if (gfxm) { try { e3d = gfxm.attach3D(view, { selector: '.em,.hd-fxi,.hd-row,.hd-banner,.hd-ev,.chip,.hd-nav,.hd-acts,.hd-card,.hd-roombar,.hd-sub,.hd-top' }); } catch (e) { console.error(e); } }
   if (S) {
     if (S.mg) { migNote = S.mg; S.mg = 0; }
     ensureDaily();

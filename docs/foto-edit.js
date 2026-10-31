@@ -198,6 +198,8 @@ function applyFrame(src, fr) {
   return { cv: out, L };
 }
 
+let ICO = null; // foto-icons.js (3D-stickers, wereld-kaders), lui geladen
+
 /* ============================ lagen: tekst, emoji, stickers ============================ */
 let _mctx = null;
 function fontOf(L, px) { return (L.italic ? 'italic ' : '') + (L.bold ? '700 ' : '400 ') + px + 'px ' + (FONTS[L.font] || FONTS[0])[1]; }
@@ -229,6 +231,7 @@ function drawLayer(c, L, W) {
   } else {
     if (L.flip) c.scale(-1, 1);
     if (L.type === 'emoji') { c.font = Math.round(L.size * W * .86) + 'px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(L.ch, 0, L.size * W * .04); }
+    else if (L.type === 'icon') { const f = globalThis.__fotoIcon; if (f) f(c, L.key, 0, 0, L.size * W, {}); else { c.font = Math.round(L.size * W * .8) + 'px "Apple Color Emoji","Segoe UI Emoji",sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText('\u2B50', 0, 0); } }
     else if (STK[L.key]) { const s = L.size * W / 100; c.scale(s, s); STK[L.key](c); }
   }
   c.restore();
@@ -314,7 +317,7 @@ export function fotoEditView(ctx) {
     filt: { ver: -1, map: new Map(), base: null, io: null },
     draw: { k: 'pen', color: '#ef4444', size: 12 },
     text: { text: '', font: 0, color: '#ffffff', size: 9, align: 'center', bold: false, italic: false, shadow: true, stroke: false, strokeColor: '#000000', bg: false, bgColor: '#000000' },
-    stk: { tab: 'emoji' },
+    stk: { tab: '3d', cat: 0 },
     brush: { mode: 'blur', size: 10, strength: 60 },
     pop: { tol: 30, soft: 20, pick: null },
     tilt: { mode: 'linear', cy: .5, size: .3, blur: 60, angle: 0, sat: 25 },
@@ -863,6 +866,14 @@ export function fotoEditView(ctx) {
     if (src !== out) free(src); free(out);
     return bl;
   }
+  async function copyOut() {
+    if (S.busy) return; S.busy = true; flash('Kopiëren…');
+    try {
+      const out = renderFull(); const bl = await new Promise((res) => out.toBlob((b) => res(b), 'image/png')); free(out);
+      if (!bl) { flash('Kopiëren lukte niet.'); return; }
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': bl })]); flash('Gekopieerd ✓ Plak hem in een app');
+    } catch (e) { flash('Kopiëren lukte niet op dit toestel. Gebruik Delen of Download.'); } finally { S.busy = false; }
+  }
   async function saveOut(share) {
     if (S.busy) return; S.busy = true; flash('Plaatje maken…');
     try {
@@ -870,7 +881,7 @@ export function fotoEditView(ctx) {
       const ext = T.save.fmt === 'jpg' ? 'jpg' : 'png', nm = S.name + '-bewerkt.' + ext;
       const file = new File([bl], nm, { type: bl.type });
       if (share && navigator.canShare && navigator.canShare({ files: [file] })) {
-        try { await navigator.share({ files: [file] }); flash('Gedeeld ✓'); return; } catch (e) { if (e && e.name === 'AbortError') { flash(''); return; } }
+        try { await navigator.share({ files: [file], title: 'Mijn bewerkte foto', text: 'Gemaakt met de Fotostudio' }); flash('Gedeeld ✓'); return; } catch (e) { if (e && e.name === 'AbortError') { flash(''); return; } }
       }
       const u = URL.createObjectURL(bl); urls.add(u); const a = document.createElement('a'); a.href = u; a.download = nm; document.body.appendChild(a); a.click(); a.remove();
       const t = setTimeout(() => { timers.delete(t); urls.delete(u); URL.revokeObjectURL(u); }, 8000); timers.add(t);
@@ -1001,17 +1012,25 @@ export function fotoEditView(ctx) {
     stk: {
       html: () => {
         const L = selLayer(), tab = T.stk.tab;
-        const grid = tab === 'emoji' ? EMOJI.map((e) => `<button class="fe-b" data-a="semo" data-v="${e}">${e}</button>`).join('') : STK_LIST.map((s) => `<button class="fe-b" data-a="sdraw" data-v="${s[0]}" aria-label="${s[1]}" title="${s[1]}"><canvas width="68" height="68" data-sk="${s[0]}"></canvas></button>`).join('');
-        return `<div class="fe-row">${B('stab', `😀 Emoji (${EMOJI.length})`, { v: 'emoji', on: tab === 'emoji' })}${B('stab', `🎨 Getekend (${STK_LIST.length})`, { v: 'draw', on: tab === 'draw' })}</div>
-        <div class="fe-grid">${grid}</div>
+        let grid, cats = '';
+        if (tab === '3d' && ICO) {
+          const cs = ICO.STICKER_CATS; const cc = cs[Math.min(T.stk.cat, cs.length - 1)] || cs[0];
+          cats = `<div class="fe-row" style="flex-wrap:wrap">${cs.map((c, i) => B('scat', c.name, { v: i, on: c === cc })).join('')}</div>`;
+          grid = cc.items.map((n) => `<button class="fe-b" data-a="sicon" data-v="${n}" aria-label="${n}" title="${n}">${ICO.iconHtml(n, 44)}</button>`).join('');
+        } else if (tab === '3d') grid = '<p class="fe-hint">3D-stickers laden…</p>';
+        else grid = tab === 'emoji' ? EMOJI.map((e) => `<button class="fe-b" data-a="semo" data-v="${e}">${e}</button>`).join('') : STK_LIST.map((s) => `<button class="fe-b" data-a="sdraw" data-v="${s[0]}" aria-label="${s[1]}" title="${s[1]}"><canvas width="68" height="68" data-sk="${s[0]}"></canvas></button>`).join('');
+        return `<div class="fe-row">${B('stab', `🧊 3D (${ICO ? ICO.allStickerNames().length : 174})`, { v: '3d', on: tab === '3d' })}${B('stab', `😀 Emoji (${EMOJI.length})`, { v: 'emoji', on: tab === 'emoji' })}${B('stab', `🎨 Getekend (${STK_LIST.length})`, { v: 'draw', on: tab === 'draw' })}</div>
+        ${cats}<div class="fe-grid">${grid}</div>
         ${L ? `<div class="fe-row">${B('lflip', '↔ Spiegel')}${B('ldup', '⧉ Kopie')}${B('lfront', '⬆ Naar voren')}${B('ldel', '🗑 Weg')}</div>${R('lsz', 'Grootte', Math.round(L.size * 100), L.type === 'text' ? 2 : 4, L.type === 'text' ? 50 : 160, 1, '%')}${R('lrot', 'Draaien', Math.round((L.rot || 0) * 180 / Math.PI), -180, 180, 1, '°')}` : ''}
-        <p class="fe-hint">Tik op een sticker om hem op de foto te zetten. Sleep om te verplaatsen; sleep de blauwe hoek of gebruik twee vingers om te schalen en te draaien.</p>`;
+        <p class="fe-hint">Tik op een sticker om hem op de foto te zetten. Sleep om te verplaatsen; sleep de blauwe hoek of gebruik twee vingers om te schalen en te draaien. De 3D-stickers zijn doorzichtige plaatjes.</p>`;
       },
       after: () => { panel.querySelectorAll('canvas[data-sk]').forEach((el) => { const x = el.getContext('2d'); x.translate(34, 34); x.scale(.64, .64); try { STK[el.dataset.sk](x); } catch (e) { /* sla over */ } }); },
       act: (a, el, type) => {
         if (layerAct(a, el, type)) return;
         if (type !== 'click') return;
         if (a === 'stab') { T.stk.tab = el.dataset.v; refreshPanel(); }
+        else if (a === 'scat') { T.stk.cat = +el.dataset.v || 0; refreshPanel(); }
+        else if (a === 'sicon') { const k = el.dataset.v; addLayer({ type: 'icon', key: k, size: .26, flip: false }); if (ICO) ICO.preloadIcons([k]).then(() => { if (alive) req(true); }); }
         else if (a === 'semo') addLayer({ type: 'emoji', ch: el.dataset.v, size: .22, flip: false });
         else if (a === 'sdraw') addLayer({ type: 'svg', key: el.dataset.v, size: .28, flip: false });
       },
@@ -1026,7 +1045,7 @@ export function fotoEditView(ctx) {
       act: (a, el, type) => {
         const f = S.frame;
         if (type === 'click') {
-          if (a === 'fr') { f.id = el.dataset.v; f.color = FR[f.id].def; commit(); refreshPanel(); req(true); }
+          if (a === 'fr') { f.id = el.dataset.v; f.color = FR[f.id].def; commit(); refreshPanel(); req(true); if (FR[f.id].deco && ICO) ICO.preloadIcons(FR[f.id].deco).then(() => { if (alive) req(true); }); }
           else if (a === 'frc') { f.color = el.dataset.v; commit(); refreshPanel(); req(true); }
         } else if (a === 'frcc') { f.color = el.value; req(true); if (type === 'change') commit(); }
         else if (a === 'frt') { if (type === 'input') { f.thick = +el.value; req(true); } else if (type === 'change') commit(); }
@@ -1086,11 +1105,11 @@ export function fotoEditView(ctx) {
       html: () => `<div class="fe-row">${B('fmt', 'JPG', { v: 'jpg', on: T.save.fmt === 'jpg' })}${B('fmt', 'PNG', { v: 'png', on: T.save.fmt === 'png' })}</div>
         ${T.save.fmt === 'jpg' ? R('q', 'Kwaliteit', T.save.q, 40, 100, 1, '%') : ''}
         <p class="fe-hint">Formaat: ${sizeText()}${S.frame.id !== 'none' && T.save.fmt === 'jpg' ? ' · doorzichtige randen worden wit in JPG' : ''}</p>
-        <div class="fe-row">${B('share', '📤 Delen', { pri: 1 })}${B('dl', '⬇ Download')}${S.queue.length ? B('next', `➡ Volgende foto (${S.queue.length})`) : ''}</div>
+        <div class="fe-row">${B('share', '📤 Delen', { pri: 1 })}${B('dl', '⬇ Download')}${typeof ClipboardItem !== 'undefined' ? B('copy', '📋 Kopieer') : ''}${S.queue.length ? B('next', `➡ Volgende foto (${S.queue.length})`) : ''}</div>
         <p class="fe-hint">Je foto blijft op je eigen toestel.</p>`,
       act: (a, el, type) => {
         if (type === 'click') {
-          if (a === 'fmt') { T.save.fmt = el.dataset.v; refreshPanel(); } else if (a === 'share') saveOut(true); else if (a === 'dl') saveOut(false);
+          if (a === 'fmt') { T.save.fmt = el.dataset.v; refreshPanel(); } else if (a === 'share') saveOut(true); else if (a === 'dl') saveOut(false); else if (a === 'copy') copyOut();
           else if (a === 'next' && S.queue.length) { const f = S.queue.shift(); openOne(f); }
         } else if (a === 'q' && type === 'input') T.save.q = +el.value;
       },
@@ -1141,7 +1160,12 @@ export function fotoEditView(ctx) {
   /* ---------- start ---------- */
   view.innerHTML = '<div class="fe-wrap"><p class="fe-hint">Fotobewerker laden…</p></div>';
   if (ctx.__test) Object.assign(ctx.__test, { S, T, TOOLS, setTool, req, frame, openFiles, openCanvas, commit, undo, redo, applyCrop, bakeGeom, saveOut, exportBlob, renderFull, onDown, onMove, onUp, onWheel, getCv: () => cv, getPanel: () => panel });
-  import('./foto-filters.js?v=1').then((m) => {
+  import('./foto-icons.js?v=1').then((m) => {
+    ICO = m;
+    if (!FR['w-ruimte']) m.worlds().forEach((w) => { const d = m.worldFrameDef(w, { layPad, putImg }); FRAMES.push(d); FR[d.id] = d; });
+    if (alive && panel && (S.tool === 'stk' || S.tool === 'frame')) refreshPanel();
+  }).catch((e) => { console.error(e); });
+  import('./foto-filters.js?v=2').then((m) => {
     if (!alive) return;
     if (!m || !m.FILTERS || !m.applyFilter || !m.adjust || !m.cloneCanvas) throw new Error('onvolledige module');
     FX = m;

@@ -2,9 +2,9 @@
 // Elk onderdeel is een eigen module die pas geladen wordt als je erop tikt. Foto's blijven op je eigen toestel.
 
 const TABS = [
-  ['edit', '🖼️ Bewerken', './foto-edit.js?v=3', 'fotoEditView'],
-  ['gen', '✨ Genereer', './foto-collage-gen.js?v=3', 'collageGenView'],
-  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=3', 'collageFreeView'],
+  ['edit', '🖼️ Bewerken', './foto-edit.js?v=4', 'fotoEditView'],
+  ['gen', '✨ Genereer', './foto-collage-gen.js?v=4', 'collageGenView'],
+  ['free', '🎨 Zelf maken', './foto-collage-free.js?v=4', 'collageFreeView'],
 ];
 
 // Op telefoon/tablet alleen image/* vragen: dan biedt iOS/Android 'Fotobibliotheek' en 'Foto maken' aan i.p.v. alleen de bestandenlijst.
@@ -29,7 +29,7 @@ export function fotoView(ctx) {
   const { view, esc, uid, addCleanup } = ctx;
   let tab = 'edit', token = 0, cleanups = [], alive = true;
   const style = document.createElement('style');
-  style.textContent = `.fs-top{display:flex;gap:6px;margin:0 0 10px}.fs-top button{flex:1;padding:.6rem .2rem;font-weight:700}
+  style.textContent = `.fs-top{display:flex;gap:6px;margin:0 0 10px;align-items:stretch}.fs-top button{flex:1;padding:calc(.6rem * var(--gfx-scale,1)) .2rem;font-weight:700;font-size:calc(1rem * var(--gfx-font,1));min-height:48px}.fs-top .fs-set{flex:0 0 52px;font-size:1.25rem}
 .fs-note{font-size:.8rem;opacity:.65;text-align:center;margin:.2rem 0 .6rem}`;
   document.head.appendChild(style);
 
@@ -38,8 +38,10 @@ export function fotoView(ctx) {
 
   async function open(id) {
     tab = id; const my = ++token; runCleanups();
-    view.innerHTML = `<div class="fs-top">${TABS.map(([k, l]) => `<button data-t="${k}" class="${k === tab ? 'pri' : ''}">${l}</button>`).join('')}</div><div id="fs-body"></div>`;
+    view.innerHTML = `<div class="fs-top">${TABS.map(([k, l]) => `<button data-t="${k}" class="${k === tab ? 'pri' : ''}">${l}</button>`).join('')}<button class="fs-set" id="fs-set" aria-label="Instellingen" title="Instellingen">⚙️</button></div><div id="fs-body"></div>`;
     view.querySelectorAll('[data-t]').forEach((b) => b.onclick = () => { if (b.dataset.t !== tab) open(b.dataset.t); });
+    const gear = view.querySelector('#fs-set');
+    if (gear) gear.onclick = async () => { try { const m = await import('./gfx/panel.js?v=1'); m.openSettingsPanel({ title: 'Instellingen Fotostudio' }); } catch (e) { console.error(e); } };
     const body = view.querySelector('#fs-body'); body.innerHTML = '<div class="box center"><small>Laden…</small></div>';
     const [, , path, fn] = TABS.find((t) => t[0] === id);
     try {

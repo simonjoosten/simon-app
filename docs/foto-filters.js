@@ -2,6 +2,8 @@
 // Alles werkt IN PLAATS op een canvas (getImageData/putImageData). De kern staat op
 // ImageData-niveau ({width,height,data:Uint8ClampedArray}) zodat het ook in node testbaar is.
 
+import { makeExtraFilters } from './foto-filters-extra.js?v=1';
+
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
 const norm01 = (v) => { v = +v || 0; if (v > 1) v /= 100; return clamp(v, 0, 1); };
@@ -355,7 +357,7 @@ function fSolarize(img) {
 }
 
 /* ------------------------------------------------------------------ */
-/* Filtertabel: precies 50                                              */
+/* Filtertabel: 50 + 25 extra                                              */
 /* ------------------------------------------------------------------ */
 const G = (p) => (img) => grade(img, p);
 const M = (stops, mix, pre) => (img) => gradientMap(img, stops, mix, pre);
@@ -416,6 +418,8 @@ const TABLE = [
   ['solarize', 'Solarisatie', 'Creatief', fSolarize],
   ['thermal', 'Warmtecamera', 'Creatief', M([[0, '#0b0030'], [0.25, '#5a0fa0'], [0.5, '#e0243c'], [0.75, '#ffa000'], [1, '#ffffe0']], 0)],
 ];
+
+TABLE.push(...makeExtraFilters({ G, M, grade, gradientMap, boxBlur, lumArray, quantize, clamp, rng, blockMean, fillBlock }));
 
 export const FILTERS = TABLE.map(([id, name, group]) => ({ id, name, group }));
 const IMPL = {};

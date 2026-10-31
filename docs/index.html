@@ -269,7 +269,7 @@ async function homeView() {
   if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js?v=2').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
   const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   if (me.apps.includes('vraag')) getDoc(doc(db, 'dailyq', today, 'answers', me.uid)).then((s) => { if (!s.exists()) setBadge('vraag', 1); }).catch(() => {});
-  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js?v=3'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
+  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js?v=4'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
   if (me.apps.includes('agenda')) import('./agenda.js?v=2').then((m) => m.agendaToday(db)).then((n) => setBadge('agenda', n || 0)).catch(() => {});
   if (me.apps.includes('chat')) import('./chat.js?v=2').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
   if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
@@ -385,15 +385,15 @@ async function gewoontesApp() { const m = await import('./gewoontes.js?v=2'); aw
 async function learnStudyApp() { const m = await import('./learn/study.js?v=2'); await m.learnStudyView(appCtx()); }
 async function shortsApp() { const m = await import('./shorts.js?v=1'); await m.shortsView(appCtx()); }
 async function learnSpelApp() { const m = await import('./learn/games.js?v=3'); await m.learnSpelView(appCtx()); }
-const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=2'); await m.puzzelView(appCtx(), id); };
+const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=3'); await m.puzzelView(appCtx(), id); };
 const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=2`); await m[`${id}View`](appCtx()); };
-async function fotoApp() { const m = await import('./foto.js?v=3'); m.fotoView(appCtx()); }
-async function huisdierApp() { const m = await import('./huisdier.js?v=3'); await m.huisdierView(appCtx()); }
-async function tijdApp() { const m = await import('./tijd.js'); m.tijdView(appCtx()); }
-async function rekenenApp() { const m = await import('./rekenen.js'); m.rekenenView(appCtx()); }
+async function fotoApp() { const m = await import('./foto.js?v=4'); m.fotoView(appCtx()); }
+async function huisdierApp() { const m = await import('./huisdier.js?v=4'); await m.huisdierView(appCtx()); }
+async function tijdApp() { const m = await import('./tijd.js?v=2'); m.tijdView(appCtx()); }
+async function rekenenApp() { const m = await import('./rekenen.js?v=2'); m.rekenenView(appCtx()); }
 
 /* ---------- Kompas, Mop, Meme, Muziek, Kleurplaten ---------- */
-async function kompasApp() { const m = await import('./kompas.js'); m.kompasView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
+async function kompasApp() { const m = await import('./kompas.js?v=2'); m.kompasView({ view: $('#view'), db, uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
 async function mopApp() { const m = await import('./mop.js?v=2'); await m.mopView({ view: $('#view'), esc, uid: me.uid }); }
 async function memeApp() { const m = await import('./meme.js?v=2'); m.memeView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
 async function muziekApp() { const m = await import('./music.js'); m.muziekView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
@@ -404,8 +404,8 @@ async function emojiApp() { const m = await import('./emoji.js'); m.emojiView({ 
 
 /* ---------- Weer ---------- */
 async function weerApp() {
-  const m = await import('./weer.js');
-  await m.weerView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) });
+  const m = await import('./weer.js?v=2');
+  await m.weerView({ view: $('#view'), db, esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) });
 }
 
 /* ---------- Gamescroller ---------- */
