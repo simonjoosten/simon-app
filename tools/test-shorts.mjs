@@ -1,6 +1,6 @@
 // Node-test voor docs/shorts-logic.js (feed-volgorde, filters, opslag, lui laden). Gebruik: node tools/test-shorts.mjs
 import assert from 'node:assert/strict';
-import { CATS, CAT, norm, mulberry, sanitizeState, serialize, mergeStates, createStore, searchMatch, filterList, baseOrder, mixOrder, buildFeed, windowRange, createLazy, dataMode, defaultState, MAX_DATA, CLOUD_EVERY } from '../docs/shorts-logic.js';
+import { CATS, CAT, norm, mulberry, sanitizeState, serialize, mergeStates, createStore, searchMatch, filterList, baseOrder, mixOrder, buildFeed, windowRange, createLazy, dataMode, defaultState, MAX_DATA, CLOUD_EVERY, createAudioSync, audioUrl, clampVol, VOL_DEFAULT, DRIFT_MAX } from '../docs/shorts-logic.js';
 
 const memLS = () => { const m = new Map(); return { getItem: (k) => (m.has(k) ? m.get(k) : null), setItem: (k, v) => m.set(k, String(v)), removeItem: (k) => m.delete(k), m }; };
 const mk = (n) => Array.from({ length: n }, (_, i) => ({ id: 's' + String(i + 1).padStart(3, '0'), t: 'Filmpje ' + (i + 1), c: CATS[i % 10].id, tags: ['tag' + (i % 4)], s: 10, kb: 200 }));
@@ -124,4 +124,82 @@ ok('mobiele data', () => {
   assert.equal(dataMode({ connection: { effectiveType: '4g', type: 'wifi' } }, 'auto').zuinig, false);
   assert.equal(dataMode({ connection: { type: 'cellular' } }, 'normaal').zuinig, false); assert.equal(dataMode({}, 'zuinig').zuinig, true);
 });
-console.log('test-shorts: ' + n + ' groepen OK');
+// ---------- geluid
+const emitter = () => { const m = new Map(); return { addEventListener(n, f) { if (!m.has(n)) m.set(n, new Set()); m.get(n).add(f); }, removeEventListener(n, f) { if (m.has(n)) m.get(n).delete(f); }, emit(n) { for (const f of [...(m.get(n) || [])]) f({ type: n }); }, count(n) { return (m.get(n) || new Set()).size; } }; };
+function mockAudio(opt = {}) {
+  const a = Object.assign(emitter(), {
+    paused: true, ended: false, currentTime: 0, duration: opt.duration == null ? 9.98 : opt.duration, volume: 1, preload: '', src: '', loop: false,
+    plays: 0, pauses: 0, loads: 0, seeks: 0, rejects: opt.reject || null,
+    play() { this.plays++; if (this.rejects) return Promise.reject(Object.assign(new Error('x'), { name: this.rejects })); this.paused = false; return Promise.resolve(); },
+    pause() { this.pauses++; this.paused = true; },
+    load() { this.loads++; this.paused = true; },
+    removeAttribute(n) { if (n === 'src') this.src = ''; },
+  });
+  let ct = 0; Object.defineProperty(a, 'currentTime', { get() { return ct; }, set(v) { ct = v; a.seeks++; } });
+  return a;
+}
+const mockVideo = () => Object.assign(emitter(), { paused: false, currentTime: 0 });
+const flush = () => new Promise((r) => setTimeout(r, 0));
+await (async () => {
+  assert.equal(VOL_DEFAULT, 0.7); assert.equal(clampVol(2), 1); assert.equal(clampVol(-3), 0); assert.equal(clampVol('x'), 0.7); assert.equal(clampVol(0.456), 0.46);
+  assert.equal(audioUrl('shorts/', { id: 's001', a: 1 }), 'shorts/s001.m4a'); assert.equal(audioUrl('shorts/', { id: 's001' }), ''); assert.equal(audioUrl('shorts/', null), '');
+  // staat: standaard uit, onthouden in de bestaande opslag, kapotte waarden netjes
+  const d = defaultState(); assert.equal(d.opt.sound, false); assert.equal(d.opt.vol, 0.7);
+  const s1 = sanitizeState({ opt: { sound: 'ja', vol: 5 } }); assert.equal(s1.opt.sound, false); assert.equal(s1.opt.vol, 1);
+  assert.equal(sanitizeState({ opt: { sound: true, vol: 0.3 } }).opt.vol, 0.3); assert.equal(sanitizeState({ opt: { vol: 'kapot' } }).opt.vol, 0.7);
+  const ls = memLS(); const st = createStore('snd', { ls }); assert.equal(st.state.opt.sound, false);
+  st.setOpt({ sound: true, vol: 0.4 }); const st2 = createStore('snd', { ls }); assert.equal(st2.state.opt.sound, true); assert.equal(st2.state.opt.vol, 0.4); assert.equal(st2.state.opt.order, 'nieuw');
+  assert.equal(mergeStates({ opt: { sound: true, vol: 0.2 }, u: 5 }, { opt: { sound: false }, u: 9 }).opt.sound, false);
+
+  const IT = { id: 's007', a: 1, ak: 30 }, IT0 = { id: 's008' }; // IT0: geen m4a
+  const mk = (o = {}) => { const made = []; const blocked = []; const loaded = []; const env = { base: 'shorts/', createAudio: () => { const a = mockAudio(o); made.push(a); return a; }, onBlocked: () => blocked.push(1), onLoad: (it) => loaded.push(it.id) }; return { c: createAudioSync(env), made, blocked, loaded }; };
+
+  // standaard uit: geen Audio-element, geen download
+  { const { c, made } = mk(); const v = mockVideo(); c.setTarget(IT, v); assert.equal(made.length, 0); assert.equal(c.url, 'shorts/s007.m4a'); c.tick(); assert.equal(made.length, 0); }
+  // aanzetten (tik): src, volume, start op de videotijd
+  { const { c, made, loaded } = mk(); const v = mockVideo(); v.currentTime = 1.25; c.setTarget(IT, v); c.setVolume(0.5); c.setEnabled(true);
+    const a = made[0]; assert.equal(made.length, 1); assert.ok(a.src.endsWith('shorts/s007.m4a')); assert.equal(a.volume, 0.5); assert.equal(a.preload, 'auto'); assert.equal(a.loads, 1); assert.equal(a.plays, 1); assert.ok(!a.paused); assert.equal(a.currentTime, 1.25); assert.deepEqual(loaded, ['s007']);
+    // drift < 0,15 s: niet bijsturen; erboven wel
+    a.seeks = 0; v.currentTime = 2.0; a.currentTime = 1.9; a.seeks = 0; c.tick(); assert.equal(a.seeks, 0, 'klein verschil negeren');
+    v.currentTime = 2.0; a.currentTime = 1.7; a.seeks = 0; v.emit('timeupdate'); assert.equal(a.seeks, 1); assert.equal(a.currentTime, 2.0);
+    assert.ok(DRIFT_MAX >= 0.1 && DRIFT_MAX <= 0.15);
+    // seek in de video (scrubben): direct opnieuw naar dezelfde tijd
+    v.currentTime = 6.0; a.seeks = 0; v.emit('seeked'); assert.equal(a.currentTime, 6.0);
+    // video-lus: video springt terug naar het begin
+    v.currentTime = 9.9; a.currentTime = 9.9; v.currentTime = 0.1; a.seeks = 0; c.tick(); assert.equal(a.currentTime, 0.1);
+    // pauze (tik) en weer door
+    v.paused = true; v.emit('pause'); assert.ok(a.paused); const p0 = a.plays; v.paused = false; v.currentTime = 3; v.emit('play'); assert.equal(a.plays, p0 + 1); assert.equal(a.currentTime, 3);
+    // buffering: audio wacht
+    v.emit('waiting'); assert.ok(a.paused); v.emit('playing'); assert.ok(!a.paused);
+    // tab/app uit beeld
+    c.setHidden(true); assert.ok(a.paused); c.setHidden(false); assert.ok(!a.paused);
+    // wisselen: stoppen, nieuwe src
+    const v2 = mockVideo(); v2.currentTime = 0.3; c.setTarget({ id: 's009', a: 1 }, v2); assert.equal(made.length, 1, 'zelfde element hergebruikt (iOS)'); assert.ok(a.src.endsWith('s009.m4a')); assert.ok(!a.paused); assert.equal(a.currentTime, 0.3);
+    v.emit('timeupdate'); assert.equal(v.count('timeupdate'), 0, 'oude video losgekoppeld');
+    // geen m4a: stil en src weg
+    c.setTarget(IT0, mockVideo()); assert.ok(a.paused); assert.equal(a.src, ''); assert.equal(c.url, '');
+    c.setTarget(null, null); assert.ok(a.paused);
+    // uitzetten
+    c.setTarget(IT, v2); assert.ok(!a.paused); c.setEnabled(false); assert.ok(a.paused); assert.equal(a.src, '');
+    c.destroy(); assert.equal(v2.count('timeupdate'), 0);
+  }
+  // einde van het geluid vóór het einde van de video: wachten tot de lus
+  { const { c, made } = mk({ duration: 9.9 }); const v = mockVideo(); c.setTarget(IT, v); c.setEnabled(true); const a = made[0];
+    v.currentTime = 9.95; a.paused = true; a.ended = true; const pl = a.plays; v.emit('timeupdate'); assert.equal(a.plays, pl, 'niet herstarten aan het einde');
+    v.currentTime = 0.2; v.emit('timeupdate'); assert.equal(a.plays, pl + 1); assert.equal(a.currentTime, 0.2); }
+  // zuinige modus: geen preload
+  { const { c, made } = mk(); c.setZuinig(true); const v = mockVideo(); c.setTarget(IT, v); c.setEnabled(true); const a = made[0]; assert.equal(a.preload, 'none'); assert.equal(a.loads, 0); assert.equal(a.plays, 1); c.setZuinig(false); assert.equal(a.preload, 'auto'); }
+  // laadfout (bestand ontbreekt): stil, geen fout, niet blijven proberen
+  { const { c, made } = mk(); const v = mockVideo(); c.setTarget(IT, v); c.setEnabled(true); const a = made[0]; a.emit('error'); assert.ok(c.failed); a.pause(); const pl = a.plays; v.emit('timeupdate'); c.tick(); assert.equal(a.plays, pl); c.setTarget({ id: 's010', a: 1 }, mockVideo()); assert.ok(!c.failed); }
+  // afspelen geblokkeerd: onBlocked, geen onverwerkte rejection; andere fout: stil
+  { const { c, made, blocked } = mk({ reject: 'NotAllowedError' }); const v = mockVideo(); c.setTarget(IT, v); c.setEnabled(true); await flush(); assert.equal(blocked.length, 1); }
+  { const { c, blocked } = mk({ reject: 'AbortError' }); c.setTarget(IT, mockVideo()); c.setEnabled(true); await flush(); assert.equal(blocked.length, 0); }
+  // kapotte Audio (gooit overal): geen uitzondering
+  { const bad = new Proxy({}, { get() { throw new Error('stuk'); }, set() { throw new Error('stuk'); } }); const c = createAudioSync({ base: 'shorts/', createAudio: () => bad }); c.setTarget(IT, mockVideo()); c.setEnabled(true); c.tick(); c.setVolume(0.2); c.setHidden(true); c.destroy(); }
+  { const c = createAudioSync({ base: 'shorts/', createAudio: () => { throw new Error('geen Audio'); } }); c.setTarget(IT, mockVideo()); c.setEnabled(true); c.tick(); c.destroy(); }
+  // video zonder audio-flag blijft stil, ook met geluid aan
+  { const { c, made } = mk(); const v = mockVideo(); c.setEnabled(true); c.setTarget(IT0, v); const a = made[0]; assert.equal(a.plays, 0); assert.equal(a.src, ''); v.emit('timeupdate'); assert.equal(a.plays, 0); }
+  n++;
+})();
+console.log('test-shorts: '
+ + n + ' groepen OK');

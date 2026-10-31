@@ -2,7 +2,9 @@
 """Bouwt docs/shorts/index.js uit tools/shorts/meta-*.json.
 
 Controleert dat docs/shorts/<id>.mp4 en <id>.jpg bestaan en schrijft
-`export const SHORTS = [{id,t,c,tags,s,kb}]` (kb = mp4-grootte in KB), gesorteerd op id.
+`export const SHORTS = [{id,t,c,tags,s,kb,a,ak}]` (kb = mp4-grootte in KB), gesorteerd op id.
+Bestaat ook `<id>.m4a` (geluid, zie tools/make-shorts-sound.py), dan krijgt het filmpje `a:1` en `ak` = m4a-grootte in KB;
+zonder m4a ontbreken deze velden en blijft het filmpje stil.
 Werkt met 0 bestanden en kan opnieuw gedraaid worden (overschrijft index.js).
 """
 import glob, json, os, re, sys
@@ -47,13 +49,18 @@ def main():
                 s = 10
             items[sid] = {'id': sid, 't': str(m.get('t', sid)), 'c': c, 'tags': tags, 's': s,
                           'kb': max(1, int(round(os.path.getsize(mp4) / 1024)))}
+            m4a = os.path.join(OUT_DIR, sid + '.m4a')
+            if os.path.isfile(m4a) and os.path.getsize(m4a) > 0:
+                items[sid]['a'] = 1
+                items[sid]['ak'] = max(1, int(round(os.path.getsize(m4a) / 1024)))
     out = [items[k] for k in sorted(items)]
     body = ',\n'.join('  ' + json.dumps(o, ensure_ascii=False, separators=(',', ':')) for o in out)
     js = '// Gegenereerd door tools/make-shorts-index.py - niet met de hand aanpassen.\nexport const SHORTS = [%s];\n' % (('\n' + body + '\n') if out else '')
     with open(os.path.join(OUT_DIR, 'index.js'), 'w', encoding='utf-8') as fh:
         fh.write(js)
     tot = sum(o['kb'] for o in out)
-    print('%d filmpjes in index (%d KB totaal); %d overgeslagen (mp4/jpg ontbreekt)' % (len(out), tot, len(skipped)))
+    na = [o for o in out if o.get('a')]
+    print('%d filmpjes in index (%d KB totaal); %d overgeslagen (mp4/jpg ontbreekt); %d met geluid (%d KB audio)' % (len(out), tot, len(skipped), len(na), sum(o['ak'] for o in na)))
 
 
 if __name__ == '__main__':

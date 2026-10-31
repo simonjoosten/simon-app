@@ -383,7 +383,7 @@ async function vraagAdminApp() { const m = await import('./vraag.js?v=2'); await
 async function agendaApp() { const m = await import('./agenda.js?v=2'); await m.agendaView(appCtx()); }
 async function gewoontesApp() { const m = await import('./gewoontes.js?v=2'); await m.gewoontesView(appCtx()); }
 async function learnStudyApp() { const m = await import('./learn/study.js?v=2'); await m.learnStudyView(appCtx()); }
-async function shortsApp() { const m = await import('./shorts.js?v=1'); await m.shortsView(appCtx()); }
+async function shortsApp() { const m = await import('./shorts.js?v=2'); await m.shortsView(appCtx()); }
 async function learnSpelApp() { const m = await import('./learn/games.js?v=3'); await m.learnSpelView(appCtx()); }
 const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=3'); await m.puzzelView(appCtx(), id); };
 const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=2`); await m[`${id}View`](appCtx()); };

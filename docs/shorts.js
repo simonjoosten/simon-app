@@ -4,7 +4,7 @@
 import { icon } from './gfx/art.js?v=1';
 import { Settings, GFX } from './gfx/settings.js?v=1';
 import { openSettingsPanel } from './gfx/panel.js?v=1';
-import { CATS, CAT, buildFeed, createStore, createLazy, dataMode, fmtMB, filterList } from './shorts-logic.js?v=1';
+import { CATS, CAT, buildFeed, createStore, createLazy, createAudioSync, dataMode, fmtMB, filterList, VOL_DEFAULT } from './shorts-logic.js?v=1';
 
 const FS_URL = 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 const VIDEO_BASE = new URL('shorts/', import.meta.url).href;
@@ -69,6 +69,10 @@ html[data-reduce="1"] .sh-heart .big{animation-name:sh-fade}
 .sh-act.fav .b img,.sh-act.fav .b span{opacity:.5;filter:grayscale(1)}
 .sh-act.fav.on .b img,.sh-act.fav.on .b span{opacity:1;filter:none}
 .sh-act.fav.on .b{background:rgba(255,60,110,.35);box-shadow:0 0 0 2px rgba(255,120,150,.8) inset}
+.sh-act.snd .b{font-size:calc(28px * var(--sh-s))}
+.sh-act.snd.on .b{background:rgba(99,102,241,.45);box-shadow:0 0 0 2px rgba(165,180,252,.8) inset}
+.sh-act.snd.na .b span,.sh-act.snd.na .b{opacity:.55}
+.sh-range{width:100%;min-height:calc(44px * var(--sh-s));accent-color:var(--gfx-accent,#a78bfa)}
 .sh-count{position:absolute;left:10px;bottom:calc(30px * var(--sh-s));z-index:9;font-size:.78em;opacity:.75;pointer-events:none;text-shadow:0 1px 4px #000}
 
 .sh-banner{position:absolute;left:8px;right:8px;top:calc(124px * var(--sh-s));z-index:11;display:none;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:rgba(250,204,21,.95);color:#222;font-size:.9em;font-weight:600}
@@ -132,7 +136,8 @@ export async function shortsView(ctx) {
 
   // ---- UI-staat
   let cat = 'all', q = '', feed = [], cur = 0, userPaused = false, dm = dataMode(navigator, store.state.opt.data), bannerShut = false;
-  let loadedKB = 0; const loadedIds = new Set(); const sessionSeen = new Set();
+  let loadedKB = 0; const loadedIds = new Set(); const loadedAudio = new Set(); const sessionSeen = new Set();
+  let blocked = false, docHidden = false, rootHidden = false;
   let seenTimer = null, raf = 0, itemH = 0;
 
   view.innerHTML = `<div class="sh">
@@ -152,6 +157,7 @@ export async function shortsView(ctx) {
     <div class="sh-banner" role="status"><span></span><button data-a="bannerx" aria-label="Sluiten">✕</button></div>
     <div class="sh-side">
       <button class="sh-act fav" data-a="fav" aria-label="Favoriet"><span class="b">${icon('heart', { size: 40 })}</span><span>Favoriet</span></button>
+      <button class="sh-act snd" data-a="sound" aria-label="Geluid aan" aria-pressed="false"><span class="b">🔇</span><span>Geluid</span></button>
       <button class="sh-act" data-a="next" aria-label="Volgende"><span class="b">⌄</span><span>Volgende</span></button>
       <button class="sh-act" data-a="share" aria-label="Delen"><span class="b">${icon('gift', { size: 38 })}</span><span>Delen</span></button>
     </div>
@@ -164,6 +170,29 @@ export async function shortsView(ctx) {
   const favBtn = root.querySelector('[data-a=fav]');
   const reduce = () => !!(GFX && GFX.reduce);
   const q0 = () => (GFX && GFX.q) || 0;
+
+  // ---- geluid: één Audio-element voor het huidige filmpje, gelijk met de stille <video> (zie createAudioSync in shorts-logic.js)
+  const sndBtn = root.querySelector('[data-a=sound]');
+  const snd = createAudioSync({
+    base: VIDEO_BASE,
+    createAudio: () => new Audio(),
+    onBlocked: () => { blocked = true; syncSoundBtn(); },
+    onLoad: (it) => { if (it && !loadedAudio.has(it.id)) { loadedAudio.add(it.id); loadedKB += it.ak || 30; updateBanner(); } },
+  });
+  snd.setVolume(store.state.opt.vol == null ? VOL_DEFAULT : store.state.opt.vol);
+  addCleanup(() => snd.destroy());
+  function syncSoundBtn() {
+    const on = !!store.state.opt.sound && !blocked, o = curItem();
+    sndBtn.querySelector('.b').textContent = on ? '🔊' : '🔇';
+    sndBtn.classList.toggle('on', on); sndBtn.classList.toggle('na', !(o && snd.has(o.it)));
+    sndBtn.setAttribute('aria-pressed', String(on)); sndBtn.setAttribute('aria-label', on ? 'Geluid uit' : 'Geluid aan');
+  }
+  function audioTarget() { const o = curItem(); snd.setTarget(o && o.video ? o.it : null, o && o.video ? o.video : null); syncSoundBtn(); }
+  function setSound(on) { // in een tik-handler aanroepen (iOS laat audio alleen na een tik starten)
+    store.setOpt({ sound: !!on }); blocked = false; snd.setEnabled(!!on); syncSoundBtn();
+    const o = curItem();
+    toast(on ? (o && !snd.has(o.it) ? 'Geluid aan (dit filmpje heeft nog geen geluid)' : 'Geluid aan') : 'Geluid uit');
+  }
 
   let toastT = 0;
   function toast(msg) { toastEl.textContent = msg; toastEl.classList.add('show'); clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 1800); }
@@ -215,7 +244,7 @@ export async function shortsView(ctx) {
   const lazyV = createLazy({ radius: 1, attach: attachVideo, detach: detachVideo });
   const lazyP = createLazy({ radius: 3, attach: attachPoster, detach: detachPoster });
 
-  function stopAll() { lazyV.clear(); lazyP.clear(); clearTimeout(seenTimer); }
+  function stopAll() { snd.setTarget(null, null); lazyV.clear(); lazyP.clear(); clearTimeout(seenTimer); }
   function rebuild() {
     stopAll(); items.length = 0; feedEl.innerHTML = ''; feedEl.scrollTop = 0; cur = 0; userPaused = false;
     const list = buildFeed(ALL, { cat, q }, store);
@@ -259,10 +288,11 @@ export async function shortsView(ctx) {
     v.src = videoUrl(o.it);
     o.stage.insertBefore(v, o.stage.querySelector('.sh-shade')); o.video = v;
     if (!loadedIds.has(o.it.id)) { loadedIds.add(o.it.id); loadedKB += o.it.kb || 300; updateBanner(); }
-    if (i === cur) playCurrent();
+    if (i === cur) { audioTarget(); playCurrent(); }
   }
   function detachVideo(i) {
     const o = items[i]; if (!o || !o.video) return;
+    if (i === cur) snd.setTarget(null, null);
     const v = o.video; o.video = null;
     try { v.pause(); } catch { /* */ } v.removeAttribute('src'); try { v.load(); } catch { /* */ } v.remove();
   }
@@ -287,9 +317,9 @@ export async function shortsView(ctx) {
     const prev = items[cur]; if (prev && prev.video && cur !== i) { try { prev.video.pause(); } catch { /* */ } }
     if (prev) prev.el.classList.remove('paused');
     cur = i; userPaused = false;
-    dm = dataMode(navigator, store.state.opt.data); lazyV.setRadius(dm.zuinig ? 0 : 1);
+    dm = dataMode(navigator, store.state.opt.data); lazyV.setRadius(dm.zuinig ? 0 : 1); snd.setZuinig(dm.zuinig);
     lazyV.move(cur, items.length); lazyP.move(cur, items.length);
-    pauseOthers(); playCurrent();
+    pauseOthers(); audioTarget(); playCurrent();
     const o = curItem();
     clearTimeout(seenTimer);
     if (o) {
@@ -306,6 +336,7 @@ export async function shortsView(ctx) {
     favBtn.style.visibility = o ? '' : 'hidden'; root.querySelector('[data-a=share]').style.visibility = o ? '' : 'hidden';
     const n = items.filter((x) => x.kind === 'v').length;
     countEl.textContent = o ? `${cur + 1} / ${n}` : '';
+    syncSoundBtn();
   }
 
   // ---- scrollen
@@ -370,6 +401,7 @@ export async function shortsView(ctx) {
   function frame() {
     raf = requestAnimationFrame(frame);
     const o = curItem(); if (!o || !o.video) return;
+    snd.tick();
     const v = o.video; if (v.duration > 0) o.bar.style.transform = 'scaleX(' + Math.min(1, v.currentTime / v.duration).toFixed(4) + ')';
   }
   raf = requestAnimationFrame(frame); addCleanup(() => cancelAnimationFrame(raf));
@@ -385,13 +417,13 @@ export async function shortsView(ctx) {
   feedEl.addEventListener('pointerup', endScrub); feedEl.addEventListener('pointercancel', endScrub);
 
   // ---- zichtbaarheid: pauzeren als het tabblad of de app uit beeld is
-  const onVis = () => { if (document.hidden) pauseAllVideos(); else playCurrent(); };
+  const onVis = () => { docHidden = document.hidden; snd.setHidden(docHidden || rootHidden); if (document.hidden) pauseAllVideos(); else playCurrent(); };
   document.addEventListener('visibilitychange', onVis); addCleanup(() => document.removeEventListener('visibilitychange', onVis));
   if (typeof IntersectionObserver !== 'undefined') {
-    const io = new IntersectionObserver((es) => { for (const en of es) { if (!en.isIntersecting || en.intersectionRatio < 0.2) pauseAllVideos(); else playCurrent(); } }, { threshold: [0, 0.2, 0.5] });
+    const io = new IntersectionObserver((es) => { for (const en of es) { rootHidden = !en.isIntersecting || en.intersectionRatio < 0.2; snd.setHidden(docHidden || rootHidden); if (rootHidden) pauseAllVideos(); else playCurrent(); } }, { threshold: [0, 0.2, 0.5] });
     io.observe(root); addCleanup(() => io.disconnect());
   }
-  addCleanup(() => { stopAll(); pauseAllVideos(); });
+  addCleanup(() => { stopAll(); pauseAllVideos(); snd.setTarget(null, null); });
 
   // ---- banner (mobiele data)
   function updateBanner() {
@@ -403,7 +435,7 @@ export async function shortsView(ctx) {
     }
   }
   const conn = navigator.connection;
-  if (conn && conn.addEventListener) { const f = () => { dm = dataMode(navigator, store.state.opt.data); lazyV.setRadius(dm.zuinig ? 0 : 1); lazyV.move(cur, items.length); updateBanner(); }; conn.addEventListener('change', f); addCleanup(() => conn.removeEventListener('change', f)); }
+  if (conn && conn.addEventListener) { const f = () => { dm = dataMode(navigator, store.state.opt.data); lazyV.setRadius(dm.zuinig ? 0 : 1); snd.setZuinig(dm.zuinig); lazyV.move(cur, items.length); updateBanner(); }; conn.addEventListener('change', f); addCleanup(() => conn.removeEventListener('change', f)); }
 
   // ---- opties-sheet
   function openOpts() {
@@ -414,20 +446,29 @@ export async function shortsView(ctx) {
       <h3>Volgorde</h3>${seg('order', o.order, [['nieuw', 'Nieuw eerst'], ['id', 'Op nummer'], ['random', 'Willekeurig']])}
       <h3>Mix van categorieën</h3>${seg('mix', o.mix, [[true, 'Afwisselen'], [false, 'Los']])}
       <h3>Data</h3>${seg('data', o.data, [['auto', 'Automatisch'], ['zuinig', 'Altijd zuinig'], ['normaal', 'Normaal']])}
-      <small>Zuinig = één filmpje tegelijk laden. Automatisch let op mobiele data. Deze sessie ±${fmtMB(loadedKB)}.</small>
+      <small>Zuinig = één filmpje tegelijk laden, zonder het geluid vooraf te laden. Automatisch let op mobiele data. Deze sessie ±${fmtMB(loadedKB)}.</small>
+      <h3>Geluid</h3>${seg('sound', !!o.sound, [[true, '🔊 Aan'], [false, '🔇 Uit']])}
+      <input class="sh-range" type="range" min="0" max="100" step="5" value="${Math.round((o.vol == null ? VOL_DEFAULT : o.vol) * 100)}" aria-label="Volume" data-vol>
+      <small>Standaard uit. Op iPhone/iPad regel je het volume met de knoppen van het apparaat.</small>
       <button class="sh-cta sh-wide" data-a="gfx2">Beeld en effecten…</button>
       <button class="sh-opt sh-wide" data-a="close">Sluiten</button></div>`;
     root.appendChild(back);
     const close = () => back.remove();
+    const vol = back.querySelector('[data-vol]');
+    if (vol) {
+      vol.addEventListener('input', () => snd.setVolume(Number(vol.value) / 100));
+      vol.addEventListener('change', () => store.setOpt({ vol: Number(vol.value) / 100 }));
+    }
     back.addEventListener('click', (e) => {
       if (e.target === back || (e.target.closest && e.target.closest('[data-a=close]'))) return close();
       if (e.target.closest && e.target.closest('[data-a=gfx2]')) { close(); return openGfx(); }
       const b = e.target.closest && e.target.closest('.sh-opt[data-v]'); if (!b) return;
       const name = b.parentNode.getAttribute('data-seg'); let v = b.getAttribute('data-v');
-      if (name === 'mix') v = v === 'true';
+      if (name === 'mix' || name === 'sound') v = v === 'true';
       store.setOpt({ [name]: v });
       b.parentNode.querySelectorAll('.sh-opt').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
-      if (name === 'data') { dm = dataMode(navigator, v); lazyV.setRadius(dm.zuinig ? 0 : 1); lazyV.move(cur, items.length); updateBanner(); }
+      if (name === 'sound') { blocked = false; snd.setEnabled(v); syncSoundBtn(); }
+      else if (name === 'data') { dm = dataMode(navigator, v); lazyV.setRadius(dm.zuinig ? 0 : 1); snd.setZuinig(dm.zuinig); lazyV.move(cur, items.length); updateBanner(); }
       else { syncTools(); rebuild(); }
     });
   }
@@ -454,6 +495,7 @@ export async function shortsView(ctx) {
     else if (a === 'clear') { q = ''; searchIn.value = ''; searchWrap.classList.remove('open'); rebuild(); }
     else if (a === 'random') { const o = store.state.opt; store.setOpt({ order: o.order === 'random' ? 'nieuw' : 'random' }); toast(store.state.opt.order === 'random' ? 'Willekeurig aan' : 'Nieuwe eerst'); rebuild(); }
     else if (a === 'mix') { store.setOpt({ mix: !store.state.opt.mix }); toast(store.state.opt.mix ? 'Mix aan' : 'Mix uit'); rebuild(); }
+    else if (a === 'sound') setSound(!store.state.opt.sound);
     else if (a === 'opts') openOpts();
     else if (a === 'gfx') openGfx();
     else if (a === 'bannerx') { bannerShut = true; updateBanner(); }
@@ -472,6 +514,7 @@ export async function shortsView(ctx) {
     else if (e.key === 'ArrowUp' || e.key === 'k') { goTo(cur - 1); e.preventDefault(); }
     else if (e.key === ' ') { setPaused(!userPaused); e.preventDefault(); }
     else if (e.key === 'l') { const o = curItem(); if (o) like(o, 180, 300); }
+    else if (e.key === 'm') setSound(!store.state.opt.sound);
   };
   window.addEventListener('keydown', onKey); addCleanup(() => window.removeEventListener('keydown', onKey));
 
@@ -480,5 +523,11 @@ export async function shortsView(ctx) {
   addCleanup(() => { if (typeof offS === 'function') offS(); });
 
   rebuild(); updateBanner();
+  if (store.state.opt.sound) { // eerder aangezet: proberen te starten; lukt dat niet zonder tik (iOS), dan ontgrendelt de eerste tik
+    snd.setEnabled(true);
+    const unlock = () => { root.removeEventListener('pointerup', unlock, true); root.removeEventListener('click', unlock, true); if (store.state.opt.sound) { blocked = false; snd.setEnabled(true); syncSoundBtn(); } };
+    root.addEventListener('pointerup', unlock, true); root.addEventListener('click', unlock, true);
+    addCleanup(() => { root.removeEventListener('pointerup', unlock, true); root.removeEventListener('click', unlock, true); });
+  }
   if (ALL.length && ALL.length < EMPTY_SOON) toast('Er komen er nog meer!');
 }

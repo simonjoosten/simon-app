@@ -25,7 +25,9 @@ export function shuffle(arr, rng = Math.random) { const a = arr.slice(); for (le
 // ---------- staat
 export const ORDERS = ['nieuw', 'id', 'random'];
 export const DATA_MODES = ['auto', 'zuinig', 'normaal'];
-export function defaultState() { return { v: 1, fav: [], seen: {}, opt: { order: 'nieuw', mix: true, data: 'auto' }, last: '', u: 0 }; }
+export const VOL_DEFAULT = 0.7;
+export const clampVol = (x) => { const n = Number(x); return Number.isFinite(n) ? Math.round(Math.max(0, Math.min(1, n)) * 100) / 100 : VOL_DEFAULT; };
+export function defaultState() { return { v: 1, fav: [], seen: {}, opt: { order: 'nieuw', mix: true, data: 'auto', sound: false, vol: VOL_DEFAULT }, last: '', u: 0 }; }
 
 // Maakt van willekeurige (oude/kapotte) data een geldige staat; onbekende ids blijven staan (nieuwe filmpjes komen later).
 export function sanitizeState(raw) {
@@ -40,6 +42,8 @@ export function sanitizeState(raw) {
   if (ORDERS.includes(o.order)) s.opt.order = o.order;
   if (typeof o.mix === 'boolean') s.opt.mix = o.mix;
   if (DATA_MODES.includes(o.data)) s.opt.data = o.data;
+  if (typeof o.sound === 'boolean') s.opt.sound = o.sound;
+  if (o.vol != null && o.vol !== '') s.opt.vol = clampVol(o.vol);
   if (idOk(raw.last)) s.last = raw.last;
   s.u = Number(raw.u) > 0 ? Math.floor(Number(raw.u)) : 0;
   return s;
@@ -190,3 +194,106 @@ export function dataMode(nav, pref = 'auto') {
   return { zuinig: false, reason: '' };
 }
 export const fmtMB = (kb) => (kb >= 1024 ? (kb / 1024).toFixed(1).replace('.', ',') + ' MB' : Math.round(kb) + ' KB');
+
+// ---------- geluid (m4a per filmpje, synchroon met de stille <video>)
+export const DRIFT_MAX = 0.15; // seconden verschil tussen audio en video voordat we bijsturen
+export const audioUrl = (base, it) => (it && it.a === 1 ? base + it.id + '.m4a' : '');
+
+// Eén Audio-element dat voor het huidige filmpje van src wisselt (iOS ontgrendelt het bij de eerste tik op de geluid-knop).
+// env: { createAudio:()=>Audio-achtig, base:'shorts/', onBlocked:()=>void, onLoad:(it)=>void }
+// Audio-achtig: play()->Promise|undefined, pause(), load(), currentTime, duration, paused, ended, volume, preload, src, removeAttribute(), addEventListener(), removeEventListener().
+// Zonder m4a, bij laadfout of bij geblokkeerd afspelen blijft het stil, zonder fout.
+export function createAudioSync(env = {}) {
+  const make = env.createAudio || (() => new Audio());
+  const base = env.base || '';
+  let audio = null, video = null, item = null, url = '', enabled = false, vol = VOL_DEFAULT, zuinig = false, hidden = false, failed = false, srcSet = '';
+  const unbind = [];
+  const guard = (f) => { try { return f(); } catch { return undefined; } };
+  function ensure() {
+    if (audio) return audio;
+    audio = guard(make);
+    if (!audio) return null;
+    guard(() => { audio.loop = false; audio.volume = vol; audio.preload = 'none'; });
+    const on = (n, f) => { guard(() => audio.addEventListener(n, f)); unbind.push(() => guard(() => audio.removeEventListener(n, f))); };
+    on('error', () => { failed = true; });
+    on('ended', () => { sync(); });
+    return audio;
+  }
+  function applySrc() {
+    if (!audio) return;
+    const want = enabled && url ? url : '';
+    if (want === srcSet) return;
+    guard(() => audio.pause());
+    srcSet = want; failed = false;
+    if (want) {
+      guard(() => { audio.preload = zuinig ? 'none' : 'auto'; audio.src = want; });
+      if (!zuinig) guard(() => audio.load()); // zuinig: pas laden zodra er echt gespeeld wordt
+      if (env.onLoad) guard(() => env.onLoad(item));
+    } else {
+      guard(() => { audio.removeAttribute('src'); audio.load(); });
+    }
+  }
+  const wants = () => !!(enabled && !hidden && video && url && !failed && !video.paused);
+  function play() {
+    let p; try { p = audio.play(); } catch { p = null; }
+    if (p && typeof p.catch === 'function') p.catch((e) => { if (e && e.name === 'NotAllowedError' && env.onBlocked) guard(env.onBlocked); });
+  }
+  function sync(force) { try { syncNow(force); } catch { /* stil blijven, nooit een fout naar de app */ } }
+  function syncNow(force) {
+    if (!audio) return;
+    if (!wants()) { if (!audio.paused) guard(() => audio.pause()); return; }
+    if (enabled && url && srcSet !== url) applySrc();
+    const vt = Number(video.currentTime) || 0;
+    const dur = Number.isFinite(audio.duration) && audio.duration > 0 ? audio.duration : Infinity;
+    const target = Math.max(0, Math.min(vt, dur - 0.03));
+    if (audio.paused || audio.ended) {
+      if (vt >= dur - 0.03) return; // einde van het geluid: wacht tot de video weer begint
+      guard(() => { audio.currentTime = target; });
+      play();
+      return;
+    }
+    if (force || Math.abs((Number(audio.currentTime) || 0) - target) > DRIFT_MAX) guard(() => { audio.currentTime = target; });
+  }
+  const vEvents = ['play', 'playing', 'pause', 'seeking', 'seeked', 'waiting', 'stalled', 'timeupdate', 'emptied'];
+  const vUnbind = [];
+  function bindVideo() {
+    vUnbind.splice(0).forEach((f) => f());
+    if (!video || !video.addEventListener) return;
+    const v = video;
+    for (const n of vEvents) {
+      const f = () => { if (n === 'seeking' || n === 'seeked') sync(true); else if (n === 'waiting' || n === 'stalled') { if (audio && !audio.paused) guard(() => audio.pause()); } else sync(); };
+      v.addEventListener(n, f); vUnbind.push(() => guard(() => v.removeEventListener(n, f)));
+    }
+  }
+  return {
+    get audio() { return audio; },
+    get enabled() { return enabled; },
+    get failed() { return failed; },
+    get url() { return url; },
+    has: (it) => !!(it && it.a === 1),
+    // Moet in een tik-handler aangeroepen worden bij het aanzetten (ontgrendelt audio op iOS).
+    setEnabled(on) {
+      enabled = !!on;
+      if (enabled) ensure();
+      applySrc(); sync(true);
+      if (!enabled && audio) guard(() => audio.pause());
+    },
+    setVolume(v) { vol = clampVol(v); if (audio) guard(() => { audio.volume = vol; }); },
+    setZuinig(z) { zuinig = !!z; if (audio && srcSet) guard(() => { audio.preload = zuinig ? 'none' : 'auto'; }); },
+    setHidden(h) { hidden = !!h; sync(); },
+    setTarget(it, vid) {
+      item = it || null; video = vid || null;
+      url = video && it ? audioUrl(base, it) : '';
+      bindVideo();
+      if (enabled) ensure();
+      applySrc(); sync(true);
+    },
+    sync, tick() { if (audio && enabled) sync(); },
+    destroy() {
+      vUnbind.splice(0).forEach((f) => f());
+      unbind.splice(0).forEach((f) => f());
+      if (audio) { guard(() => audio.pause()); guard(() => audio.removeAttribute('src')); guard(() => audio.load()); }
+      audio = null; video = null; item = null; url = ''; srcSet = ''; enabled = false;
+    },
+  };
+}
