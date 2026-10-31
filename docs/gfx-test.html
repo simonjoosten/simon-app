@@ -1,0 +1,12 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>gfx-test</title>
+<body style="margin:0;background:#111;color:#fff;font:14px system-ui">
+<div id="bar" style="padding:6px;display:flex;flex-wrap:wrap;gap:4px"></div><canvas id="c" width="360" height="520" style="display:block;margin:0 auto;background:#000"></canvas><div id="host" style="position:relative;width:360px;height:520px;margin:6px auto"></div>
+<script type="module">
+import { Themes, WORLDS } from './gfx/themes.js?v=1'; import { Scenes } from './gfx/scenes.js?v=1'; import { Settings, GFX } from './gfx/settings.js?v=1'; import { openSettingsPanel } from './gfx/panel.js?v=1'; import { ready } from './gfx/art.js?v=1';
+const q=new URLSearchParams(location.search); if(q.get('q')) Settings.set({quality:q.get('q')});
+const c=document.getElementById('c'), ctx=c.getContext('2d'); let world=WORLDS[0], t=0, mode='world';
+const bar=document.getElementById('bar'); const add=(l,f)=>{const b=document.createElement('button');b.textContent=l;b.onclick=f;bar.appendChild(b)};
+WORLDS.forEach(w=>add(w.id,()=>{mode='world';world=w})); Object.keys(Scenes.list).forEach(id=>add('▶'+id,()=>{mode='scene';Scenes.play(document.getElementById('host'),id,{title:'Hallo!',sub:'Proef',w:360,h:520})})); add('⚙',()=>openSettingsPanel({title:'Instellingen',toast:()=>{}}));
+window.show=(id)=>{mode='world';world=Themes.world(id)}; window.scene=(id)=>Scenes.play(document.getElementById('host'),id,{title:'Hallo!',sub:'Proef',w:360,h:520});
+(function loop(){t+=1/60; if(mode==='world') Themes.paintBackground(ctx,360,520,world,t); requestAnimationFrame(loop)})();
+</script>

@@ -1,0 +1,4 @@
+<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>iconen</title>
+<body style="margin:0;background:#e8ecf5;font:10px system-ui"><div id="g" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(64px,1fr));gap:2px;padding:4px"></div>
+<script type="module">import { ICONS } from './gfx/icons.js'; import { icon } from './gfx/art.js?v=1'; const g=document.getElementById('g'); const r=new URLSearchParams(location.search); const [a,b]=(r.get('r')||'0-200').split('-').map(Number);
+g.innerHTML=Object.keys(ICONS).slice(a,b).map(n=>`<div style="text-align:center">${icon(n,{size:60})}<br>${n}</div>`).join('');</script>
