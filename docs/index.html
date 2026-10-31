@@ -370,9 +370,9 @@ async function klusjesApp() { const m = await import('./klusjes.js?v=2'); await 
 async function klusjesAdminApp() { const m = await import('./klusjes.js?v=2'); await m.klusjesAdminView({ db, me, esc, nice, view: $('#view') }); }
 
 /* ---------- Dobbel & kies, Pixel-art, Piano ---------- */
-async function dobbelApp() { const m = await import('./dice.js'); m.diceView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
+async function dobbelApp() { const m = await import('./dice.js?v=2'); m.diceView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
 async function pixelApp() { const m = await import('./pixel.js?v=2'); m.pixelView({ view: $('#view'), esc, uid: me.uid }); }
-async function pianoApp() { const m = await import('./piano.js'); m.pianoView({ view: $('#view'), esc, addCleanup: (f) => unsubs.push(f) }); }
+async function pianoApp() { const m = await import('./piano.js?v=2'); m.pianoView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
 
 /* ---------- Vraag, Agenda, Gewoontes, Huisdier, Tijd, Rekenen ---------- */
 let gfxBound = false;
@@ -396,8 +396,8 @@ async function rekenenApp() { const m = await import('./rekenen.js?v=2'); m.reke
 async function kompasApp() { const m = await import('./kompas.js?v=2'); m.kompasView({ view: $('#view'), db, uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
 async function mopApp() { const m = await import('./mop.js?v=2'); await m.mopView({ view: $('#view'), esc, uid: me.uid }); }
 async function memeApp() { const m = await import('./meme.js?v=2'); m.memeView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
-async function muziekApp() { const m = await import('./music.js'); m.muziekView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
-async function kleurApp() { const m = await import('./kleur.js'); m.kleurView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
+async function muziekApp() { const m = await import('./music.js?v=2'); m.muziekView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
+async function kleurApp() { const m = await import('./kleur.js?v=2'); m.kleurView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
 
 /* ---------- Emoji-mixer ---------- */
 async function emojiApp() { const m = await import('./emoji.js'); m.emojiView({ view: $('#view'), esc, uid: me.uid }); }

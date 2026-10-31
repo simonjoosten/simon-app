@@ -1,6 +1,14 @@
-// Kleurplaten: 21 plaatjes als inline SVG om in te kleuren (emmer, gum, ongedaan maken, PNG-download, per plaatje onthouden).
+// Kleur: 35 kleurplaten (getekende plaatjes, mandala's, pixelkunst) met emmer, gum, pipet, ongedaan/opnieuw, achtergrond, 8 kleursets en eigen paletten,
+// plus een Kleurlab (kleurenwiel, harmonieën, palet-generator, verlopen, contrast, kleurenblind, kleuren uit een foto) en vier kleurspelletjes.
+// Opslag van kleurplaten blijft hetzelfde: localStorage `kleur:<uid>:art` = { plaatId: { vormIndex: kleur, bg?: kleur } }.
 
-const PALETTE = ['#000000', '#4b5563', '#9ca3af', '#ffffff', '#7c2d12', '#b45309', '#d97706', '#fcd9b6', '#ef4444', '#f43f5e', '#ec4899', '#a855f7', '#6366f1', '#3b82f6', '#06b6d4', '#14b8a6', '#22c55e', '#84cc16', '#facc15', '#fde68a', '#f97316', '#bae6fd', '#bbf7d0', '#fbcfe8'];
+import { PLATEN_EXTRA } from './kleur-art.js?v=1';
+import * as K from './kleur-color.js?v=1';
+import { mountLab } from './kleur-lab.js?v=1';
+import { mountGames } from './kleur-games.js?v=1';
+import { styleTag, gearHtml, wireGear, worldSelectHtml, hero, icon, GFX, playScene, copyText } from './apps3-ui.js?v=1';
+
+const PALETTE = K.SETS[0].colors;
 
 // ---- tekenhulpjes: elk geeft één sluitend SVG-element (zonder fill/stroke) ----
 const C = (x, y, r) => `<circle cx="${x}" cy="${y}" r="${r}"/>`;
@@ -22,7 +30,7 @@ function rainbow() {
   return out;
 }
 
-export const PLATEN = [
+const PLATEN_OLD = [
   { id: 'huis', naam: 'Huis', emoji: '🏠',
     shapes: [C(340, 60, 30), R(260, 100, 30, 70), R(90, 190, 220, 170), P('70,195 200,85 330,195'), R(110, 215, 50, 50), R(240, 215, 50, 50), R(175, 270, 50, 90), C(213, 318, 4), E(55, 355, 40, 24), E(350, 355, 40, 24), C(200, 150, 18)],
     decor: [L('M135,215 V265 M110,240 H160 M265,215 V265 M240,240 H290')] },
@@ -86,79 +94,186 @@ export const PLATEN = [
     decor: [L('M180,130 Q200,142 220,130')] },
 ];
 
+
+export const PLATEN = [...PLATEN_OLD, ...PLATEN_EXTRA];
+
 // ---- SVG opbouwen ----
 export function svgString(plaat, kleuren = {}, { id = false } = {}) {
-  const body = plaat.shapes.map((s, i) => s.replace(/^<(\w+)/, `<$1${id ? ` data-i="${i}"` : ''} fill="${kleuren[i] || '#ffffff'}" stroke="#000" stroke-width="4" stroke-linejoin="round" stroke-linecap="round" style="cursor:pointer"`)).join('');
+  const bg = /^#[0-9a-f]{6}$/i.test(kleuren.bg || '') ? kleuren.bg : '#ffffff';
+  const body = plaat.shapes.map((s, i) => s.replace(/^<(\w+)/, `<$1${id ? ` data-i="${i}"` : ''} fill="${kleuren[i] || '#ffffff'}" stroke="#000" stroke-width="${plaat.shapes.length > 60 ? 2 : 4}" stroke-linejoin="round" stroke-linecap="round" style="cursor:pointer"`)).join('');
   const decor = plaat.decor.map((s) => s.replace(/^<(\w+)/, '<$1 fill="none" stroke="#000" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" pointer-events="none"')).join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect width="400" height="400" fill="#ffffff" pointer-events="none"/>${body}${decor}</svg>`;
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400" width="400" height="400"><rect ${id ? 'data-bg="1" ' : ''}width="400" height="400" fill="${bg}"${id ? '' : ' pointer-events="none"'}/>${body}${decor}</svg>`;
 }
+
+const GROEPEN = [
+  ['alles', 'Alles', null],
+  ['dieren', 'Dieren', ['kat', 'hond', 'vis', 'dino', 'vlinder', 'uil', 'schildpad', 'pinguin', 'olifant']],
+  ['voertuigen', 'Voertuigen', ['auto', 'raket', 'boot', 'vrachtwagen', 'ufo']],
+  ['natuur', 'Natuur', ['bloem', 'boom', 'zon', 'regenboog', 'paddenstoel', 'appel', 'planeet']],
+  ['gebouwen', 'Gebouwen', ['huis', 'kasteel', 'vuurtoren']],
+  ['fun', 'Leuk', ['ballon', 'ijsje', 'sneeuwman', 'robot', 'cupcake', 'vlieger']],
+  ['mandala', 'Mandala & pixels', ['mandala1', 'mandala2', 'mandala3', 'mandala4', 'pixels']],
+];
+const countFilled = (k) => Object.keys(k || {}).filter((x) => x !== 'bg').length;
+
+const CSS = `<style>
+.kl-flex{display:flex;gap:.8rem;flex-wrap:wrap;align-items:center}
+.kl-row{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;margin:.45rem 0}
+.kl-col{display:flex;flex-direction:column;gap:.3rem}
+.kl-big{border-radius:14px;padding:.8rem;text-align:center;font-weight:800;font-size:calc(1.1rem*var(--f));margin:.4rem 0}
+.kl-strip{display:flex;gap:4px;margin:.4rem 0;flex-wrap:wrap}
+.kl-sw{flex:1;min-width:calc(46px*var(--s));min-height:calc(54px*var(--s));border-radius:10px;border:1px solid #0003;cursor:pointer;display:flex;align-items:flex-end;justify-content:center;padding:2px}
+.kl-pal{display:flex;gap:4px;height:calc(200px*var(--s));margin:.2rem 0 .6rem}
+.kl-pc{flex:1;border-radius:12px;display:flex;flex-direction:column;justify-content:space-between;align-items:center;padding:.3rem 0;min-width:0}
+.kl-pc button{background:transparent;border:0;min-height:calc(40px*var(--s));padding:0 .1rem}
+.kl-hexb{flex-direction:column;font-size:calc(.8rem*var(--f))}
+.kl-grad{height:calc(150px*var(--s));border-radius:14px;margin:.4rem 0;border:1px solid var(--line)}
+.kl-prev{border-radius:14px;padding:1rem;margin:.6rem 0;border:1px solid var(--line)}
+.kl-badge{padding:.2rem .5rem;border-radius:99px;font-size:.8rem;font-weight:700}
+.kl-badge.ok{background:#bbf7d0;color:#14532d}.kl-badge.no{background:#fecaca;color:#7f1d1d}
+.kl-saved{display:flex;gap:.5rem;align-items:center;padding:.4rem 0;border-top:1px solid var(--line)}
+.kl-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.5rem 1rem;border-radius:12px;border:1px solid var(--line);cursor:pointer;font-weight:700}
+.kl-btn.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.kl-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(160px*var(--s)),1fr));gap:.6rem}
+.kl-games button{flex-direction:column;padding:.8rem;text-align:center;line-height:1.25}
+.kl-duel{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;margin:.5rem 0}
+.kl-odd{display:grid;gap:6px;max-width:calc(420px*var(--s));margin:.6rem auto}
+.kl-odd button{aspect-ratio:1;min-height:0;border:0;border-radius:12px;padding:0}
+.kl-timebar{height:10px;background:rgba(128,128,128,.25);border-radius:6px;overflow:hidden;margin:.3rem 0}
+.kl-timebar i{display:block;height:100%;background:var(--accent);transition:width .25s linear}
+.kl-simon{display:grid;grid-template-columns:1fr 1fr;gap:.6rem;max-width:calc(360px*var(--s));margin:.8rem auto}
+.kl-simon button{aspect-ratio:1;min-height:0;border:0;border-radius:24px;opacity:.55;transition:opacity .08s,transform .08s}
+.kl-simon button.lit{opacity:1;transform:scale(1.05);box-shadow:0 0 28px 6px #fff8}
+.kl-gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(calc(110px*var(--s)),1fr));gap:.5rem;margin-top:.6rem}
+.kl-gal button{padding:.3rem;display:flex;flex-direction:column;align-items:center;gap:.2rem;background:var(--card);border:1px solid var(--line);border-radius:12px;min-height:calc(40px*var(--s))}
+.kl-gal .th{width:100%;aspect-ratio:1;background:#fff;border-radius:8px;overflow:hidden;pointer-events:none}
+.kl-gal .bar{width:100%;height:5px;background:rgba(128,128,128,.25);border-radius:3px;overflow:hidden}.kl-gal .bar i{display:block;height:100%;background:#22c55e}
+.kl-art{width:100%;max-width:520px;margin:0 auto;background:#fff;border:1px solid var(--line);border-radius:14px;overflow:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none;max-height:75vh}
+.kl-pg{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:.5rem 0}
+.kl-pg button{aspect-ratio:1;border-radius:11px;padding:0;min-height:calc(40px*var(--s))}
+.kl-rec{display:flex;gap:5px;flex-wrap:wrap;margin:.3rem 0}.kl-rec button{width:calc(34px*var(--s));height:calc(34px*var(--s));min-height:0;border-radius:50%;padding:0}
+</style>`;
 
 // ctx: { view, esc, uid, addCleanup }
 export function kleurView(ctx) {
   const { view, esc, uid, addCleanup } = ctx;
-  const KEY = `kleur:${uid}:art`;
-  const readAll = () => { try { const o = JSON.parse(localStorage.getItem(KEY) || '{}'); return o && typeof o === 'object' ? o : {}; } catch { return {}; } };
-  const writeAll = (o) => { try { localStorage.setItem(KEY, JSON.stringify(o)); return true; } catch { return false; } };
+  const KEY = `kleur:${uid}:art`, DKEY = `kleur:${uid}:done`;
+  const rd = (k, d) => { try { const o = JSON.parse(localStorage.getItem(k) || 'null'); return o == null ? d : o; } catch { return d; } };
+  const wr = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch { return false; } };
+  const readAll = () => { const o = rd(KEY, {}); return o && typeof o === 'object' && !Array.isArray(o) ? o : {}; };
+  const writeAll = (o) => wr(KEY, o);
 
-  let cur = null, kleuren = {}, color = PALETTE[8], tool = 'fill', undo = [], confirmClear = false, msg = '', disposed = false;
-  addCleanup && addCleanup(() => { disposed = true; });
+  let tab = 'plates', cur = null, kleuren = {}, color = PALETTE[8], tool = 'fill', undo = [], redo = [], confirmClear = false, msg = '', disposed = false, groep = 'alles', setId = 'regenboog', zoom = 100, heroCtl = null, lab = null, games = null, curColor = '#e53935';
+  let recent = rd(`kleur:${uid}:recent`, []); if (!Array.isArray(recent)) recent = [];
+  let pals = K.cleanPalettes(rd(`kleur:${uid}:pal`, []));
+  let customSet = null;
+  addCleanup && addCleanup(() => { disposed = true; try { heroCtl && heroCtl.dispose(); } catch { /* stil */ } try { lab && lab.dispose(); games && games.dispose(); } catch { /* stil */ } });
+  const $ = (s) => view.querySelector(s);
+  const say = (t) => { msg = t; const e = $('#kl-msg'); if (e) e.innerHTML = t ? `<small class="err" style="color:inherit">${esc(t)}</small>` : ''; };
 
   const save = () => { const all = readAll(); if (Object.keys(kleuren).length) all[cur.id] = kleuren; else delete all[cur.id]; if (!writeAll(all)) msg = 'Opslaan lukt niet (opslag vol of geblokkeerd).'; };
-  const snap = () => { undo.push({ ...kleuren }); if (undo.length > 60) undo.shift(); };
+  const snap = () => { undo.push({ ...kleuren }); if (undo.length > 80) undo.shift(); redo = []; };
+  const sets = () => [...K.SETS, ...pals.map((p, i) => ({ id: 'u' + i, name: '⭐ ' + p.name, colors: p.colors })), ...(customSet ? [customSet] : [])];
+  const curSet = () => sets().find((s) => s.id === setId) || K.SETS[0];
+  const pushRecent = (c) => { recent = [c, ...recent.filter((x) => x !== c)].slice(0, 8); wr(`kleur:${uid}:recent`, recent); };
+  const labApi = {
+    esc, say: (t) => say(t), copy: copyText, pals: () => pals, setPals: (a) => { pals = K.cleanPalettes(a); wr(`kleur:${uid}:pal`, pals); },
+    toColoring: (colors, name) => { customSet = { id: 'custom', name: '🎨 ' + (name || 'Mijn palet'), colors: colors.slice(0, 24) }; setId = 'custom'; color = customSet.colors[0]; tab = 'plates'; cur ? draw() : menu(); renderTabs(); say(`Palet “${customSet.name}” staat klaar bij het kleuren.`); },
+    cur: () => curColor, setCur: (c) => { curColor = c; },
+  };
 
+  function build() {
+    view.innerHTML = `${styleTag()}${CSS}<div class="ap" id="kl"><div id="kl-hero"></div><div class="tabs2" id="kl-tabs"></div><div id="kl-body"></div><div id="kl-msg" class="msg"></div></div>`;
+    heroCtl = hero($('#kl-hero'), { gameId: 'kleur', height: 96, title: `${icon('paint', { size: 30 })} Kleur`, rightHtml: `${worldSelectHtml('kleur')}${gearHtml()}` });
+    $('#ap-world').onchange = (e) => heroCtl.setWorld(e.target.value);
+    wireGear(view, (t) => say(t));
+    renderTabs(); route();
+  }
+  function renderTabs() {
+    const t = $('#kl-tabs'); if (!t) return;
+    t.innerHTML = [['plates', '🎨 Kleurplaten'], ['lab', '🌈 Kleurlab'], ['games', '🎯 Spelletjes']].map(([k, l]) => `<button data-tab="${k}" class="${k === tab ? 'on' : ''}">${l}</button>`).join('');
+    t.onclick = (e) => { const b = e.target.closest('[data-tab]'); if (!b) return; tab = b.dataset.tab; renderTabs(); route(); };
+  }
+  function route() {
+    if (lab) { lab.dispose(); lab = null; } if (games) { games.dispose(); games = null; } msg = '';
+    const body = $('#kl-body'); body.onclick = null;
+    if (tab === 'lab') { body.innerHTML = '<div id="kl-labhost"></div>'; lab = mountLab($('#kl-labhost'), labApi); }
+    else if (tab === 'games') { body.innerHTML = '<div id="kl-gamehost"></div>'; games = mountGames($('#kl-gamehost'), { esc, rd: (k, d) => rd(`kleur:${uid}:${k}`, d), wr: (k, v) => wr(`kleur:${uid}:${k}`, v), say, scene: (id, o) => playScene(view, id, o) }); }
+    else if (cur) draw(); else menu();
+  }
+
+  // ===== galerij =====
   function menu() {
     cur = null; confirmClear = false; msg = '';
-    const all = readAll();
-    view.innerHTML = `<div class="box"><b>🎨 Kleurplaten</b><br><small>Kies een plaatje om in te kleuren. Je kleuren worden onthouden.</small>
-      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.5rem;margin-top:.6rem">${PLATEN.map((p) => `<button data-id="${p.id}" style="padding:.3rem;min-height:40px;display:flex;flex-direction:column;align-items:center;gap:.2rem;background:var(--card);border:1px solid var(--line);border-radius:10px"><span style="width:100%;aspect-ratio:1;display:block;background:#fff;border-radius:6px;overflow:hidden;pointer-events:none">${svgString(p, all[p.id] || {}).replace('width="400" height="400"', 'width="100%" height="100%"')}</span><small>${esc(p.naam)}${all[p.id] && Object.keys(all[p.id]).length ? ' ✓' : ''}</small></button>`).join('')}</div></div>`;
+    const all = readAll(), done = rd(DKEY, {}), g = GROEPEN.find((x) => x[0] === groep) || GROEPEN[0];
+    const list = PLATEN.filter((p) => !g[2] || g[2].includes(p.id));
+    const dayIdx = Math.floor(Date.now() / 86400000) % PLATEN.length, daily = PLATEN[dayIdx];
+    const totalDone = PLATEN.filter((p) => done[p.id]).length;
+    $('#kl-body').innerHTML = `<div class="card"><b>${icon('paint', { size: 28 })} Kies een plaatje</b> <small class="mute">${PLATEN.length} plaatjes · ${totalDone} af</small>
+      <div class="kl-row" style="margin-bottom:0"><button data-id="${daily.id}" class="on" style="flex:1">⭐ Plaatje van de dag: ${esc(daily.naam)}</button></div>
+      <div class="tabs2" style="margin-top:.5rem">${GROEPEN.map(([k, l]) => `<button data-grp="${k}" class="${k === groep ? 'on' : ''}">${l}</button>`).join('')}</div>
+      <div class="kl-gal">${list.map((p) => { const k = all[p.id] || {}, n = countFilled(k), pct = Math.min(100, Math.round(n / p.shapes.length * 100)); return `<button data-id="${p.id}"><span class="th">${svgString(p, k).replace('width="400" height="400"', 'width="100%" height="100%"')}</span><small>${esc(p.naam)}${done[p.id] ? ' ✓' : ''}</small><span class="bar"><i style="width:${pct}%"></i></span></button>`; }).join('')}</div></div>`;
     view.querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', () => open(b.dataset.id)));
+    view.querySelectorAll('[data-grp]').forEach((b) => b.addEventListener('click', () => { groep = b.dataset.grp; menu(); }));
   }
 
   function open(id) {
     cur = PLATEN.find((p) => p.id === id); if (!cur) return;
-    const saved = readAll()[id]; kleuren = saved && typeof saved === 'object' ? { ...saved } : {}; undo = []; confirmClear = false; msg = '';
+    const saved = readAll()[id]; kleuren = saved && typeof saved === 'object' ? { ...saved } : {}; undo = []; redo = []; confirmClear = false; msg = ''; zoom = 100;
     draw();
   }
 
+  // ===== kleuren =====
   function draw() {
     if (disposed) return;
-    const valid = /^#[0-9a-f]{6}$/i.test(color) ? color : '#000000';
-    view.innerHTML = `<div class="box" style="padding:.7rem">
-      <div class="row wrap" style="margin:0 0 .5rem"><button id="kl-back" style="min-height:40px">← Plaatjes</button><b style="flex:1;text-align:center">${esc(cur.emoji + ' ' + cur.naam)}</b><button id="kl-rnd" style="min-height:40px">🎲 Verras me</button></div>
-      <div id="kl-art" style="width:100%;max-width:460px;margin:0 auto;aspect-ratio:1;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden;touch-action:manipulation;user-select:none;-webkit-user-select:none">${svgString(cur, kleuren, { id: true }).replace('width="400" height="400"', 'width="100%" height="100%" style="display:block"')}</div>
-      <div class="row wrap" style="margin:.6rem 0 0"><button data-tool="fill" class="${tool === 'fill' ? 'pri' : ''}" style="min-height:40px">🪣 Emmer</button><button data-tool="erase" class="${tool === 'erase' ? 'pri' : ''}" style="min-height:40px">🧽 Gum</button><button id="kl-undo" style="min-height:40px" ${undo.length ? '' : 'disabled'}>↶ Ongedaan</button></div>
-      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:.6rem 0">${PALETTE.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="min-height:40px;aspect-ratio:1;border-radius:9px;padding:0;background:${c};border:${c === color ? '4px solid var(--accent)' : '1px solid var(--line)'}"></button>`).join('')}</div>
-      <div class="row"><label style="display:flex;gap:.5rem;align-items:center"><small>Eigen kleur</small><input type="color" id="kl-custom" value="${valid}" style="width:3rem;height:2.5rem;padding:0;border:0;background:none"></label></div>
-      <div class="row wrap">${confirmClear ? '<small>Alles wissen?</small><button id="kl-yes" class="pri" style="min-height:40px">Ja, wis alles</button><button id="kl-no" style="min-height:40px">Nee</button>' : '<button id="kl-clear" style="min-height:40px">🗑 Alles wissen</button>'}<button id="kl-png" class="pri" style="min-height:40px">⬇ Bewaar als plaatje</button></div>
-      <div id="kl-msg">${msg ? `<small class="err">${esc(msg)}</small>` : ''}</div></div>`;
-    const art = view.querySelector('#kl-art');
-    const undoBtn = view.querySelector('#kl-undo');
-    const msgEl = view.querySelector('#kl-msg');
-    const say = (t) => { msg = t; msgEl.innerHTML = t ? `<small class="err">${esc(t)}</small>` : ''; };
-
+    const valid = /^#[0-9a-f]{6}$/i.test(color) ? color : '#000000', S = sets(), cs = curSet(), n = countFilled(kleuren), pct = Math.min(100, Math.round(n / cur.shapes.length * 100)), tips = K.harmony(valid, 'analoog').concat(K.harmony(valid, 'compl')[1]);
+    $('#kl-body').innerHTML = `<div class="card" style="padding:.7rem">
+      <div class="kl-row" style="margin-top:0"><button id="kl-back" style="min-height:calc(42px*var(--s))">← Plaatjes</button><b style="flex:1;text-align:center">${esc(cur.emoji + ' ' + cur.naam)}</b><button id="kl-rnd" style="min-height:calc(42px*var(--s))">🎲 Verras me</button></div>
+      <div class="kl-timebar" title="${pct}% ingekleurd"><i style="width:${pct}%;transition:none"></i></div>
+      <div id="kl-art" class="kl-art"><div id="kl-svg" style="width:${zoom}%">${svgString(cur, kleuren, { id: true }).replace('width="400" height="400"', 'width="100%" height="100%" style="display:block"')}</div></div>
+      <div class="kl-row"><span>🔍</span><input type="range" id="kl-zoom" min="100" max="300" step="25" value="${zoom}" style="flex:1" aria-label="Inzoomen"><b>${zoom}%</b></div>
+      <div class="kl-row"><button data-tool="fill" class="${tool === 'fill' ? 'on' : ''}">🪣 Emmer</button><button data-tool="erase" class="${tool === 'erase' ? 'on' : ''}">🧽 Gum</button><button data-tool="pipet" class="${tool === 'pipet' ? 'on' : ''}">💧 Pipet</button><button data-tool="bg" class="${tool === 'bg' ? 'on' : ''}">🖼 Achtergrond</button>
+        <button id="kl-undo" ${undo.length ? '' : 'disabled'}>↶</button><button id="kl-redo" ${redo.length ? '' : 'disabled'}>↷</button></div>
+      <div class="kl-row"><select id="kl-set" aria-label="Kleurenset" style="flex:1">${S.map((x) => `<option value="${x.id}"${x.id === cs.id ? ' selected' : ''}>${esc(x.name)}</option>`).join('')}</select>
+        <input type="color" id="kl-custom" value="${valid}" style="width:3.2rem;height:46px;padding:0;border:0;background:none" aria-label="Eigen kleur"></div>
+      <div class="kl-pg">${cs.colors.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:${c === color ? '4px solid var(--accent)' : '1px solid var(--line)'}"></button>`).join('')}</div>
+      ${recent.length ? `<small class="mute">Laatst gebruikt</small><div class="kl-rec">${recent.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:${c === color ? '3px solid var(--accent)' : '1px solid var(--line)'}"></button>`).join('')}</div>` : ''}
+      <small class="mute">Past erbij (${esc(K.colorName(valid))}):</small><div class="kl-rec">${tips.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:1px solid var(--line)"></button>`).join('')}</div>
+      <div class="kl-row">${confirmClear ? '<small>Alles wissen?</small><button id="kl-yes" class="on">Ja, wis alles</button><button id="kl-no">Nee</button>' : '<button id="kl-clear">🗑 Alles wissen</button>'}<button id="kl-png" class="on">⬇ Bewaar als plaatje</button></div></div>`;
+    const art = $('#kl-art'), undoBtn = $('#kl-undo');
+    const refresh = () => { const n2 = countFilled(kleuren), p2 = Math.min(100, Math.round(n2 / cur.shapes.length * 100)), bar = view.querySelector('.kl-timebar i'); if (bar) bar.style.width = p2 + '%'; $('#kl-undo').disabled = !undo.length; $('#kl-redo').disabled = !redo.length; };
     art.addEventListener('pointerdown', (e) => {
-      const el = e.target.closest && e.target.closest('[data-i]'); if (!el) return;
-      e.preventDefault();
-      const i = el.dataset.i, nieuw = tool === 'erase' ? null : color;
-      if ((kleuren[i] || null) === nieuw) return;
-      snap(); if (nieuw) kleuren[i] = nieuw; else delete kleuren[i];
-      el.setAttribute('fill', nieuw || '#ffffff'); undoBtn.disabled = false; save(); if (msg) say(msg);
+      const el = e.target.closest && e.target.closest('[data-i],[data-bg]'); if (!el) return; e.preventDefault();
+      const isBg = el.hasAttribute('data-bg'), key = isBg ? 'bg' : el.dataset.i;
+      if (tool === 'pipet') { const c = isBg ? (kleuren.bg || '#ffffff') : (kleuren[key] || '#ffffff'); color = c; tool = 'fill'; draw(); return; }
+      if (isBg && tool !== 'bg' && tool !== 'erase') return;   // de achtergrond kleur je alleen met het achtergrond-gereedschap
+      const nieuw = tool === 'erase' ? null : color;
+      if (tool === 'bg' || isBg) { if ((kleuren.bg || null) === (tool === 'erase' ? null : color)) return; snap(); if (tool === 'erase') delete kleuren.bg; else kleuren.bg = color; draw(); save(); return; }
+      if ((kleuren[key] || null) === nieuw) return;
+      snap(); if (nieuw) { kleuren[key] = nieuw; pushRecent(nieuw); } else delete kleuren[key];
+      el.setAttribute('fill', nieuw || '#ffffff'); save(); refresh();
+      if (nieuw && countFilled(kleuren) >= cur.shapes.length) {
+        const done = rd(DKEY, {}); if (!done[cur.id]) { done[cur.id] = 1; wr(DKEY, done); heroCtl && heroCtl.burst(160, 60, { kind: 'confetti', n: 24 }); playScene(view, 'victory', { title: 'Mooi gekleurd!', sub: cur.naam }); }
+      }
     });
-    view.querySelector('#kl-back').onclick = menu;
-    view.querySelector('#kl-rnd').onclick = () => {
-      snap(); const pal = PALETTE.filter((c) => c !== '#000000');
-      cur.shapes.forEach((_, i) => { kleuren[i] = pal[Math.floor(Math.random() * pal.length)]; }); confirmClear = false; save(); draw();
+    $('#kl-back').onclick = menu;
+    $('#kl-rnd').onclick = () => {
+      snap(); const pal = K.generatePalette({ mode: ['willekeurig', 'analoog', 'triade', 'split'][K.rand(4)], n: 5 });
+      cur.shapes.forEach((_, i) => { kleuren[i] = pal[K.rand(pal.length)]; }); confirmClear = false; save(); draw();
     };
     view.querySelectorAll('[data-tool]').forEach((b) => b.onclick = () => { tool = b.dataset.tool; draw(); });
-    view.querySelectorAll('[data-col]').forEach((b) => b.onclick = () => { color = b.dataset.col; tool = 'fill'; draw(); });
-    const cust = view.querySelector('#kl-custom');
+    view.querySelectorAll('[data-col]').forEach((b) => b.onclick = () => { color = b.dataset.col; if (tool === 'erase' || tool === 'pipet') tool = 'fill'; draw(); });
+    $('#kl-set').onchange = (e) => { setId = e.target.value; draw(); };
+    $('#kl-zoom').oninput = (e) => { zoom = +e.target.value; $('#kl-svg').style.width = zoom + '%'; e.target.nextElementSibling.textContent = zoom + '%'; };
+    const cust = $('#kl-custom');
     cust.addEventListener('input', () => { color = cust.value; tool = 'fill'; });
     cust.addEventListener('change', () => { color = cust.value; tool = 'fill'; draw(); });
-    undoBtn.onclick = () => { if (!undo.length) return; kleuren = undo.pop(); save(); draw(); };
-    const cl = view.querySelector('#kl-clear'); if (cl) cl.onclick = () => { confirmClear = true; draw(); };
-    const no = view.querySelector('#kl-no'); if (no) no.onclick = () => { confirmClear = false; draw(); };
-    const yes = view.querySelector('#kl-yes'); if (yes) yes.onclick = () => { if (Object.keys(kleuren).length) snap(); kleuren = {}; confirmClear = false; save(); draw(); };
-    view.querySelector('#kl-png').onclick = () => {
+    undoBtn.onclick = () => { if (!undo.length) return; redo.push({ ...kleuren }); kleuren = undo.pop(); save(); draw(); };
+    $('#kl-redo').onclick = () => { if (!redo.length) return; undo.push({ ...kleuren }); kleuren = redo.pop(); save(); draw(); };
+    const cl = $('#kl-clear'); if (cl) cl.onclick = () => { confirmClear = true; draw(); };
+    const no = $('#kl-no'); if (no) no.onclick = () => { confirmClear = false; draw(); };
+    const yes = $('#kl-yes'); if (yes) yes.onclick = () => { if (Object.keys(kleuren).length) snap(); kleuren = {}; confirmClear = false; save(); draw(); };
+    $('#kl-png').onclick = () => {
       const url = URL.createObjectURL(new Blob([svgString(cur, kleuren)], { type: 'image/svg+xml;charset=utf-8' }));
       const img = new Image();
       img.onload = () => {
@@ -175,7 +290,8 @@ export function kleurView(ctx) {
       img.onerror = () => { URL.revokeObjectURL(url); say('Plaatje maken is mislukt.'); };
       img.src = url;
     };
+    if (msg) say(msg);
   }
 
-  menu();
+  build();
 }
