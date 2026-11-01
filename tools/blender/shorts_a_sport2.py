@@ -20,6 +20,7 @@ def darts(S, name, darts_=((20, 'T'), (20, 'T'), (20, 'S'), (19, 'T'), (3, 'D'),
     tot = 0
     for k, ((sec, band), fa) in enumerate(zip(darts_, arrive)):
         if band == 'B': tx, tz, pts = 0.03, 0.02, 50
+        elif sec == 'B': tx, tz, pts = .27, -.12, 25
         else:
             i = SEC.index(sec); th = math.radians(90 - i * 18); r = RAD[band]; tx, tz = r * math.cos(th), r * math.sin(th); pts = sec * MUL[band]
         tz += .0; tot += pts
