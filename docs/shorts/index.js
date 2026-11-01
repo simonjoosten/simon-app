@@ -187,6 +187,19 @@ export const SHORTS = [
   {"id":"s185","t":"Zeilboot op de golven","c":"natuur","tags":["golven","boot"],"s":9,"kb":408,"a":1,"ak":38},
   {"id":"s186","t":"Rustige groene zee","c":"natuur","tags":["golven","zee"],"s":9,"kb":366,"a":1,"ak":37},
   {"id":"s187","t":"Hoge golven","c":"natuur","tags":["golven","storm"],"s":9,"kb":463,"a":1,"ak":38},
+  {"id":"s188","t":"Paddenstoelenbos","c":"natuur","tags":["paddenstoelen","bos"],"s":9,"kb":230,"a":1,"ak":38},
+  {"id":"s189","t":"Gloeiend sprookjesbos","c":"natuur","tags":["paddenstoelen","magie"],"s":9,"kb":233,"a":1,"ak":38},
+  {"id":"s190","t":"Gele en rode zwammen","c":"natuur","tags":["paddenstoelen","herfst"],"s":9,"kb":222,"a":1,"ak":38},
+  {"id":"s191","t":"Dag en nacht","c":"natuur","tags":["dag","nacht"],"s":9,"kb":327,"a":1,"ak":38},
+  {"id":"s192","t":"Dag en nacht in de sneeuw","c":"natuur","tags":["dag","nacht","winter"],"s":9,"kb":326,"a":1,"ak":38},
+  {"id":"s193","t":"Moestuin groeit","c":"natuur","tags":["moestuin","groenten"],"s":9,"kb":351,"a":1,"ak":36},
+  {"id":"s194","t":"Tuin vol fruit","c":"natuur","tags":["moestuin","fruit"],"s":9,"kb":342,"a":1,"ak":35},
+  {"id":"s195","t":"Maïs en wortels","c":"natuur","tags":["moestuin","maïs"],"s":9,"kb":344,"a":1,"ak":36},
+  {"id":"s196","t":"Noorderlicht","c":"natuur","tags":["noorderlicht","winter"],"s":9,"kb":496,"a":1,"ak":39},
+  {"id":"s197","t":"Roze noorderlicht","c":"natuur","tags":["noorderlicht","nacht"],"s":9,"kb":466,"a":1,"ak":38},
+  {"id":"s198","t":"Zonnebloemen volgen de zon","c":"natuur","tags":["zonnebloem","zon"],"s":9,"kb":490,"a":1,"ak":38},
+  {"id":"s199","t":"Bijen en zonnebloemen","c":"natuur","tags":["zonnebloem","bij"],"s":9,"kb":512,"a":1,"ak":38},
+  {"id":"s200","t":"Bloemen draaien mee","c":"natuur","tags":["bloemen","zon"],"s":9,"kb":406,"a":1,"ak":38},
   {"id":"s201","t":"Octopus heeft drie harten","c":"weetjes","tags":["octopus","dieren","hart"],"s":8,"kb":385,"a":1,"ak":32},
   {"id":"s202","t":"Zwaarste dier ter wereld","c":"weetjes","tags":["vinvis","gewicht","dieren"],"s":8,"kb":287,"a":1,"ak":32},
   {"id":"s203","t":"Bijen dansen","c":"weetjes","tags":["bij","dansen","dieren"],"s":8,"kb":302,"a":1,"ak":32},
@@ -284,5 +297,7 @@ export const SHORTS = [
   {"id":"s295","t":"Hoog in de lucht","c":"fantasie","tags":["kasteel","koning","wolken"],"s":8,"kb":256,"a":1,"ak":34},
   {"id":"s296","t":"Toverdrank","c":"fantasie","tags":["toverdrank","tovenaar","magie"],"s":8,"kb":274,"a":1,"ak":33},
   {"id":"s297","t":"Tovenaar mengt drank","c":"fantasie","tags":["toverdrank","tovenaar","eenhoorn"],"s":8,"kb":303,"a":1,"ak":33},
-  {"id":"s298","t":"Kikker plus ster","c":"fantasie","tags":["toverdrank","kikker","fee"],"s":8,"kb":282,"a":1,"ak":33}
+  {"id":"s298","t":"Kikker plus ster","c":"fantasie","tags":["toverdrank","kikker","fee"],"s":8,"kb":282,"a":1,"ak":33},
+  {"id":"s299","t":"Eenhoorn regenboog","c":"fantasie","tags":["eenhoorn","regenboog","sprookje"],"s":8,"kb":297,"a":1,"ak":35},
+  {"id":"s300","t":"Eenhoorn rent","c":"fantasie","tags":["eenhoorn","regenboog","sterren"],"s":8,"kb":244,"a":1,"ak":34}
 ];
