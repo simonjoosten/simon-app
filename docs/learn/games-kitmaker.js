@@ -39,4 +39,8 @@ export async function openKitImport(o) {
   const { openImportCode } = await import('./study-maker.js?v=2');
   return openImportCode(host(o));
 }
+export async function openKitPhoto(o) {
+  const { openPhotoKit } = await import('./r4-ocr.js?v=1');
+  return openPhotoKit(host(o));
+}
 export async function removeKit(id) { C.Kits.remove(id); }

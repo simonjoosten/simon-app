@@ -6,7 +6,8 @@ import * as L from './study-logic.js?v=2';
 import * as A from './study-art.js?v=2';
 import { MODES, startLeren, startOefenen, startToets, startTalen, historyCard } from './study-modes.js?v=2';
 import { openMaker, openImportCode } from './study-maker.js?v=2';
-import { isR4, r4Kit, mergeR4 } from './r4-packs.js?v=1';   // ronde 4: 10 extra kits (los van packs/index.js)
+import { isR4, r4Kit, mergeR4 } from './r4-packs.js?v=1';
+const openPhotoKit = (S) => import('./r4-ocr.js?v=1').then((m) => m.openPhotoKit(S)).catch(() => S.toast('Kit uit foto laden lukt niet'));  // ronde 4: foto -> tekst -> kit   // ronde 4: 10 extra kits (los van packs/index.js)
 
 export { L as logic };
 export { parsePaste, pairsToQuestions, textToQuestions, generate, GENERATORS, encodeKit, decodeKit, gradeFor, LearnQueue, LivesState, FlashDeck, cleanQ, cleanKit, fieldsToQ, qToFields, kitToText, wordsOf, langQuestion, stepsFor, planSession, timeWords, pickDistractors } from './study-logic.js?v=2';
@@ -200,7 +201,7 @@ export function learnStudyView(ctx) {
     const modes = h('div', { class: 'ls-modes' }, MODES.filter((m) => m.id !== 'leren' && m.id !== 'toets' && !(m.id === 'talen' && !(k && k.lang && k.lang !== 'nl'))).map(modeBtn), h('button', { class: 'ls-mode', disabled: !k, onclick: () => go('toets') }, h('b', null, A.iconEl('pencil', 44, '✍️')), h('div', null, h('span', null, 'Toets'), h('small', null, 'Echte toets met cijfer.'))));
     mount(content, statRow(), hero, modes,
       h('div', { class: 'ls-card' }, h('h3', null, 'Zelf kits maken'), h('div', { class: 'ls-muted' }, 'Plak een woordenlijst, laat een tekst vragen worden, of gebruik de generator voor sommen.'),
-        h('div', { class: 'ls-row', style: { marginTop: '8px' } }, h('button', { class: 'ls-btn p', style: { flex: 1 }, onclick: () => openMaker(S, {}) }, '➕ Nieuwe kit'), h('button', { class: 'ls-btn', style: { flex: 1 }, onclick: () => openImportCode(S) }, '📥 Kit-code'))));
+        h('div', { class: 'ls-row', style: { marginTop: '8px', flexWrap: 'wrap' } }, h('button', { class: 'ls-btn p', style: { flex: '1 1 130px' }, onclick: () => openMaker(S, {}) }, '➕ Nieuwe kit'), h('button', { class: 'ls-btn', 'data-act': 'kit-photo', style: { flex: '1 1 130px' }, onclick: () => openPhotoKit(S) }, '📷 Kit uit foto'), h('button', { class: 'ls-btn', style: { flex: '1 1 100%' }, onclick: () => openImportCode(S) }, '📥 Kit-code'))));
   }
 
   /* --- Kits (bibliotheek) --- */
@@ -227,7 +228,7 @@ export function learnStudyView(ctx) {
           open ? (g.kits.length ? g.kits.map(kitRow) : g.empty ? h('div', { class: 'ls-card ls-muted' }, 'Je hebt nog geen eigen kits. Tik op “Nieuwe kit”.') : null) : null);
       }));
     }
-    mount(content, h('div', { class: 'ls-row', style: { marginBottom: '8px' } }, h('button', { class: 'ls-btn p', style: { flex: 1 }, onclick: () => openMaker(S, {}) }, '➕ Nieuwe kit'), h('button', { class: 'ls-btn', style: { flex: 1 }, onclick: () => openImportCode(S) }, '📥 Kit-code plakken')), qi, chips, list);
+    mount(content, h('div', { class: 'ls-row', style: { marginBottom: '8px', flexWrap: 'wrap' } }, h('button', { class: 'ls-btn p', style: { flex: '1 1 130px' }, onclick: () => openMaker(S, {}) }, '➕ Nieuwe kit'), h('button', { class: 'ls-btn', 'data-act': 'kit-photo', style: { flex: '1 1 130px' }, onclick: () => openPhotoKit(S) }, '📷 Kit uit foto'), h('button', { class: 'ls-btn', style: { flex: '1 1 100%' }, onclick: () => openImportCode(S) }, '📥 Kit-code plakken')), qi, chips, list);
     drawList();
   }
   function kitSheet(k) {
