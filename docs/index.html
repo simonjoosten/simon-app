@@ -31,6 +31,7 @@
   .status{display:flex;justify-content:space-between;align-items:center;padding:.9rem 1.4rem .2rem;font-weight:600;font-size:.95rem}
   .status button{background:rgba(255,255,255,.2);border:0;color:#fff;border-radius:99px;padding:.3rem .8rem;font-size:.8rem}
   .hello{padding:.4rem 1.4rem 0;opacity:.85;font-size:.9rem}
+  .srch{padding:0 1rem}.srch input{width:100%;box-sizing:border-box;padding:.65rem .9rem;border-radius:99px;border:0;background:rgba(255,255,255,.22);color:#fff;font:inherit;font-size:1rem;outline:none}.srch input::placeholder{color:rgba(255,255,255,.7)}
   .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:1.4rem .4rem;padding:1.5rem 1rem;flex:1;align-content:start}
   .app{display:flex;flex-direction:column;align-items:center;gap:.35rem;background:none;border:0;color:#fff;padding:0;font-size:.72rem;position:relative}
   .ico{width:58px;height:58px;border-radius:15px;display:grid;place-items:center;box-shadow:0 4px 12px rgba(0,0,0,.25)}
@@ -243,6 +244,34 @@ function setBadge(id, n) {
   el.textContent = n;
 }
 
+/* ---------- Zoeken ---------- */
+const KEYS = {
+  klusjes: 'taken huishouden punten', vraag: 'quiz vraag dag', agenda: 'kalender afspraken planning', gewoontes: 'habits routine reeks',
+  huisdier: 'dier knuffel verzorgen', themapark: 'pretpark spel tycoon attracties', aquarium: 'vissen spel tycoon', stadbouwer: 'stad bouwen spel tycoon',
+  ruimtebasis: 'ruimte space spel tycoon', foodtruck: 'eten restaurant spel tycoon', escape: 'kamer puzzel ontsnappen raadsel spel', foto: 'camera plaatjes collage filter bewerken',
+  kratjes: 'puzzel spel schuiven', verbind: 'puzzel spel kleuren', knopen: 'puzzel spel touw', pinnen: 'puzzel spel', tangram: 'puzzel spel vormen',
+  learnstudy: 'leren school oefenen toets huiswerk kit', learnspel: 'leren spel quiz kit', shorts: 'filmpjes video kijken', tijd: 'klok timer wekker stopwatch',
+  rekenen: 'sommen wiskunde tafels', kompas: 'richting gps noord', mop: 'grap humor lachen', meme: 'plaatje grap tekst', muziek: 'muziek maken beats instrument liedje',
+  kleur: 'tekenen kleurplaat verf', dobbel: 'dobbelsteen spel kans', pixel: 'tekenen kunst plaatje animatie', piano: 'muziek toetsen instrument liedje',
+  emojimix: 'smiley plaatjes', weer: 'regen zon temperatuur', gamescroller: 'spel', chat: 'berichten praten sturen', limo: 'drinken bestellen', notifications: 'meldingen berichten',
+  lijst: 'mensen leden', join: 'aanvragen', notify: 'melding sturen',
+};
+const zoekNorm = (t) => String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+function searchApps(q, ids) {
+  const words = zoekNorm(q).split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const score = (id) => {
+    const name = zoekNorm(META[id].n), keys = zoekNorm(KEYS[id] || ''), idn = zoekNorm(id);
+    let sc = 0;
+    for (const w of words) {
+      if (name.startsWith(w)) sc += 4; else if (name.split(/[\s-]+/).some((x) => x.startsWith(w))) sc += 3; else if (name.includes(w) || idn.includes(w)) sc += 2;
+      else if (keys.split(/\s+/).some((x) => x.startsWith(w))) sc += 1; else return 0;
+    }
+    return sc;
+  };
+  return ids.map((id) => [id, score(id)]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]).map((x) => x[0]);
+}
+
 /* ---------- Homescherm ---------- */
 async function homeView() {
   stop();
@@ -260,11 +289,26 @@ async function homeView() {
   $('#app').innerHTML = `<div class="phone">
     <div class="status"><span>${time}</span><span><button id="gfxset" aria-label="Instellingen">⚙️</button> <button id="out">Uitloggen</button></span></div>
     <div class="hello">Hoi ${esc(me.name)} 👋</div>
-    <div class="grid">${mine.filter((i) => !META[i].core).map(tile).join('') || '<small style="grid-column:1/-1;text-align:center">Geen apps. Open de App Installer.</small>'}</div>
+    <div class="srch"><input id="appq" type="search" placeholder="Zoek een app…" aria-label="Zoek een app" autocomplete="off" enterkeyhint="search"></div>
+    <div class="grid" id="appgrid">${mine.filter((i) => !META[i].core).map(tile).join('') || '<small style="grid-column:1/-1;text-align:center">Geen apps. Open de App Installer.</small>'}</div>
     <div class="dock">${mine.filter((i) => META[i].core).map(tile).join('')}</div></div>`;
   $('#gfxset').onclick = async () => { try { const m = await import('./gfx/panel.js?v=1'); m.openSettingsPanel({ title: 'Instellingen', toast: (t) => { try { alert(t); } catch (e) { /* ok */ } } }); } catch (e) { console.error(e); } };
   $('#out').onclick = logout;
-  document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+  const wire = () => document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
+  wire();
+  const grid = $('#appgrid'), gridHtml = grid.innerHTML;
+  $('#appq').oninput = (e) => {
+    const q = e.target.value.trim();
+    if (!q) { grid.innerHTML = gridHtml; wire(); return; }
+    const hits = searchApps(q, ids);
+    grid.innerHTML = hits.length ? hits.map((id) => installed(id) ? tile(id) : `<button class="app" data-add="${id}" style="opacity:.75">${ico(id)}${esc(META[id].n)}<small style="font-size:.6rem">+ installeren</small></button>`).join('')
+      : `<small style="grid-column:1/-1;text-align:center">Niets gevonden voor “${esc(q)}”.</small>`;
+    wire();
+    grid.querySelectorAll('[data-add]').forEach((b) => b.onclick = async () => {
+      const id = b.dataset.add; if (!me.apps.includes(id)) { me.apps = [...me.apps, id]; await updateDoc(doc(db, 'users', me.uid), { apps: me.apps }); }
+      openApp(id);
+    });
+  };
   const col = collection(db, 'limoRequests');
   if (me.admin && me.apps.includes('limoadmin')) live(query(col, where('status', '==', 'pending')), (sn) => setBadge('limoadmin', sn.size));
   if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js?v=3').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
@@ -288,10 +332,11 @@ async function openApp(id) {
 /* ---------- App Installer ---------- */
 async function installerView() {
   const list = Object.keys(META).filter((id) => !META[id].core && (!META[id].admin || me.admin));
-  $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><ul>${list.map((id) => { const on = me.apps.includes(id); return `
-    <li>${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}</span>
+  $('#view').innerHTML = `<div class="box"><h3>Beschikbare apps</h3><input id="instq" type="search" placeholder="Zoek in apps…" style="width:100%;box-sizing:border-box;margin:.2rem 0 .5rem;padding:.55rem .8rem;border-radius:10px;border:1px solid var(--line,#ccc)"><ul>${list.map((id) => { const on = me.apps.includes(id); return `
+    <li data-n="${id}">${ico(id)}<span style="flex:1;margin-left:.4rem">${esc(META[id].n)}</span>
     <button class="${on ? '' : 'pri'}" data-i="${id}">${on ? 'Verwijderen' : 'Installeren'}</button></li>`; }).join('')}</ul>
     <small>App Installer en Notificaties zitten er altijd bij.</small><br><small style="opacity:.5">Versie 30 okt · ${list.length} apps beschikbaar</small></div>`;
+  $('#instq').oninput = (e) => { const q = e.target.value.trim(), hit = q ? new Set(searchApps(q, list)) : null; document.querySelectorAll('[data-n]').forEach((li) => { li.style.display = !hit || hit.has(li.dataset.n) ? '' : 'none'; }); };
   document.querySelectorAll('[data-i]').forEach((b) => b.onclick = async () => {
     const id = b.dataset.i;
     me.apps = me.apps.includes(id) ? me.apps.filter((x) => x !== id) : [...me.apps, id];
