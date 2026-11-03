@@ -6,7 +6,7 @@ import { drawCompass, drawLevel } from './kompas-draw.js?v=1';
 import { icon, GFX, Themes, injectCss, topBar, bindGear, tabsHtml, makeStore, makeCanvas, escHtml } from './tools-ui.js?v=1';
 export { WINDS, WINDNAMES, dir } from './kompas-core.js?v=1';
 
-const TABS = [['kompas', 'Kompas', 'compass'], ['waterpas', 'Waterpas', 'target'], ['hoogte', 'Hoogte meten', 'tree'], ['locatie', 'Locatie', 'map'], ['plekken', 'Plekken', 'flag'], ['schat', 'Schatzoeken', 'chest'], ['oefen', 'Oefenen', 'book']];
+const TABS = [['kompas', 'Kompas', 'compass'], ['waterpas', 'Waterpas', 'target'], ['hoogte', 'Hoogte meten', 'tree'], ['locatie', 'Locatie', 'map'], ['plekken', 'Plekken', 'flag'], ['schat', 'Schatzoeken', 'chest'], ['buiten', 'Buiten', 'sun'], ['oefen', 'Oefenen', 'book']];
 
 export function kompasView(ctx) {
   const { view, addCleanup } = ctx;
@@ -69,6 +69,7 @@ export function kompasView(ctx) {
     if (tab === 'waterpas') return levelTab(b);
     if (tab === 'hoogte') return heightTab(b);
     b.innerHTML = '<div class="tu-card center"><small>Laden…</small></div>';
+    if (tab === 'buiten') { import('./tools-r4-kompas.js?v=1').then((m) => { if (!alive || my !== seq) return; const b2 = body(); b2.innerHTML = ''; m.buitenTab(b2, S, ctxApi); }).catch((e) => { if (alive && my === seq) body().innerHTML = `<div class="tu-card"><span class="err">Kon dit onderdeel niet laden: ${esc(e.message)}</span></div>`; }); return; }
     import('./kompas-geo.js?v=1').then((m) => { if (!alive || my !== seq) return; const b2 = body(); b2.innerHTML = ''; ({ locatie: m.locatieTab, plekken: m.plekkenTab, schat: m.schatTab, oefen: m.oefenTab })[tab](b2, S, ctxApi); })
       .catch((e) => { if (alive && my === seq) body().innerHTML = `<div class="tu-card"><span class="err">Kon dit onderdeel niet laden: ${esc(e.message)}</span></div>`; });
   }

@@ -4,6 +4,7 @@ import { doc, getDoc, setDoc, updateDoc, deleteDoc, addDoc, collection, getDocs,
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { ADMIN_UID } from './firebase-config.js';
 import { injectKit, head, wireHead, tabsHtml, ic, playScene, appStore, showToast } from './appkit.js?v=1';
+import { extraHtml, surprise } from './tools-r4-klusjes.js?v=1';
 import * as K from './klusjes-core.js?v=1';
 
 // Foto verkleinen tot een kleine JPEG (bewust in dit bestand, zodat Klusjes niets van andere bestanden nodig heeft).
@@ -107,6 +108,8 @@ export async function klusjesView(c) {
       const rows = (key) => K.ranking(stats, wk, key);
       const list = (key, title) => `<div class="ak-card"><h3>${title}</h3>${rows(key).map((x, i) => `<div class="row" style="margin:.4rem 0"><span style="width:2.4rem;text-align:center">${i < 3 ? ic(['medal', 'medal', 'medal'][i], { size: 30 }) + '' : i + 1}</span><span style="flex:1">${esc(x.name)}${x.id === me.uid ? ' <small>(jij)</small>' : ''}${x.streak > 1 ? ` <small>🔥 ${x.streak} dagen</small>` : ''}<br><small class="mute">Niveau ${K.levelOf(x.total || 0)} · ${K.levelTitle(K.levelOf(x.total || 0))}</small></span><b>${x[key] || 0}</b></div>`).join('') || '<small>Nog geen punten.</small>'}</div>`;
       body = list('wp', 'Deze week') + list('total', 'Totaal');
+    } else if (tab === 'extra') {
+      body = extraHtml({ chores, stats, miles, claims, me, plan: store.get().r4 || {}, ic });
     } else if (tab === 'shop') {
       const next = K.nextMilestone(miles, claims, total), fav = store.get().fav;
       body = `<div class="ak-card" style="text-align:center">${ic('coin', { size: 56 })}<div style="font-size:2.2rem;font-weight:800">${total}</div><small>Jouw taakpunten</small>${my.streak > 1 ? `<div><small>🔥 ${my.streak} dagen achter elkaar</small></div>` : ''}
@@ -124,10 +127,15 @@ export async function klusjesView(c) {
         <div class="ak-card"><h3>Prijzen (${got.size}/${K.BADGES.length})</h3><div class="ak-grid" style="grid-template-columns:repeat(3,1fr)">${K.BADGES.map((b) => `<div class="gw-badge ${got.has(b.id) ? 'got' : 'kl-lock'}" style="text-align:center;padding:.5rem .2rem;font-size:.8rem">${ic(b.ic, { size: 52 })}<div><b>${b.n}</b></div><small class="mute">${b.d}</small></div>`).join('')}</div></div>`;
     }
     const pend = open.filter((x) => x.status === 'open').length;
-    view.innerHTML = `${KCSS}<div class="ak">${kHead('Klusjes', `Niveau ${L.level} · ${total} punten`)}${tabsHtml(tab, [['todo', `Te doen${pend ? ` (${pend})` : ''}`, 'hammer'], ['week', 'Week', 'compass'], ['done', 'Klaar', 'medal'], ['score', 'Scorebord', 'trophy'], ['shop', 'Winkel', 'chest'], ['prijzen', 'Prijzen', 'crown']])}${body}</div>`;
+    view.innerHTML = `${KCSS}<div class="ak">${kHead('Klusjes', `Niveau ${L.level} · ${total} punten`)}${tabsHtml(tab, [['todo', `Te doen${pend ? ` (${pend})` : ''}`, 'hammer'], ['week', 'Week', 'compass'], ['done', 'Klaar', 'medal'], ['score', 'Scorebord', 'trophy'], ['shop', 'Winkel', 'chest'], ['prijzen', 'Prijzen', 'crown'], ['extra', 'Extra', 'puzzle']])}${body}</div>`;
     wireHead(view);
     view.querySelectorAll('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; draw(); });
     view.querySelectorAll('[data-done]').forEach((b) => b.onclick = () => openForm(b.dataset.done));
+    view.querySelectorAll('[data-sur]').forEach((b) => b.onclick = () => {
+      const r4 = { ...(store.get().r4 || {}) }, td = K.dayKey(new Date());
+      if (b.dataset.sur === 'again') { r4.again = (r4.again || 0) + 1; r4.surprise = null; } else { const s0 = surprise(td, me.uid, r4.again || 0); r4.surprise = { day: td, title: s0.title, points: s0.points, icon: s0.icon, ok: true }; }
+      store.set({ r4 }); draw();
+    });
     view.querySelectorAll('[data-fav]').forEach((b) => b.onclick = () => { store.set({ fav: store.get().fav === b.dataset.fav ? '' : b.dataset.fav }); draw(); });
     view.querySelectorAll('[data-claim]').forEach((b) => b.onclick = async () => {
       const m = miles.find((x) => x.id === b.dataset.claim); b.disabled = true;

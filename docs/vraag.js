@@ -3,6 +3,7 @@
 import { doc, getDoc, setDoc, deleteDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { injectKit, head, wireHead, tabsHtml, ic, playScene, appStore, showToast } from './appkit.js?v=1';
+import { mountR4 } from './tools-r4-vraag.js?v=1';
 import { GFX } from './gfx/settings.js?v=1';
 import { SECTIONS } from './vraag-bank.js?v=1';
 import * as V from './vraag-core.js?v=1';
@@ -157,11 +158,13 @@ export async function vraagView(ctx) {
     if (game === 'quiz') return drawQuiz();
     if (game === 'liever') return drawLiever();
     if (game === 'dobbel') return drawDobbel();
+    if (game === 'r4') return '<div data-r4host></div>';
     const s = qs();
     const card = (id, icn, t, d) => `<button class="ak-card" data-game="${id}" style="width:100%;text-align:left;display:flex;gap:.8rem;align-items:center;margin:.5rem 0">${ic(icn, { size: 64 })}<span><b style="font-size:1.1em">${t}</b><br><small class="mute">${d}</small></span></button>`;
     return card('quiz', 'lightbulb', 'Kennisquiz', `${GM.QUIZ.length} vragen in ${GM.QUIZ_CATS.length} categorieën${s.best ? ` · record ${s.best}/10` : ''}`)
       + card('liever', 'dice', 'Wat liever?', `Kies en vergelijk ${V.TYPED.filter((t) => t.type === 'liever').length} lastige keuzes${store.get().liever ? ` · ${store.get().liever} gespeeld` : ''}`)
-      + card('dobbel', 'puzzle', 'Dobbelvraag', 'Gooi de dobbelsteen en stel de vraag aan de anderen');
+      + card('dobbel', 'puzzle', 'Dobbelvraag', 'Gooi de dobbelsteen en stel de vraag aan de anderen')
+      + card('r4', 'trophy', 'Nieuwe spelletjes', 'Dagquiz, Bliksemquiz, Waar of niet waar, Wie of wat ben ik?');
   }
   function drawQuiz() {
     const s = qs(), back = '<button class="ak-big" data-gback>‹ Terug</button>';
@@ -251,6 +254,7 @@ export async function vraagView(ctx) {
     wireHeadOnly();
     view.querySelectorAll('[data-tab]').forEach((b) => b.onclick = async () => { tab = b.dataset.tab; if (tab === 'admin' && !plan.length) { await loadPlan(); } draw(); });
     wireToday(); wireAdmin(); wireGames(); wireBank();
+    const r4h = view.querySelector('[data-r4host]'); if (r4h) { r4h.innerHTML = '<div class="ak-card"><button class="ak-big" data-gback>‹ Terug</button></div>'; const sub = document.createElement('div'); r4h.appendChild(sub); mountR4(sub, 'menu', { store, ic, dayKey: todayKey, back: () => { game = null; draw(); } }); view.querySelectorAll('[data-gback]').forEach((b) => { b.onclick = () => { game = null; draw(); }; }); }
   }
   const wireHeadOnly = () => wireHead(view);
 

@@ -95,6 +95,19 @@ const RAW = [
   ['adelaar', 'Adelaarsrog', 'haai', 'ray', ['#1f3a5f', '#4a78b0', '#f2f7fb'], { p: 'manta', sz: 6, price: 220000, rar: 2, xo: 1, beh: 'cruise', sc: 1.8, e: '🐟', f: 'Een adelaarsrog lijkt te vliegen door het water.' }],
   ['macaroni', 'Macaronipinguïn', 'ping', 'penguin', ['#1f2433', '#ffffff', '#ffb52e'], { p: 'rockhopper', sz: 2, price: 150000, beh: 'ping', sc: 1.05, e: '🐧', f: 'Zijn gele kuif lijkt op een macaroni-pruik uit vroeger tijd.' }],
   ['zeeleeuw', 'Zeeleeuw', 'ping', 'seal', ['#a07850', '#6d5236', '#e8d9c4'], { sz: 4, price: 900000, rar: 2, xo: 1, beh: 'ping', sc: 1.5, e: '🦭', f: 'Zeeleeuwen klappen in hun flippers als ze blij zijn.' }],
+  // ---- ronde 4: 12 nieuwe soorten (ids achteraan)
+  ['platy', 'Platy', 'zoet', 'fish', ['#ff7f50', '#ffd166', '#fff1e0'], { p: 'tailspot', sz: 1, price: 45, beh: 'school', sc: 0.8, e: '🐟', f: 'Platy\'s zijn er in bijna alle kleuren van de regenboog.' }],
+  ['skalaar', 'Skalaar', 'zoet', 'disc', ['#d9dee6', '#3b4a63', '#ffffff'], { p: 'stripes', sz: 2, price: 1100, beh: 'roam', sc: 1.05, e: '🐠', f: 'De skalaar lijkt op een engel met lange, wapperende vinnen.' }],
+  ['rivierkreeft', 'Rivierkreeftje', 'zoet', 'lobster', ['#b5533c', '#e58a6b', '#ffe0d2'], { sz: 1, price: 650, beh: 'floor', sc: 0.75, e: '🦀', f: 'Kreeftjes lopen over de bodem en ruimen kruimeltjes op.' }],
+  ['maankwal', 'Maankwal', 'zout', 'jelly', ['#e8e0ff', '#b9a6ff', '#ffffff'], { p: 'spots', sz: 2, price: 3800, beh: 'hover', sc: 1, e: '🪼', f: 'Een maankwal heeft vier mooie cirkels, net een bloem.' }],
+  ['tonijn', 'Tonijn', 'zout', 'fish', ['#2c4a73', '#9ab6d6', '#e9f1f8'], { p: 'scales', sz: 3, price: 22000, beh: 'cruise', sc: 1.35, e: '🐟', f: 'Een tonijn moet blijven zwemmen om te kunnen ademen.' }],
+  ['vliegvis', 'Vliegende vis', 'zout', 'fish', ['#3d8fd6', '#a8d8ff', '#ffffff'], { p: 'scales', sz: 1, price: 5500, beh: 'roam', sc: 0.9, e: '🐟', f: 'Hij zweeft wel honderd meter boven het water.' }],
+  ['papegaaivis', 'Papegaaivis', 'rif', 'fish', ['#27c4a3', '#ff6fae', '#fff2a8'], { p: 'scales', sz: 2, price: 9000, beh: 'roam', sc: 1.1, e: '🐠', f: 'Papegaaivissen knabbelen aan koraal en maken wit zand.' }],
+  ['zeedraak', 'Bladzeedraakje', 'rif', 'seahorse', ['#9acd32', '#d7e86a', '#f5ffd0'], { sz: 2, price: 45000, rar: 2, xo: 1, beh: 'hover', sc: 1.15, e: '🐉', f: 'Hij ziet eruit als een drijvend stukje wier. Zo verstopt hij zich.' }],
+  ['citroenhaai', 'Citroenhaai', 'haai', 'shark', ['#c7b45a', '#8d7f30', '#f6f1c9'], { sz: 5, price: 55000, beh: 'cruise', sc: 1.45, e: '🦈', f: 'Zijn gele huid helpt hem te verstoppen op de zandbodem.' }],
+  ['hoedjesping', 'Hoedjespinguïn', 'ping', 'penguin', ['#1d2333', '#ffffff', '#ff9d3d'], { p: 'gentoo', sz: 2, price: 130000, beh: 'ping', sc: 1.0, e: '🐧', f: 'Een dun zwart streepje onder zijn kin lijkt op een hoedkoordje.' }],
+  ['zeeolifant', 'Zeeolifant', 'ping', 'seal', ['#7b6b5a', '#4e4136', '#d9ccbd'], { sz: 6, price: 1200000, rar: 2, xo: 1, beh: 'ping', sc: 1.7, e: '🦭', f: 'Mannetjes hebben een slurf waarmee ze brullen.' }],
+  ['beloega', 'Beloega', 'ping', 'narwal', ['#f2f6fa', '#bcd0e0', '#ffffff'], { sz: 8, price: 4500000, rar: 3, xo: 1, beh: 'cruise', sc: 1.8, e: '🐋', f: 'Beloega\'s zingen en piepen, daarom heten ze ook zeekanaries.' }],
 ];
 export const SP = RAW.map(([id, n, hab, art, cols, o]) => ({
   id, n, hab, art, cols, p: o.p || '', sz: o.sz, price: o.price, rar: o.rar || 0, xo: !!o.xo, beh: o.beh, sc: o.sc, h: o.h || 0, e: o.e, f: o.f,
@@ -118,6 +131,10 @@ export const DECO = {
   schelp: { n: 'Reuzenschelp', e: '🐚', base: 900, b: 0.11, not: ['ping'], ic: 'shell' },
   palm: { n: 'Palmeilandje', e: '🌴', base: 3500, b: 0.16, not: ['ping'], ic: 'palm' },
   fontein: { n: 'Waterfontein', e: '⛲', base: 10000, b: 0.22, not: [], ic: 'fountain' },
+  wier: { n: 'Zeewierwoud', e: '🌱', base: 350, b: 0.09, not: ['ping'] },
+  pompoen: { n: 'Pompoenhuisje', e: '🎃', base: 1800, b: 0.12, not: ['ping'] },
+  kerstboom: { n: 'Kerstboom', e: '🎄', base: 2000, b: 0.13, not: [] },
+  sterren: { n: 'Zeesterrenbed', e: '⭐', base: 7000, b: 0.17, only: ['zout', 'rif', 'haai'] },
   vuurtoren: { n: 'Vuurtoren', e: '🗼', base: 40000, b: 0.30, not: ['ping'], ic: 'lighthouse' },
 };
 export const decoOk = (id, hab) => { const d = DECO[id]; return d && (!d.only || d.only.includes(hab)) && (!d.not || !d.not.includes(hab)); };
@@ -162,6 +179,8 @@ export const REGIONS = [
   { id: 'oceaan', n: 'Open oceaan', e: '⛵', cost: 300000, dur: 1800, loot: { hamer: 35, manta: 30, zaagvis: 25, walvishaai: 10, adelaar: 14 } },
   { id: 'pool', n: 'Poolzee', e: '🧊', cost: 1000000, dur: 3600, loot: { ezel: 25, keizerp: 25, kuif: 20, zeehond: 20, narwal: 10, zeeleeuw: 14 } },
   { id: 'mangrove', n: 'Mangrovebos', e: '🌴', cost: 12000, dur: 600, loot: { arapaima: 30, axolotl: 40, aal: 30 } },
+  { id: 'lagune', n: 'Verborgen lagune', e: '🏖️', cost: 150000, dur: 900, loot: { zeedraak: 25, maankwal: 35, papegaaivis: 40 } },
+  { id: 'ijsfjord', n: 'IJsfjord', e: '🏔️', cost: 2500000, dur: 3600, loot: { zeeolifant: 30, beloega: 12, hoedjesping: 45 } },
   { id: 'kelp', n: 'Kelpwoud', e: '🌊', cost: 60000, dur: 1200, loot: { reuzeninktvis: 12, schildpad: 35, murene: 30, kreeft: 23 } },
 ];
 export const REGM = Object.fromEntries(REGIONS.map((r) => [r.id, r]));
@@ -222,6 +241,13 @@ export const GOALS = [
   ['g40', 'Voltooi 25 expedities', (s) => s.st.exps, 25, 400000, 150],
   ['g41', 'Heb 300 dieren', animalsTotal, 300, 1e6, 200],
   ['g42', 'Verdien 1 biljard', (s) => s.te, 1e15, 5e6, 200],
+  // ronde 4
+  ['g43', 'Heb 6 verschillende decoraties', (s) => new Set(s.T.flatMap((t) => t.d)).size, 6, 25000, 80],
+  ['g44', 'Heb 10 soorten tegelijk', speciesOwned, 10, 20000, 80],
+  ['g45', 'Ontdek 50 soorten', discN, 50, 300000, 150],
+  ['g46', 'Voltooi 40 expedities', (s) => s.st.exps, 40, 800000, 150],
+  ['g47', 'Heb 600 dieren', animalsTotal, 600, 3e6, 200],
+  ['g48', 'Vind 3 legendarische dieren', (s) => discRar(s, 3), 3, 2e6, 200],
 ];
 export const GOALM = Object.fromEntries(GOALS.map((g) => [g[0], g]));
 
@@ -1199,6 +1225,7 @@ export async function aquariumView(ctx) {
     S.last = now;
   }
   sound.on = !!S.snd;
+  r4Attach(ctx, view, () => S);
 
   /* ---------- toestand van de UI ---------- */
   let tab = 'tank', ti = 0, bookFilter = 'all', prestConfirm = false, modalOpen = false, modalCv = null, modalSp = null;
@@ -1836,4 +1863,25 @@ export async function aquariumView(ctx) {
     try { writeLocal(); writeCloud(true); } catch (e) { /* ok */ }
     sound.close();
   });
+}
+
+/* =====================================================================
+   RONDE 4: tellers voor de extra laag (seizoenen, opdrachten, prestaties; zie big-r4-aquarium.js)
+   ===================================================================== */
+const R4_SPECIES = ['platy', 'skalaar', 'rivierkreeft', 'maankwal', 'tonijn', 'vliegvis', 'papegaaivis', 'zeedraak', 'citroenhaai', 'hoedjesping', 'zeeolifant', 'beloega'];
+const R4_DECO = ['wier', 'pompoen', 'kerstboom', 'sterren'];
+export function r4Metrics(s) {
+  const seasonDeco = new Set(s.T.flatMap((t) => t.d)), dc = s.dc || {};
+  return {
+    earned: s.te, taps: s.st.taps, births: s.st.births, visitors: s.st.vis, exps: s.st.exps, tanks: s.T.length, animals: animalsTotal(s), species: discN(s),
+    rare: discRar(s, 2), legend: discRar(s, 3), decos: decoN(s), decoTypes: seasonDeco.size, upgrades: upLevels(s), streak: (s.dy && s.dy.best) || 0, prestiges: s.st.pres, play: Math.floor((s.st.ticks || 0) / 4),
+    r4Species: R4_SPECIES.filter((id) => dc[id]).length, r4Deco: R4_DECO.filter((id) => seasonDeco.has(id)).length, coins: s.c,
+  };
+}
+function r4Attach(ctx, host, getS) {
+  import('./big-r4-aquarium.js?v=1').then((m) => m.attach(ctx, {
+    host, metrics: () => r4Metrics(getS()), rate: () => economy(getS()).ips,
+    add: (v) => { const x = getS(); if (x && v > 0) { x.c += v; x.e += v; x.te += v; } },
+    ng: { label: 'Verhuizen naar een groter aquarium', desc: 'Begin opnieuw en ontvang parels (blijvende voordelen).', count: () => getS().st.pres, can: () => prestigeGain(getS()) >= 1, need: 'Verdien meer munten om te kunnen verhuizen.' },
+  })).catch(() => { /* extra laag is optioneel */ });
 }

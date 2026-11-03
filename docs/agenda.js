@@ -4,6 +4,7 @@ import { doc, updateDoc, deleteDoc, addDoc, collection, getDocs }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import { injectKit, head, wireHead, tabsHtml, ic, playScene, appStore, showToast } from './appkit.js?v=1';
 import * as C from './agenda-core.js?v=1';
+import { overzichtHtml, toIcs } from './tools-r4-agenda.js?v=1';
 
 export { occursOn, monthGrid } from './agenda-core.js?v=1';
 const { ymd, parseKey, addDays, MONTHS, DAYS_SHORT, PALETTE, REPEAT, CATS, colorOf, catOf, occursOn, monthGrid, byTime, longDate, shortDate, countdownText, diffDays } = C;
@@ -16,7 +17,7 @@ export async function agendaToday(db) {
   catch (e) { console.error(e); return 0; }
 }
 
-const TABS = [['nu', 'Nu', 'bell'], ['maand', 'Maand', 'ticket'], ['week', 'Week', 'compass'], ['dag', 'Dag', 'sun'], ['lijst', 'Lijst', 'scroll'], ['bday', 'Verjaardagen', 'cake'], ['rooster', 'Rooster', 'school']];
+const TABS = [['nu', 'Nu', 'bell'], ['maand', 'Maand', 'ticket'], ['week', 'Week', 'compass'], ['dag', 'Dag', 'sun'], ['lijst', 'Lijst', 'scroll'], ['bday', 'Verjaardagen', 'cake'], ['rooster', 'Rooster', 'school'], ['overzicht', 'Overzicht', 'chest']];
 
 export async function agendaView(ctx) {
   const { db, me, esc, nice, view, addCleanup } = ctx;
@@ -146,10 +147,11 @@ export async function agendaView(ctx) {
     form.title = q('#f-title').value; form.date = q('#f-date').value; form.time = q('#f-time').value; form.note = q('#f-note').value; form.repeat = q('#f-repeat').value; form.rem = q('#f-rem').value;
   }
 
-  const VIEWS = { nu: vNu, maand: vMaand, week: vWeek, dag: vDag, lijst: vLijst, bday: vBday, rooster: vRooster };
+  const vOverzicht = () => overzichtHtml({ events: visible(), year: parseKey(selected).y, today: todayKey(), ic });
+  const VIEWS = { nu: vNu, maand: vMaand, week: vWeek, dag: vDag, lijst: vLijst, bday: vBday, rooster: vRooster, overzicht: vOverzicht };
   function draw() {
     if (!alive) return;
-    view.innerHTML = `<div class="ak">${head({ icon: 'hourglass', title: 'Agenda', sub: `${events.length} afspraken · samen met de anderen`, c1: '#f472b6', c2: '#e11d48' })}${tabsHtml(tab, TABS)}${['maand', 'week', 'dag', 'lijst'].includes(tab) ? whoBar() : ''}${form ? formHtml() : ''}${VIEWS[tab]()}</div>`;
+    view.innerHTML = `<div class="ak">${head({ icon: 'hourglass', title: 'Agenda', sub: `${events.length} afspraken · samen met de anderen`, c1: '#f472b6', c2: '#e11d48' })}${tabsHtml(tab, TABS)}${['maand', 'week', 'dag', 'lijst', 'overzicht'].includes(tab) ? whoBar() : ''}${form ? formHtml() : ''}${VIEWS[tab]()}</div>`;
     bind();
   }
   const openForm = (f) => { form = f; formErr = ''; confirmId = null; draw(); const t = view.querySelector('#f-title'); if (t) t.scrollIntoView({ block: 'center' }); };
@@ -159,6 +161,8 @@ export async function agendaView(ctx) {
     wireHead(view);
     const all = (s) => view.querySelectorAll(s);
     all('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; form = null; draw(); });
+    all('[data-goday]').forEach((b) => b.onclick = () => { selected = b.dataset.goday; const p = parseKey(selected); year = p.y; month = p.m - 1; tab = 'dag'; draw(); });
+    all('[data-ics]').forEach((b) => b.onclick = () => { try { const blob = new Blob([toIcs(visible())], { type: 'text/calendar' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'agenda.ics'; document.body.appendChild(a); a.click(); a.remove(); showToast && showToast('Bestand gemaakt'); } catch { showToast && showToast('Downloaden lukt niet op dit toestel'); } });
     all('[data-who]').forEach((b) => b.onclick = () => { who = b.dataset.who; draw(); });
     all('[data-nav]').forEach((b) => b.onclick = () => { const d = new Date(year, month + Number(b.dataset.nav), 1); year = d.getFullYear(); month = d.getMonth(); draw(); });
     all('[data-step]').forEach((b) => b.onclick = () => { selected = addDays(selected, Number(b.dataset.step)); const p = parseKey(selected); year = p.y; month = p.m - 1; draw(); });

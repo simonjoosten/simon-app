@@ -223,6 +223,8 @@ function generate(boardId, k, seed, tries) {
 
 function parseSol(str) { return str ? str.split(';').map((t) => t.split('.').map(Number)) : null; }
 
+// Ronde 4: eindeloze levels (n = 300 + e) die een kopie van een eerder level zouden zijn, krijgen een vaste extra seed-draai (index -> draai).
+export const ENDLESS_SALT = {"449":1,"495":1,"526":2,"540":1,"547":1,"576":2,"579":5,"583":1,"593":1,"600":1,"604":1,"618":1,"620":1,"632":1,"639":1,"660":2,"665":1,"689":1,"692":1,"695":1,"699":1}; // vooraf berekend; test-r4-puzzel.mjs controleert dat levels 300-699 allemaal verschillen
 const levelCache = new Map();
 export function makeLevel(n) {
   if (levelCache.has(n)) return levelCache.get(n);
@@ -245,7 +247,7 @@ export function makeLevel(n) {
       tries = 4; goalMode = e % 3 === 2;
       title = 'Eindeloos · ' + buildBoard(id).name;
     }
-    const g = generate(id, k, n * 7919 + 13, tries);
+    const g = generate(id, k, n * 7919 + 13 + (ENDLESS_SALT[n] || 0) * 104729, tries);
     lv = { n, board: buildBoard(id), start: g.start, goal: goalMode ? g.goal : -1, sol: g.sol, k: g.cnt, title, open: g.open };
   }
   levelCache.set(n, lv);

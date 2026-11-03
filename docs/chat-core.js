@@ -1,4 +1,6 @@
 // Chat: zuivere logica. Stickers, reacties en antwoorden reizen als gewone tekstberichten met een verborgen opmaak
+import { R4_PACKS, R4_THEMES, R4_REACTIONS, QUICK_PHRASES, fillPhrase } from './tools-r4-chat.js?v=1';
+export { QUICK_PHRASES, fillPhrase };
 // (de Firestore-regels laten alleen de typen text/image/gif/video toe). Spraakberichten zijn type 'video' met een audio-mime.
 export const pairId = (a, b) => [a, b].sort().join('_');
 export const CHUNK = 450000;
@@ -45,7 +47,7 @@ export function reactionsMap(list) {
   return out;
 }
 export const myReaction = (map, mid, uid) => ((map.get(mid) || []).find((r) => r.uids.includes(uid)) || {}).emoji || '';
-export const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥'];
+export const REACTIONS = ['❤️', '👍', '😂', '😮', '😢', '🔥', ...R4_REACTIONS];
 
 // Korte tekst voor de gespreklijst en antwoorden
 export function previewOf(m) {
@@ -112,6 +114,7 @@ export const THEMES = [
   { id: 'ijs', n: 'IJs', ic: 'snowflake', bg: ['#e0f2fe', '#bae6fd'], mine: ['#0891b2', '#06b6d4'], mineText: '#fff', theirs: '#ffffff', theirsText: '#164e63', dark: false },
   { id: 'vulkaan', n: 'Vulkaan', ic: 'volcano', bg: ['#450a0a', '#9a3412'], mine: ['#dc2626', '#f97316'], mineText: '#fff', theirs: '#7c2d12', theirsText: '#ffedd5', dark: true },
   { id: 'lavendel', n: 'Lavendel', ic: 'flower', bg: ['#ede9fe', '#ddd6fe'], mine: ['#7c3aed', '#8b5cf6'], mineText: '#fff', theirs: '#faf5ff', theirsText: '#3b0764', dark: false },
+  ...R4_THEMES,
 ];
 export const themeOf = (id) => THEMES.find((t) => t.id === id) || THEMES[0];
 
@@ -125,6 +128,7 @@ export const STICKER_PACKS = [
   { id: 'natuur', n: 'Natuur', ic: 'tree', items: ['sun', 'moon', 'cloud', 'rain', 'snowflake', 'flame', 'volcano', 'wave', 'tree', 'pine', 'palm', 'flower', 'sunflower', 'mushroom', 'leaf', 'cactus', 'rock'] },
   { id: 'vervoer', n: 'Vervoer', ic: 'car', items: ['car', 'truck', 'bus', 'train', 'plane', 'boat', 'ship', 'bike', 'helicopter', 'submarine', 'tractor', 'foodtruck', 'rocket'] },
   { id: 'plekken', n: 'Plekken', ic: 'castle', items: ['house', 'castle', 'tower', 'tent', 'barn', 'windmill', 'lighthouse', 'ferriswheel', 'rollercoaster', 'carousel', 'igloo', 'pyramid', 'fountain', 'bridge'] },
+  ...R4_PACKS, // ronde 4: 5 extra pakketten
 ];
 // Recent gebruikte stickers: nieuwste vooraan, geen dubbelen, max 12
 export const pushRecent = (list, name, max = 12) => [name, ...(list || []).filter((x) => x !== name)].slice(0, max);

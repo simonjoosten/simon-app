@@ -1,9 +1,10 @@
 // Piano: liedjes, spel-logica (vallende noten), akkoordherkenning en opnames. Geen DOM of audio, dus testbaar met node.
 
-import { NOTE_NAMES, SOLFEGE, pitchClass } from './music-synth.js';
-import { b64e, b64d } from './music-model.js';
+import { NOTE_NAMES, SOLFEGE, pitchClass } from './music-synth.js?v=2';
+import { b64e, b64d } from './music-model.js?v=2';
 
 // ---- noten lezen: "C4 D#4:2 r:1 Bb3:0.5" (lengte in tellen, kwartnoot = 1) ----
+import { R4_SONGS, R4_DRILLS } from './creatief-r4-songs.js?v=1';
 const BASE = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
 export function parseNote(tok) {
   const m = /^([A-Ga-g])([#b]?)(-?\d)(?::(\d*\.?\d+))?$/.exec(tok);
@@ -35,6 +36,8 @@ export const SONGS = [
   { id: 'beethoven', name: 'Het lot klopt aan (Beethoven)', level: 3, bpm: 120, icon: 'bolt', notes: 'G4:.5 G4:.5 G4:.5 D#4:3 r:.5 F4:.5 F4:.5 F4:.5 D4:3' },
   { id: 'elise', name: 'Für Elise', level: 3, bpm: 120, icon: 'piano', notes: 'E5:.5 D#5:.5 E5:.5 D#5:.5 E5:.5 B4:.5 D5:.5 C5:.5 A4:1.5 r:.5 C4:.5 E4:.5 A4:.5 B4:1.5 r:.5 E4:.5 G#4:.5 B4:.5 C5:2' },
   { id: 'riff', name: 'Rock-riff (op de lage toetsen)', level: 3, bpm: 110, icon: 'guitar', notes: 'G3 A#3 C4:1.5 G3 A#3 C#4 C4:2 G3 A#3 C4:1.5 A#3 G3:2' },
+  ...R4_SONGS,
+  ...R4_DRILLS,
 ];
 export const SONG_BY_ID = Object.fromEntries(SONGS.map((s) => [s.id, s]));
 export const songNotes = (s) => parseSong(s.notes);

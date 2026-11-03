@@ -25,7 +25,7 @@ const Hub = await import('../docs/learn/games.js?v=1');
 const { Profile, Prog, Snd } = core;
 
 /* ---------- 1. pure logica ---------- */
-ok(Hub.GAME_IDS.length === 18 && new Set(Hub.GAME_IDS).size === 18, '18 unieke spel-id\'s');
+ok(Hub.GAME_IDS.length === 24 && new Set(Hub.GAME_IDS).size === 24, '24 unieke spel-id\'s (18 + 6 uit ronde 4)');
 ok(Hub.GAME_IDS.every((id) => Hub.META[id] && Hub.META[id].length === 6), 'META voor alle 18');
 ok(Shop.HUB_ACH.length >= 30 && new Set(Shop.HUB_ACH.map((a) => a.id)).size === Shop.HUB_ACH.length, `prestaties: ${Shop.HUB_ACH.length} unieke`);
 ok(Shop.AVATARS.length >= 30 && Shop.HATS.length >= 15 && Shop.BGS.length >= 12, 'uiterlijk-catalogus groot genoeg');
@@ -133,7 +133,7 @@ ok(document_.head.children.some((c) => c.tag === 'style' && c.textContent.includ
 await sleep(1200);   // probe
 const gw = () => root.querySelector('.lsp-gridwrap').innerHTML;
 const cards = (gw().match(/class="lsp-gc[ "]/g) || []).length;
-ok(cards === 18, `18 kaarten in de grid (${cards})`);
+ok(cards === 24, `24 kaarten in de grid (${cards})`);
 ok(gw().includes('Komt binnenkort') && gw().includes('Even stuk') && gw().includes('Klassiek (stub)') && gw().includes('2 spelers'), 'grid: binnenkort/stuk/echt/duo');
 ok(view.state.avail.klassiek === 'ok' && view.state.avail.toren === 'ok', 'probe: crash-spel laadt wel (crasht pas bij create)');
 ok(view.state.avail.baas === 'error' && view.state.avail.pizza === 'soon', `probe-status baas=${view.state.avail.baas} pizza=${view.state.avail.pizza}`);

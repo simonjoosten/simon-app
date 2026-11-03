@@ -89,6 +89,19 @@ def('Y', { n: 'Luchthaven', e: '✈️', cat: 'ov', c: 7000, u: 6, k: 'transit',
 def('s', { n: 'Biogascentrale', e: '🔥', cat: 'nuts', c: 500, u: 0.6, pwr: 90, poll: 0.5, noRoad: 1, unl: 150, d: 'Stroom (90) uit afval.' });
 def('O', { n: 'Kerncentrale', e: '⚡', cat: 'nuts', c: 4800, u: 5, pwr: 900, poll: 1, noRoad: 1, unl: 1500, d: 'Heel veel stroom (900).' });
 def('y', { n: 'Stuwmeer', e: '🌧️', cat: 'nuts', c: 3200, u: 1.5, wat: 500, noRoad: 1, unl: 1000, d: 'Water voor een grote stad (500).' });
+// ---- ronde 4: 12 nieuwe gebouwen (tekens ! # $ % * + = ? @ ^ ~ ;)
+def('#', { n: 'Tinyhouse', e: '🏠', cat: 'wonen', c: 70, res: 8, unl: 60, d: 'Klein maar fijn: plek voor 8 inwoners.' });
+def('$', { n: 'Studentenflat', e: '🏢', cat: 'wonen', c: 700, res: 75, unl: 380, d: 'Plek voor 75 inwoners, het liefst bij een school.' });
+def('%', { n: 'Drukkerij', e: '📘', cat: 'werk', c: 240, jobs: 30, inc: 0.075, poll: 0.5, unl: 90, d: '30 banen en verse boeken.' });
+def('*', { n: 'Datacenter', e: '⚙️', cat: 'werk', c: 3400, jobs: 90, inc: 0.17, edu: 1, unl: 900, d: '90 banen voor slimme koppen.' });
+def('+', { n: 'Pannenkoekenhuis', e: '🥧', cat: 'winkel', c: 260, shop: 70, rev: 0.06, k: 'shop', r: 6, unl: 130, d: 'Pannenkoeken voor 70 klanten.' });
+def('=', { n: 'Bioscoop', e: '🎟️', cat: 'winkel', c: 780, shop: 170, rev: 0.05, k: 'shop', r: 8, tour: 15, unl: 330, d: 'Popcorn en films voor 170 klanten.' });
+def('?', { n: 'Muziekschool', e: '🎹', cat: 'zorg', c: 420, u: 0.5, k: 'school', r: 6, edu: 75, unl: 220, d: 'Piano, gitaar en trommels leren.' });
+def('@', { n: 'Hondenrenweide', e: '🐶', cat: 'groen', c: 120, u: 0.1, k: 'green', r: 5, noRoad: 1, unl: 55, d: 'Blije honden, blije buren.' });
+def('^', { n: 'Kermis', e: '🎡', cat: 'groen', c: 1500, u: 2, k: 'fun', r: 10, tour: 110, unl: 500, d: 'Oliebollen, botsauto\'s en veel bezoekers.' });
+def('~', { n: 'Fietsenstalling', e: '🚲', cat: 'ov', c: 140, u: 0.1, k: 'transit', r: 6, transit: 130, unl: 45, d: 'Fietsers houden de straten vrij.' });
+def('!', { n: 'Batterijpark', e: '⚡', cat: 'nuts', c: 1700, u: 1, pwr: 420, noRoad: 1, unl: 700, d: 'Slimme opslag: stroom voor een hele wijk (420).' });
+def(';', { n: 'Regenwatertank', e: '🌧️', cat: 'nuts', c: 250, u: 0.2, wat: 130, noRoad: 1, unl: 90, d: 'Vangt regen op: water voor een buurt (130).' });
 export const BUILDABLE = Object.keys(BD).filter((c) => !BD[c].fixed);
 const RESIDENTIAL = 'hjfkv', JOBCH = 'baioC', SHOPCH = 'mneq';
 
@@ -479,6 +492,13 @@ export const GOALS = [
   { t: 'Bouw een luchthaven', e: '✈️', r: 90000, f: (S, st) => [nC(st, 'Y'), 1] },
   { t: 'Bouw een ruimtehaven', e: '🚀', r: 200000, f: (S, st) => [nC(st, 'M'), 1] },
   { t: 'Bereik 5000 inwoners', e: '🌍', r: 300000, f: (S) => [Math.floor(S.pop), 5000] },
+  // ronde 4 (achteraan: de voortgang staat als index in de save)
+  { t: 'Bouw een tinyhouse', e: '🏠', r: 800, f: (S, st) => [nC(st, '#'), 1] },
+  { t: 'Bouw een bioscoop', e: '🎟️', r: 3000, f: (S, st) => [nC(st, '='), 1] },
+  { t: 'Bouw een kermis', e: '🎡', r: 9000, f: (S, st) => [nC(st, '^'), 1] },
+  { t: 'Bouw een datacenter', e: '⚙️', r: 25000, f: (S, st) => [nC(st, '*'), 1] },
+  { t: 'Bouw 3 fietsenstallingen', e: '🚲', r: 40000, f: (S, st) => [nC(st, '~'), 3] },
+  { t: 'Bereik 8000 inwoners', e: '🌆', r: 500000, f: (S) => [Math.floor(S.pop), 8000] },
 ];
 export const ACHS = [
   { id: 'h1', n: 'Eerste huis', e: '🏠', r: 25, f: (S, st) => nC(st, RESIDENTIAL) >= 1 },
@@ -515,6 +535,11 @@ export const ACHS = [
   { id: 'space', n: 'Ruimtevaart', e: '🚀', r: 100000, f: (S, st) => nC(st, 'M') >= 1 },
   { id: 'atoom', n: 'Veel stroom', e: '⚡', r: 15000, f: (S, st) => nC(st, 'O') >= 1 },
   { id: 'uni', n: 'Studentenstad', e: '🔬', r: 6000, f: (S, st) => nC(st, '2') >= 1 },
+  { id: 'r4_tiny', n: 'Klein wonen', e: '🏠', r: 300, f: (S, st) => nC(st, '#') >= 3 },
+  { id: 'r4_film', n: 'Filmstad', e: '🎟️', r: 1500, f: (S, st) => nC(st, '=') >= 1 },
+  { id: 'r4_kermis', n: 'Kermisstad', e: '🎡', r: 4000, f: (S, st) => nC(st, '^') >= 1 },
+  { id: 'r4_data', n: 'Digitale stad', e: '⚙️', r: 9000, f: (S, st) => nC(st, '*') >= 1 },
+  { id: 'r4_fiets', n: 'Fietsstad', e: '🚲', r: 900, f: (S, st) => nC(st, '~') >= 3 },
   { id: 'kunst', n: 'Cultuurstad', e: '🎨', r: 3000, f: (S, st) => nC(st, '39') >= 2 },
 ];
 // geeft lijst van nieuwe prestaties; kent geld toe
@@ -973,6 +998,30 @@ Object.assign(DRAW, {
     softSh(c, x, y, s, 0.5); for (const px of [0.3, 0.7]) { poly(c, [x + s * (px - 0.2), y + s * 0.9, x + s * (px + 0.2), y + s * 0.9, x + s * (px + 0.12), y + s * 0.4, x + s * (px - 0.12), y + s * 0.4], '#d9dde6'); poly(c, [x + s * (px + 0.06), y + s * 0.9, x + s * (px + 0.2), y + s * 0.9, x + s * (px + 0.12), y + s * 0.4, x + s * (px + 0.04), y + s * 0.4], 'rgba(0,0,0,.12)'); smoke(c, x + s * px, y + s * 0.4, s * 0.07, o.t + px, 3); }
     c.fillStyle = '#7b7f8a'; c.fillRect(x + s * 0.1, y + s * 0.78, s * 0.8, s * 0.12); icoTop(c, 'O', x, y, s, 0.14, 0.3); lvDots(c, x, y, s, o.lv);
   },
+  '#'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '#', w: 0.46, h: 0.26, wall: '#e9d8c0', roof: '#7aa874', cols: 2, seed: 60, dy: 0.12, k: 0.3 }); },
+  '$'(c, x, y, s, o) { dTower(c, x, y, s, o, { ch: '$', h: 0.95, c1: '#f2b8a0', c2: '#c9705a', top: '#e8c3b4', seed: 61 }); },
+  '%'(c, x, y, s, o) { dFactory(c, x, y, s, o, { ch: '%', h: 0.3, wall: '#f4ead6', top: '#d6c3a0', chim: 1, seed: 62 }); },
+  '*'(c, x, y, s, o) { dFactory(c, x, y, s, o, { ch: '*', h: 0.46, wall: '#38405a', top: '#5a6486', chim: 0, seed: 63 }); for (let k = 0; k < 4; k++) circ(c, x + s * (0.2 + 0.2 * k), y + s * 0.22, s * 0.025, Math.sin(o.t * 5 + k * 1.7) > 0 ? '#4ade80' : '#14532d'); },
+  '+'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '+', w: 0.66, h: 0.3, wall: '#fde2c4', roof: '#d9822b', awn: '#f4a261', cols: 2, seed: 64 }); },
+  '='(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '=', w: 0.82, h: 0.36, wall: '#3b3354', roof: '#6c5ce7', awn: '#e63946', cols: 3, seed: 65 }); },
+  '?'(c, x, y, s, o) { dWall(c, x, y, s, o, { ch: '?', w: 0.7, h: 0.32, wall: '#f1e0f5', roof: '#9b5de5', col: 1, cols: 3, seed: 66 }); },
+  '@'(c, x, y, s, o) { dPlot(c, x, y, s, o, { ch: '@', ground: '#9bd67a', edge: '#5e9a3f', dy: 0.5, k: 0.5, deco: (c2, x2, y2, s2) => { c2.strokeStyle = '#8d6e63'; c2.lineWidth = 2; c2.strokeRect(x2 + s2 * 0.1, y2 + s2 * 0.12, s2 * 0.8, s2 * 0.76); } }); },
+  '^'(c, x, y, s, o) { // kermis
+    softSh(c, x, y, s, 0.5); c.fillStyle = '#e9d9b0'; rrect(c, x + 2, y + s * 0.4, s - 4, s * 0.52, 5); c.fill();
+    const rr = s * 0.26, cx = x + s * 0.5, cy = y + s * 0.42; c.strokeStyle = '#e63946'; c.lineWidth = 2; c.beginPath(); c.arc(cx, cy, rr, 0, 6.2832); c.stroke();
+    for (let k = 0; k < 6; k++) { const a = o.t * 0.8 + k * 1.047; circ(c, cx + Math.cos(a) * rr, cy + Math.sin(a) * rr, s * 0.04, k % 2 ? '#ffd23f' : '#4cc9f0'); }
+    for (let k = 0; k < 4; k++) { c.fillStyle = k % 2 ? '#ff6b6b' : '#fff'; c.fillRect(x + s * (0.12 + 0.2 * k), y + s * 0.82, s * 0.2, s * 0.08); }
+    icoTop(c, '^', x, y, s, 0.1, 0.3); lvDots(c, x, y, s, o.lv);
+  },
+  '~'(c, x, y, s, o) { dPlot(c, x, y, s, o, { ch: '~', ground: '#c9d3df', edge: '#8795a8', dy: 0.5, k: 0.5, deco: (c2, x2, y2, s2) => { c2.strokeStyle = '#6b7a8f'; c2.lineWidth = 2; for (let k = 0; k < 5; k++) c2.strokeRect(x2 + s2 * (0.16 + 0.15 * k), y2 + s2 * 0.2, s2 * 0.08, s2 * 0.6); } }); },
+  '!'(c, x, y, s, o) { // batterijpark
+    softSh(c, x, y, s, 0.5); for (let k = 0; k < 3; k++) { const bx = x + s * (0.1 + 0.28 * k); c.fillStyle = '#556070'; rrect(c, bx, y + s * 0.4, s * 0.24, s * 0.5, 3); c.fill(); c.fillStyle = Math.sin(o.t * 3 + k) > -0.3 ? '#4ade80' : '#22663a'; c.fillRect(bx + s * 0.04, y + s * 0.46, s * 0.16, s * 0.2); c.fillStyle = '#9aa7b8'; c.fillRect(bx + s * 0.08, y + s * 0.36, s * 0.08, s * 0.05); }
+    icoTop(c, '!', x, y, s, 0.2, 0.34); lvDots(c, x, y, s, o.lv);
+  },
+  ';'(c, x, y, s, o) { // regenwatertank
+    softSh(c, x, y, s, 0.4); c.fillStyle = '#b9c7d6'; rrect(c, x + s * 0.2, y + s * 0.3, s * 0.6, s * 0.6, s * 0.16); c.fill(); c.fillStyle = '#4aa3df'; rrect(c, x + s * 0.24, y + s * (0.5 - 0.1 * Math.sin(o.t)), s * 0.52, s * 0.36, s * 0.12); c.fill();
+    icoTop(c, ';', x, y, s, 0.14, 0.32); lvDots(c, x, y, s, o.lv);
+  },
   y(c, x, y, s, o) { // stuwmeer
     c.fillStyle = '#9aa3b0'; rrect(c, x + 2, y + s * 0.2, s - 4, s * 0.7, 5); c.fill(); c.fillStyle = '#3f9fd8'; rrect(c, x + s * 0.1, y + s * 0.3, s * 0.8, s * 0.5, 6); c.fill();
     c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1.2; for (let k = 0; k < 3; k++) { c.beginPath(); c.moveTo(x + s * 0.18, y + s * (0.42 + 0.1 * k)); for (let n = 0; n <= 5; n++) c.lineTo(x + s * (0.18 + n * 0.13), y + s * (0.42 + 0.1 * k) + Math.sin(o.t * 2 + n + k) * 1.4); c.stroke(); }
@@ -1297,6 +1346,7 @@ export async function stadbouwerView(ctx) {
     if (gap > 60) { const r = offlineProgress(S, gap); welcome = { ...r, away: Math.min(gap, 365 * 86400) }; }
   } else { S = newCity((Math.random() * 2147483647) | 0); cloudDirty = true; }
   S.ev = S.ev || {}; S.last = Date.now(); lastCloud = Date.now() - 30000;
+  r4Attach(ctx, view, () => S, () => st);
 
   /* ---------- opbouw van de UI ---------- */
   view.innerHTML = `<style>${CSS2}</style><div class="sb-root">
@@ -1745,4 +1795,26 @@ export async function stadbouwerView(ctx) {
   saveT = setInterval(() => { if (S && localDirty) writeLocal(); }, 5000);
   if (S.tut === 0 && !best) setTimeout(() => { if (alive) { try { BG.intro(root, 'stadbouwer', 'intro-stad', { title: 'Stadbouwer', sub: 'Bouw jouw droomstad!' }); } catch (e) { /* geen intro */ } } }, 300);
   toast(S.tut < 99 ? 'Welkom in Stadbouwer! 🏙️' : 'Welkom terug in je stad! 🏙️', 'ok', 3500);
+}
+
+/* =====================================================================
+   RONDE 4: tellers voor de extra laag (seizoenen, opdrachten, prestaties; zie big-r4-stadbouwer.js)
+   ===================================================================== */
+const R4_CHARS = '#$%*+=?@^~!;';
+export function r4Metrics(S, st) {
+  const cnt = (st && st.cnt) || {}, n = (chs) => chs.split('').reduce((a, c) => a + (cnt[c] || 0), 0);
+  return {
+    pop: Math.floor(S.pop), peak: S.peak, earned: S.tot || 0, built: S.built, buildings: Object.keys(cnt).reduce((a, c) => a + (BD[c] && !BD[c].fixed && c !== 'r' ? cnt[c] : 0), 0),
+    kinds: Object.keys(cnt).filter((c) => BD[c] && !BD[c].fixed && cnt[c] > 0).length, houses: n('hjfkvuDG#$'), works: n('baioCIJNKM%*'), shops: n('mneqQTUV+='), green: n('gdFSP47@^8'),
+    power: n('WZEsO!'), water: n('ALRy;'), transit: n('BX0Y~'), schools: n('c2l3?'), stars: S.stars, prestiges: S.prest, goal: S.goal, achs: S.ach.length, land: S.land,
+    projects: Object.keys(S.proj || {}).length, upgrades: upLevels(S), happy: st ? Math.floor(st.happy) : 0, streak: (S.daily && S.daily.s) || 0, fires: S.fs, taps: S.ft,
+    r4Items: R4_CHARS.split('').filter((c) => cnt[c] > 0).length, money: S.money,
+  };
+}
+function r4Attach(ctx, host, getS, getSt) {
+  import('./big-r4-stadbouwer.js?v=1').then((m) => m.attach(ctx, {
+    host, metrics: () => r4Metrics(getS(), getSt()), rate: () => { const st = getSt(); return st ? Math.max(0, st.net) : 0; },
+    add: (v) => { const x = getS(); if (x && v > 0) { x.money += v; x.earned += v; x.tot += v; } },
+    ng: { label: 'Nieuwe stad', desc: 'Begin een nieuwe stad en krijg sterren die blijvend je inkomen verhogen.', count: () => getS().prest, can: () => canPrestige(getS()), need: 'Laat je stad groeien om opnieuw te kunnen beginnen (Plan / Meer).' },
+  })).catch(() => { /* extra laag is optioneel */ });
 }

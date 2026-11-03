@@ -13,7 +13,7 @@ function mockCtx() {
 }
 
 ok('noten', () => { assert.equal(S.noteName(60), 'C4'); assert.equal(S.noteName(69), 'A4'); assert.equal(S.noteName(61), 'C#4'); assert.ok(Math.abs(S.midiFreq(69) - 440) < 1e-9); assert.ok(S.isBlack(61) && !S.isBlack(60)); });
-ok('17 instrumenten en 12 drums', () => { assert.equal(S.INSTRUMENTS.length, 17); assert.equal(S.DRUMKIT.length, 12); assert.equal(new Set(S.INST_IDS).size, 17); });
+ok('27 instrumenten en 18 drums', () => { assert.equal(S.INSTRUMENTS.length, 27); assert.equal(S.DRUMKIT.length, 18); assert.equal(new Set(S.INST_IDS).size, 27); });
 ok('alle instrumenten spelen zonder fout', () => {
   const c = mockCtx(), nb = S.makeNoise(c), bus = S.makeBus(c);
   for (const id of S.INST_IDS) { S.playNote(c, bus.input, id, 440, 0.1, 0.5, 0.8, nb); const rel = S.startNote(c, bus.input, id, 220, 1, nb); rel(); rel(); }

@@ -2,8 +2,9 @@
 // toonsoort en toonladders, effecten (galm, echo, filter), 11 voorbeelden, 12 opslagplekken, delen via code, WAV-export en een ritmespel.
 // Alle geluid wordt in de browser gesynthetiseerd (WebAudio). Logica staat in music-model.js, klanken in music-synth.js.
 
-import { INSTRUMENTS, DRUMKIT, NOTE_NAMES, newAudio, makeBus, makeNoise, applyFx, playDrum, playNote, midiFreq, startNote, click, encodeWav, instInfo, drumInfo } from './music-synth.js?v=1';
-import * as M from './music-model.js?v=1';
+import * as R4 from './creatief-r4-music.js?v=1';
+import { INSTRUMENTS, DRUMKIT, NOTE_NAMES, newAudio, makeBus, makeNoise, applyFx, playDrum, playNote, midiFreq, startNote, click, encodeWav, instInfo, drumInfo } from './music-synth.js?v=2';
+import * as M from './music-model.js?v=2';
 import { styleTag, gearHtml, wireGear, worldSelectHtml, hero, icon, GFX, Themes, playScene, copyText, starsStr } from './apps3-ui.js?v=1';
 
 const SLOT_COUNT = 12;
@@ -264,6 +265,9 @@ export function muziekView(ctx) {
         <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap"><button id="mu-play" class="on" data-act="play">▶ Speel</button><button data-act="mode">${mode === 'pattern' ? '🔁 Patroon' : '🎼 Hele lied'}</button></div></div>
       <div class="card"><b>${icon('star', { size: 24 })} Voorbeelden</b><br><small class="mute">Tik op een voorbeeld om het te laden. Je eigen werk kun je terughalen met “↶ Terug”.</small>
         <div class="mu-tpl" style="margin-top:.5rem">${M.PRESET_KEYS.map((k) => `<button data-act="preset" data-k="${k}">${icon(M.PRESETS[k].icon, { size: 36 })}<span>${esc(M.PRESETS[k].label)}</span><small class="mute">${M.PRESETS[k].bpm} bpm</small></button>`).join('')}</div>
+        <div style="margin-top:.5rem;display:flex;gap:.4rem;flex-wrap:wrap"><button data-act="r4surprise">${icon('wand', { size: 24 })} Verras me!</button><button data-act="r4daily">${icon('sun', { size: 24 })} Lied van de dag</button>
+          <select id="mu-mash-a" aria-label="Drums van" style="min-height:44px">${M.PRESET_KEYS.map((k) => `<option value="${k}">${esc(M.PRESETS[k].label)}</option>`).join('')}</select><span style="align-self:center">+</span><select id="mu-mash-b" aria-label="Melodie van" style="min-height:44px">${M.PRESET_KEYS.map((k, i) => `<option value="${k}"${i === 1 ? ' selected' : ''}>${esc(M.PRESETS[k].label)}</option>`).join('')}</select><button data-act="r4mash">🔀 Mix</button></div>
+        <div style="margin-top:.5rem"><b>Bouwstenen</b> <small class="mute">Leg een loop op het gekozen spoor (patroon ${M.PAT_NAMES[pat]}).</small><div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-top:.3rem">${R4.LOOPS.filter((l) => l.kind === (song.tracks[sel] || {}).kind).map((l) => `<button data-act="r4loop" data-l="${l.id}">${esc(l.name)}</button>`).join('') || '<small class="mute">Kies bij Studio een spoor.</small>'}</div></div>
         ${prev ? '<div style="margin-top:.5rem"><button data-act="undo">↶ Terug naar mijn vorige lied</button></div>' : ''}</div>
       <div class="card"><b>${icon('chest', { size: 24 })} Opslaan en laden</b>
         <div class="mu-slots" style="margin:.5rem 0">${slots.map((s, i) => `<button data-act="slot" data-i="${i}" class="${i === selSlot ? 'on' : ''}"><b>${i + 1}</b><small>${s ? esc(s.name) : '(leeg)'}</small></button>`).join('')}</div>
@@ -402,6 +406,10 @@ export function muziekView(ctx) {
       case 'chain': { song.chain[+b.dataset.q] = (song.chain[+b.dataset.q] + 1) % M.PAT_COUNT; renderBody(); break; }
       case 'chainadd': if (song.chain.length < M.MAX_CHAIN) { song.chain.push(song.chain[song.chain.length - 1] || 0); renderBody(); } break;
       case 'chaindel': if (song.chain.length > 1) { song.chain.pop(); renderBody(); } break;
+      case 'r4surprise': { const r = R4.surpriseSong(Date.now() ^ (Math.random() * 1e9)); if (r && r.song) { mode = 'song'; replaceSong(r.song, `🎁 Verrassing! Gebaseerd op “${M.PRESETS[r.preset].label}”. Druk op ▶!`); } break; }
+      case 'r4daily': { const r = R4.dailySong(); if (r && r.song) { mode = 'song'; replaceSong(r.song, '📅 Het lied van vandaag is geladen. Druk op ▶!'); } break; }
+      case 'r4mash': { const sA = $('#mu-mash-a'), sB = $('#mu-mash-b'); const m = sA && sB ? R4.mashup(sA.value, sB.value) : null; if (m) { mode = 'song'; replaceSong(m, '🔀 Mash-up klaar! Druk op ▶!'); } break; }
+      case 'r4loop': { prev = M.cloneSong(song); if (R4.applyLoop(song, b.dataset.l, sel, pat)) { applyAll(); renderBody(); say('✔ Bouwsteen gelegd.'); } break; }
       case 'preset': { const s = M.buildPreset(b.dataset.k); if (s) { mode = 'song'; replaceSong(s, `✔ “${M.PRESETS[b.dataset.k].label}” geladen. Druk op ▶!`); } break; }
       case 'slot': selSlot = +b.dataset.i; renderBody(); break;
       case 'save': { const name = ($('#mu-name').value || '').trim().slice(0, 30) || `Lied ${selSlot + 1}`; slots[selSlot] = { name, data: M.compactSong(song), saved: Date.now() }; say(persist() ? `✔ Opgeslagen in plek ${selSlot + 1}.` : 'Opslaan is niet gelukt (opslag is vol of uitgeschakeld).'); renderBody(); break; }

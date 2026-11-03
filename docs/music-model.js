@@ -1,7 +1,8 @@
 // Muziekmaker: datamodel en logica (zonder DOM of audio, dus testbaar met node).
 // Song = { v:2, bpm, swing, key, scale, len, fx, vol, tracks[], pats[4][track][rij][stap], chain[] }
 
-import { NOTE_NAMES, DRUM_IDS, INST_IDS, midiFreq, playNote, playDrum } from './music-synth.js';
+import { R4_PRESETS } from './creatief-r4-beats.js?v=1';
+import { NOTE_NAMES, DRUM_IDS, INST_IDS, midiFreq, playNote, playDrum } from './music-synth.js?v=2';
 
 export const MAXSTEPS = 32, PAT_COUNT = 4, MAX_TRACKS = 8, MAX_CHAIN = 16, MEL_ROWS = 8, CHORD_ROWS = 7, KIT_ROWS = 8;
 export const PAT_NAMES = ['A', 'B', 'C', 'D'];
@@ -18,6 +19,9 @@ export const SCALES = {
   harmmineur: { label: 'Harmonisch mineur (spannend)', semis: [0, 2, 3, 5, 7, 8, 11] },
   heletoon: { label: 'Hele toon (dromerig)', semis: [0, 2, 4, 6, 8, 10] },
   japans: { label: 'Japans', semis: [0, 2, 3, 7, 8] },
+  lydisch: { label: 'Lydisch (sprookjesachtig)', semis: [0, 2, 4, 6, 7, 9, 11] },
+  frygisch: { label: 'Frygisch (spaans)', semis: [0, 1, 3, 5, 7, 8, 10] },
+  arabisch: { label: 'Arabisch (woestijn)', semis: [0, 1, 4, 5, 7, 8, 11] },
 };
 export const SCALE_KEYS = Object.keys(SCALES);
 
@@ -279,6 +283,7 @@ export const PRESETS = {
     ['chord', 'strijkers', 0, C(['xxxx............', '', '', '............xxxx', '....xxxx........', '........xxxx....', ''])],
     ['mel', 'piano', 0, M(['', '', 'x.x.....x.....x.', '..x.x.x...x.x...', '', '', '', ''])]] },
 };
+Object.assign(PRESETS, R4_PRESETS);
 export const PRESET_KEYS = Object.keys(PRESETS);
 export function buildPreset(id) {
   const P = PRESETS[id]; if (!P) return null;
@@ -286,7 +291,7 @@ export function buildPreset(id) {
   song.bpm = P.bpm; song.swing = P.swing; song.key = P.key; song.scale = P.scale; song.len = 16;
   song.tracks = []; song.pats = [[], [], [], []];
   P.tr.forEach(([kind, inst, oct, rows], i) => {
-    song.tracks.push(newTrack(kind, { id: 't' + (i + 1), inst: inst || undefined, oct }));
+    song.tracks.push(newTrack(kind, { id: 't' + (i + 1), inst: inst || undefined, oct, kit: kind === 'drums' ? P.kit : undefined }));
     song.pats[0].push(rows.map((r) => r.slice()));
     for (let p = 1; p < PAT_COUNT; p++) song.pats[p].push(blankRows(rowsFor(song.tracks[i])));
   });

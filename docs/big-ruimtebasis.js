@@ -64,6 +64,17 @@ export const MODS = [
   { id: 'smelt', e: '🏭', n: 'Smelterij', c: { erts: 40000, cred: 600, zwavel: 10 }, g: 1.35, req: 'r_smelt', x: { erts: 300, dem: 12 }, fx: '+300 🪨/s, gebruikt 12 ⚡' },
   { id: 'kristal', e: '🔮', n: 'Kristalmijn', c: { erts: 150000, cred: 2500, diamant: 6 }, g: 1.35, req: 'r_kristal', x: { erts: 1500, kennis: 5, dem: 20 }, fx: '+1,5k 🪨/s en +5 🔬/s, gebruikt 20 ⚡' },
   { id: 'alien', e: '🛸', n: 'Alien-handelsstation', c: { erts: 2000000, cred: 30000, biogel: 10 }, g: 1.4, req: 'r_alien', x: { cred: 120, kennis: 60, dem: 30 }, fx: '+120 🪙/s en +60 🔬/s, gebruikt 30 ⚡' },
+  // ---- ronde 4: 10 nieuwe modules (onderzoek in het Lab)
+  { id: 'batt', e: '⚡', n: 'Batterijbank', c: { erts: 9000, cred: 100 }, g: 1.25, req: 'r_batt', x: { sup: 140 }, fx: '+140 ⚡ energie' },
+  { id: 'kweek', e: '🍄', n: 'Paddenstoelenkelder', c: { erts: 14000, cred: 60 }, g: 1.22, req: 'r_kweek', x: { food: 40, dem: 4 }, fx: '+40 🍅 voedsel, gebruikt 4 ⚡' },
+  { id: 'zuiver', e: '🌊', n: 'Waterzuivering', c: { erts: 16000, cred: 80 }, g: 1.22, req: 'r_zuiver', x: { o2: 50, dem: 5 }, fx: '+50 💨 zuurstof, gebruikt 5 ⚡' },
+  { id: 'graaf', e: '🚜', n: 'Graafmachinepark', c: { erts: 30000, cred: 300 }, g: 1.32, req: 'r_graaf', x: { erts: 150, dem: 6 }, fx: '+150 🪨/s, gebruikt 6 ⚡' },
+  { id: 'museum', e: '🏛️', n: 'Maanmuseum', c: { erts: 45000, cred: 500 }, g: 1.3, req: 'r_museum', x: { cred: 15, kennis: 10, dem: 8 }, fx: '+15 🪙/s en +10 🔬/s, gebruikt 8 ⚡' },
+  { id: 'uni', e: '🎓', n: 'Maanuniversiteit', c: { erts: 70000, cred: 800, ijskristal: 6 }, g: 1.3, req: 'r_uni', x: { kennis: 60, dem: 10 }, fx: '+60 🔬/s, gebruikt 10 ⚡' },
+  { id: 'bos', e: '🌳', n: 'Maanbos', c: { erts: 90000, cred: 600 }, g: 1.28, req: 'r_bos', x: { house: 40, o2: 30, dem: 2 }, fx: '+40 slaapplekken en +30 💨, gebruikt 2 ⚡' },
+  { id: 'casino', e: '🎲', n: 'Maancasino', c: { erts: 220000, cred: 2000 }, g: 1.3, req: 'r_casino', x: { cred: 25, dem: 6 }, fx: '+25 🪙/s, gebruikt 6 ⚡' },
+  { id: 'thorium', e: '☢️', n: 'Thoriumreactor', c: { erts: 200000, cred: 6000, zonnemetaal: 8 }, g: 1.32, req: 'r_thor', x: { sup: 500 }, fx: '+500 ⚡ energie' },
+  { id: 'warpbaken', e: '🌀', n: 'Warpbaken', c: { erts: 4000000, cred: 40000, rijp: 8 }, g: 1.38, req: 'r_hyper', x: { cred: 400, kennis: 150, dem: 30 }, fx: '+400 🪙/s en +150 🔬/s, gebruikt 30 ⚡' },
 ];
 export const MOD = Object.fromEntries(MODS.map((m) => [m.id, m]));
 
@@ -101,6 +112,17 @@ export const RESEARCH = [
   { id: 'r_alien', e: '🛸', n: 'Buitenaards contact', c: { kennis: 40000, biogel: 8 }, req: 'r_ver', d: 'Bouw een handelsstation voor aliens.' },
   { id: 'r_prox', e: '🌀', n: 'Hyperdrive', c: { kennis: 60000, rijp: 10 }, req: 'r_warp', d: 'Reis naar Proxima b en Trappist-1e.' },
   { id: 'r_deep', e: '🔭', n: 'Diepe ruimte', c: { kennis: 150000, aurora: 10 }, req: 'r_prox', d: 'Reis naar de Kometengordel en het zwarte gat.' },
+  // ronde 4
+  { id: 'r_batt', e: '⚡', n: 'Energieopslag', c: { kennis: 2200 }, req: 'r_zon2', d: 'Bouw batterijbanken (veel energie).' },
+  { id: 'r_kweek', e: '🍄', n: 'Maankelders', c: { kennis: 2600 }, req: 'r_kas2', d: 'Bouw paddenstoelenkelders (veel voedsel).' },
+  { id: 'r_zuiver', e: '🌊', n: 'Waterkringloop', c: { kennis: 2800 }, req: 'r_o2b', d: 'Bouw waterzuiveringen (veel zuurstof).' },
+  { id: 'r_graaf', e: '🚜', n: 'Zware machines', c: { kennis: 4500 }, req: 'r_drone', d: 'Bouw graafmachineparken.' },
+  { id: 'r_museum', e: '🏛️', n: 'Maangeschiedenis', c: { kennis: 7000 }, req: 'r_toer', d: 'Bouw een maanmuseum.' },
+  { id: 'r_uni', e: '🎓', n: 'Studeren op de maan', c: { kennis: 9000, ijskristal: 6 }, req: 'r_obs', d: 'Bouw een maanuniversiteit.' },
+  { id: 'r_bos', e: '🌳', n: 'Maanbossen', c: { kennis: 11000 }, req: 'r_wonen', d: 'Bouw een maanbos: wonen en frisse lucht.' },
+  { id: 'r_casino', e: '🎲', n: 'Gokken op de maan', c: { kennis: 14000 }, req: 'r_bank', d: 'Bouw een maancasino (voor het spel, hoor).' },
+  { id: 'r_thor', e: '☢️', n: 'Thoriumkernen', c: { kennis: 25000, zonnemetaal: 8 }, req: 'r_reactor', d: 'Bouw thoriumreactoren (heel veel energie).' },
+  { id: 'r_hyper', e: '🌀', n: 'Warpbakens', c: { kennis: 80000, rijp: 8 }, req: 'r_prox', d: 'Bouw warpbakens die kennis en credits maken.' },
 ];
 export const RES = Object.fromEntries(RESEARCH.map((r) => [r.id, r]));
 
@@ -163,6 +185,15 @@ export const QUESTS = [
   { t: 'Verdien samen 1 miljard 🪨 erts', tab: null, ok: (s) => s.st.all >= 1e9, rew: { m: 60 }, p: (s) => [s.st.all, 1e9] },
   { t: 'Verhuis 10 keer', tab: 'meer', ok: (s) => s.np >= 10, rew: { m: 120 }, p: (s) => [s.np, 10] },
   { t: 'Ontdek alle 15 werelden', tab: 'mis', ok: (s) => s.wd.length >= WORLDS.length, rew: { m: 150, k: 20000 }, p: (s) => [s.wd.length, WORLDS.length] },
+  // ronde 4
+  { t: 'Bouw een ⚡ Batterijbank', tab: 'bouw', ok: (s) => nb(s, 'batt') >= 1, rew: { m: 12 } },
+  { t: 'Bouw een 🌳 Maanbos', tab: 'bouw', ok: (s) => nb(s, 'bos') >= 1, rew: { m: 15, k: 800 } },
+  { t: 'Bouw een 🚜 Graafmachinepark', tab: 'bouw', ok: (s) => nb(s, 'graaf') >= 1, rew: { m: 20 } },
+  { t: 'Bouw een 🎓 Maanuniversiteit', tab: 'bouw', ok: (s) => nb(s, 'uni') >= 1, rew: { m: 30, k: 3000 } },
+  { t: 'Bouw in totaal 400 modules', tab: 'bouw', ok: (s) => s.st.bld >= 400, rew: { m: 60 }, p: (s) => [s.st.bld, 400] },
+  { t: 'Bouw een ☢️ Thoriumreactor', tab: 'bouw', ok: (s) => nb(s, 'thorium') >= 1, rew: { m: 80 } },
+  { t: 'Voltooi 45 onderzoeken', tab: 'lab', ok: (s) => s.res.length >= 45, rew: { m: 100, k: 30000 }, p: (s) => [s.res.length, 45] },
+  { t: 'Bouw een 🌀 Warpbaken', tab: 'bouw', ok: (s) => nb(s, 'warpbaken') >= 1, rew: { m: 150 } },
 ];
 
 export const ACHS = [
@@ -205,6 +236,12 @@ export const ACHS = [
   { id: 'mis100', e: '🚀', n: 'Vliegveld', d: '100 missies voltooid', ok: (s) => s.st.mis >= 100 },
   { id: 'pr10', e: '🌌', n: 'Melkwegreiziger', d: '10x verhuisd', ok: (s) => s.np >= 10 },
   { id: 'res30', e: '🧪', n: 'Wetenschapper', d: '30 onderzoeken', ok: (s) => s.res.length >= 30 },
+  { id: 'batt5', e: '⚡', n: 'Stroomopslag', d: '5 batterijbanken', ok: (s) => nb(s, 'batt') >= 5 },
+  { id: 'bos10', e: '🌳', n: 'Groene maan', d: '10 maanbossen', ok: (s) => nb(s, 'bos') >= 10 },
+  { id: 'uni5', e: '🎓', n: 'Studentenmaan', d: '5 maanuniversiteiten', ok: (s) => nb(s, 'uni') >= 5 },
+  { id: 'graaf5', e: '🚜', n: 'Grondverzetter', d: '5 graafmachineparken', ok: (s) => nb(s, 'graaf') >= 5 },
+  { id: 'museum1', e: '🏛️', n: 'Cultuurmaan', d: 'Een maanmuseum', ok: (s) => nb(s, 'museum') >= 1 },
+  { id: 'thor1', e: '☢️', n: 'Kernkracht', d: 'Een thoriumreactor', ok: (s) => nb(s, 'thorium') >= 1 },
 ];
 
 /* =====================================================================
@@ -652,6 +689,8 @@ const uiS = () => { try { return (G.set && G.set.Settings.get().uiScale) || 1; }
 
 // 3D-icoonnamen per id (alles wat niet in de lijst staat valt terug op de emoji van het item)
 export const IC = {
+  batt: 'bolt', kweek: 'mushroom', zuiver: 'wave', graaf: 'tractor', museum: 'castle', uni: 'book', bos: 'tree', casino: 'dice', thorium: 'flame', warpbaken: 'comet',
+  r_batt: 'bolt', r_kweek: 'mushroom', r_zuiver: 'wave', r_graaf: 'tractor', r_museum: 'castle', r_uni: 'book', r_bos: 'tree', r_casino: 'dice', r_thor: 'flame', r_hyper: 'comet',
   solar: 'sun', mijn: 'pickaxe', oxy: 'cloud', kas: 'tomato', wonen: 'house', lab: 'microscope', hangaar: 'rocket', handel: 'shop', werk: 'robot', reactor: 'bolt', schild: 'shield',
   hotel: 'skyscraper', kas2: 'carrot', oxy2: 'fountain', steen: 'rock', sat: 'satellite', zontoren: 'tower', bank: 'bag', drone: 'helicopter', toer: 'ferriswheel', obs: 'globe', smelt: 'factory', kristal: 'crystal', alien: 'ufo',
   del: 'pickaxe', ond: 'microscope', kwe: 'tomato', han: 'coin',
@@ -897,6 +936,7 @@ export async function ruimtebasisView(ctx) {
   if (!alive) return;
   const isNew = !S;
   if (!S) S = newState();
+  r4Attach(ctx, view, () => S);
   audio = makeAudio(() => S.set);
 
   /* ---------- offline-voortgang ---------- */
@@ -1458,4 +1498,24 @@ export async function ruimtebasisView(ctx) {
   raf = requestAnimationFrame(frame);
   markDirty();
   saveNow();
+}
+
+/* =====================================================================
+   RONDE 4: tellers voor de extra laag (seizoenen, opdrachten, prestaties; zie big-r4-ruimtebasis.js)
+   ===================================================================== */
+const R4_MODS = ['batt', 'kweek', 'zuiver', 'graaf', 'museum', 'uni', 'bos', 'casino', 'thorium', 'warpbaken'];
+export function r4Metrics(s) {
+  const nbs = (id) => s.b[id] || 0;
+  return {
+    ore: s.st.all, cred: s.st.cred, taps: s.st.tap, missions: s.st.mis, launches: s.st.ln, built: s.st.bld, sold: s.st.sold, pop: Math.floor(s.pop), bots: s.bots,
+    research: s.res.length, worlds: s.wd.length, moves: s.np, achs: s.ach.length, quest: s.q, streak: (s.dl && s.dl.k) || 0, stars: s.st.star,
+    modules: Object.values(s.b).reduce((a, b) => a + b, 0), r4Mods: R4_MODS.filter((id) => nbs(id) > 0).length, mines: nbs('mijn'), labs: nbs('lab'), power: nbs('solar') + nbs('reactor') + nbs('batt') + nbs('thorium'),
+  };
+}
+function r4Attach(ctx, host, getS) {
+  import('./big-r4-ruimtebasis.js?v=1').then((m) => m.attach(ctx, {
+    host, metrics: () => r4Metrics(getS()), rate: () => { const s = getS(); if (!s) return 0; const R = rates(s); return Math.max(0, R.erts + R.cred * 10 + R.kennis * 3) / 3; },
+    add: (v) => { const x = getS(); if (x && v > 0) { x.r.erts += v; x.st.all += v; x.st.run += v; } },
+    ng: { label: 'Verhuizen naar een nieuwe maan', desc: 'Begin op een nieuwe maan en verdien Sterrenlicht (blijvende voordelen).', count: () => getS().np, can: () => prestigeGain(getS()) >= 1, need: 'Verdien meer erts om te kunnen verhuizen (tab Meer).' },
+  })).catch(() => { /* extra laag is optioneel */ });
 }

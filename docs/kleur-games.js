@@ -3,7 +3,7 @@ import * as K from './kleur-color.js?v=1';
 import { icon } from './gfx/art.js?v=1';
 import { GFX } from './gfx/settings.js?v=1';
 import { Settings } from './gfx/settings.js?v=1';
-import { newAudio } from './music-synth.js?v=1';
+import { newAudio } from './music-synth.js?v=2';
 
 // api: { esc, rd(key,dflt), wr(key,val), say(t), scene(id, opts), burst(kind) }
 export function mountGames(host, api) {

@@ -355,9 +355,14 @@ export async function chatView(c) {
       togglePanel('stk');
       const draw = () => {
         const p = q('#panel'); const pack = CC.STICKER_PACKS.find((x) => x.id === packId);
-        const list = packId === 'recent' ? recent : pack.items;
-        p.innerHTML = `<div class="cc-sheet"><div class="ak-tabs" style="padding-bottom:.3rem">${recent.length ? `<button class="ak-tab ${packId === 'recent' ? 'on' : ''}" data-pk="recent">🕘</button>` : ''}${CC.STICKER_PACKS.map((x) => `<button class="ak-tab ${x.id === packId ? 'on' : ''}" data-pk="${x.id}">${ic(x.ic, { size: 26 })}</button>`).join('')}</div>
+        const list = packId === 'recent' ? recent : packId === 'zinnen' ? [] : pack.items;
+        p.innerHTML = `<div class="cc-sheet"><div class="ak-tabs" style="padding-bottom:.3rem">${recent.length ? `<button class="ak-tab ${packId === 'recent' ? 'on' : ''}" data-pk="recent">🕘</button>` : ''}${CC.STICKER_PACKS.map((x) => `<button class="ak-tab ${x.id === packId ? 'on' : ''}" data-pk="${x.id}">${ic(x.ic, { size: 26 })}</button>`).join('')}<button class="ak-tab ${packId === 'zinnen' ? 'on' : ''}" data-pk="zinnen" aria-label="Snelle zinnen">💬</button></div>
           <div class="cc-stk">${list.map((n) => `<button data-st="${n}" aria-label="${n}">${ic(n, { size: 64 })}</button>`).join('')}</div></div>`;
+        if (packId === 'zinnen') {
+          const box = p.querySelector('.cc-stk'); box.style.display = 'block';
+          box.innerHTML = CC.QUICK_PHRASES.map(([g, arr]) => `<div style="margin:.3rem 0"><b>${g}</b><div style="display:flex;flex-wrap:wrap;gap:.4rem;margin-top:.3rem">${arr.map((t) => `<button data-qp="${esc(CC.fillPhrase(t, other))}" style="padding:.4rem .8rem;border-radius:99px;min-height:44px;width:auto;height:auto;font-size:.95rem">${esc(CC.fillPhrase(t, other))}</button>`).join('')}</div></div>`).join('');
+          box.querySelectorAll('[data-qp]').forEach((b) => b.onclick = async () => { try { await post({ type: 'text', text: b.dataset.qp }, b.dataset.qp.slice(0, 40)); closePanel(); } catch (e) { alert(nice(e)); } });
+        }
         p.querySelectorAll('[data-pk]').forEach((b) => b.onclick = () => { packId = b.dataset.pk; draw(); });
         p.querySelectorAll('[data-st]').forEach((b) => b.onclick = () => sendSticker(b.dataset.st));
       };

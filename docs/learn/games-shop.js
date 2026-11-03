@@ -1,5 +1,6 @@
 // Learn Spel – winkel, uiterlijk, prestaties en pure hub-logica (beloning, opslag, samenvoegen).
 // Hulpbestand van games.js. Pure functies zijn geëxporteerd voor tests (tools/test-learn-hub.mjs).
+import './r4-worlds.js?v=1';   // extra werelden eerst registreren: EXTRA_BG hieronder maakt er winkelitems van
 import { Profile, esc, fmt } from './core.js?v=1';
 import { icon, has as hasIcon } from '../gfx/art.js?v=1';
 import { ICONS } from '../gfx/icons.js?v=1';

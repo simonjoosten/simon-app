@@ -1,0 +1,112 @@
+// Escape Room: de kamers (alleen gegevens). 8 thema-kamers met eigen kleuren, decor, voorwerpen, recept en verhaaltjes.
+// plan = volgorde van puzzelsoorten (de eerste 3/4/5 worden gebruikt, afhankelijk van de moeilijkheid).
+
+// Nederlandse namen van alle iconen die in de puzzels voorkomen (met lidwoord-vrije vorm).
+export const NL = {
+  skull: 'schedel', bell: 'bel', book: 'boek', flame: 'kaars', moon: 'maan', ghost: 'spook', key: 'sleutel', scroll: 'perkament',
+  compass: 'kompas', map: 'kaart', coin: 'munt', crab: 'krab', chest: 'kist', flag: 'vlag', shark: 'haai', ship: 'schip',
+  flask: 'kolf', microscope: 'microscoop', gear: 'tandwiel', robot: 'robot', potion: 'toverdrank', bolt: 'bliksem', lightbulb: 'lamp', magnet: 'magneet',
+  planet: 'planeet', astronaut: 'astronaut', satellite: 'satelliet', comet: 'komeet', ufo: 'ufo', rocket: 'raket', sun: 'zon',
+  tower: 'toren', sword: 'zwaard', shield: 'schild', dragon: 'draak', crown: 'kroon', bow: 'boog', castle: 'kasteel', wizard: 'tovenaar',
+  cactus: 'cactus', gem: 'edelsteen', ring: 'ring', pyramid: 'piramide', rock: 'steen',
+  whale: 'walvis', shell: 'schelp', jellyfish: 'kwal', octopus: 'octopus', wave: 'golf', fish: 'vis', turtle: 'schildpad',
+  donut: 'donut', cupcake: 'cupcake', lollipop: 'lolly', cookie: 'koekje', cake: 'taart', candy: 'snoepje', icecream: 'ijsje', pie: 'appeltaart',
+  lock: 'slot', puzzle: 'puzzel', hammer: 'hamer', pickaxe: 'houweel', egg: 'ei', milk: 'melk', medal: 'medaille',
+  banana: 'banaan', apple: 'appel', balloon: 'ballon', carrot: 'wortel', duck: 'eend', ticket: 'kaartje', gift: 'cadeau', bag: 'tas',
+  money: 'geld', pencil: 'potlood', clover: 'klavertje', star: 'ster', heart: 'hart', trophy: 'beker', hourglass: 'zandloper',
+};
+
+export const GENERIC_CLUE = ['book', 'scroll', 'gift', 'bag', 'ticket', 'money', 'pencil', 'clover', 'star', 'heart', 'hourglass', 'flag'];
+export const DECOYS = ['banana', 'apple', 'balloon', 'carrot', 'duck', 'cookie', 'ticket', 'clover'];
+
+export const ROOMS = [
+  {
+    id: 'spook', name: 'Het Spookhuis', icon: 'ghost', scene: 'intro-kasteel', bg: ['#150f2e', '#3b1d6e'], floor: '#24133f', accent: '#a78bfa',
+    sub: 'Zacht gespook in een oud huis',
+    decor: ['skull', 'flame', 'bell', 'moon', 'book'],
+    props: ['skull', 'bell', 'book', 'flame', 'moon', 'ghost', 'key', 'scroll'],
+    plan: ['code', 'order', 'combine', 'slide', 'pattern'],
+    recipe: { a: 'flame', b: 'scroll', r: 'map', msg: 'De kaarsvlam laat geheime inkt zien: een kaart van het huis!' },
+    intro: 'De deur valt dicht met een zachte klap. Het spookje Boe giechelt: "Vind de weg naar buiten!"',
+    rewards: ['Een spookje klapt in zijn handjes!', 'Boe fluistert: "Goed gedaan!"', 'De kaarsen flikkeren blij.', 'Een geheim luik zwaait open.', 'Het hele huis zucht van opluchting.'],
+    outro: 'De voordeur zwaait open. Boe zwaait je uit: "Kom snel nog eens spoken!"',
+  },
+  {
+    id: 'piraten', name: 'De Piratenschuit', icon: 'ship', scene: 'intro-onderwater', bg: ['#0a3350', '#0e7490'], floor: '#5b3a1e', accent: '#38bdf8',
+    sub: 'Zoek de schat op het schip',
+    decor: ['ship', 'compass', 'crab', 'chest', 'wave'],
+    props: ['compass', 'map', 'coin', 'crab', 'chest', 'flag', 'shark', 'ship'],
+    plan: ['combine', 'code', 'pattern', 'order', 'lights'],
+    recipe: { a: 'coin', b: 'hammer', r: 'medal', msg: 'Met de hamer sla je de munt plat: een piratenmedaille!' },
+    intro: 'Kapitein Kruimel is zijn schatkist kwijt. "Help me, matroos! De golven worden woest!"',
+    rewards: ['De kapitein juicht: "Joehoe!"', 'De papegaai krijst: "Goed zo!"', 'De scheepsbel rinkelt vrolijk.', 'De zeilen klappen open.', 'Het anker komt omhoog!'],
+    outro: 'De schatkist is gevonden! Kapitein Kruimel maakt jou matroos eerste klas.',
+  },
+  {
+    id: 'lab', name: 'Het Geheime Lab', icon: 'flask', scene: 'intro-stad', bg: ['#063a2e', '#0f766e'], floor: '#12332e', accent: '#34d399',
+    sub: 'Pas op voor de borrelende drankjes',
+    decor: ['microscope', 'gear', 'robot', 'potion', 'bolt'],
+    props: ['flask', 'microscope', 'gear', 'robot', 'potion', 'bolt', 'lightbulb', 'magnet'],
+    plan: ['lights', 'code', 'order', 'slide', 'combine'],
+    recipe: { a: 'flask', b: 'gem', r: 'potion', msg: 'De edelsteen lost op in de kolf: een groene toverdrank!' },
+    intro: 'Professor Plop heeft per ongeluk het lab op slot gedaan. "Alleen een slim kind kan ons redden!"',
+    rewards: ['De robot piept: "Bliep bliep!"', 'Er knalt een vrolijk vonkje.', 'De lampen worden helderder.', 'Een kast schuift opzij.', 'Professor Plop danst door het lab.'],
+    outro: 'Klik! Het labslot springt open. Professor Plop geeft je een gouden proefbuis.',
+  },
+  {
+    id: 'ruimte', name: 'De Ruimtecapsule', icon: 'rocket', scene: 'intro-ruimte', bg: ['#070a22', '#2b1a63'], floor: '#161338', accent: '#818cf8',
+    sub: 'Repareer de capsule tussen de sterren',
+    decor: ['planet', 'astronaut', 'satellite', 'comet', 'ufo'],
+    props: ['planet', 'astronaut', 'satellite', 'comet', 'ufo', 'rocket', 'moon', 'sun'],
+    plan: ['pattern', 'code', 'slide', 'combine', 'order'],
+    recipe: { a: 'bolt', b: 'gear', r: 'robot', msg: 'Bliksem en tandwiel samen: een hulprobot komt tot leven!' },
+    intro: 'Capsule Zoef drijft ver van huis. Het luik zit vast. "Los de puzzels op om te landen!"',
+    rewards: ['Een sterretje flonkert.', 'De boordcomputer zegt: "Prima!"', 'De motoren gonzen zacht.', 'Het ruimteluik piept open.', 'De aarde komt dichterbij!'],
+    outro: 'Landing gelukt! De aarde glimt blauw onder je. Astronaut Aad geeft je een duim omhoog.',
+  },
+  {
+    id: 'kasteel', name: 'Het Ridderkasteel', icon: 'castle', scene: 'intro-kasteel', bg: ['#3a332e', '#8a4b1a'], floor: '#2e2620', accent: '#fbbf24',
+    sub: 'Ontsnap uit de torenkamer',
+    decor: ['tower', 'sword', 'shield', 'dragon', 'crown'],
+    props: ['tower', 'sword', 'shield', 'dragon', 'crown', 'bow', 'castle', 'wizard'],
+    plan: ['order', 'slide', 'code', 'lights', 'combine'],
+    recipe: { a: 'sword', b: 'shield', r: 'crown', msg: 'Zwaard en schild samen: de kroon van de dappere ridder!' },
+    intro: 'De tovenaar heeft jou in de torenkamer gestopt. "Als je slim bent, mag je weer weg!"',
+    rewards: ['De trompetten schallen!', 'De draak snurkt tevreden.', 'Een brug zakt neer.', 'De tovenaar knikt goedkeurend.', 'De poort kraakt open.'],
+    outro: 'De poort gaat open! De koning slaat jou tot ridder. Hoera!',
+  },
+  {
+    id: 'piramide', name: 'De Piramide', icon: 'pyramid', scene: 'intro-boerderij', bg: ['#6b3a12', '#d68a1c'], floor: '#4a2a10', accent: '#fde047',
+    sub: 'Zoek de weg uit het oude graf',
+    decor: ['cactus', 'scroll', 'gem', 'sun', 'ring'],
+    props: ['cactus', 'scroll', 'gem', 'sun', 'ring', 'pyramid', 'rock', 'key'],
+    plan: ['code', 'lights', 'combine', 'pattern', 'slide'],
+    recipe: { a: 'rock', b: 'pickaxe', r: 'gem', msg: 'Je hakt de steen open: binnenin zit een blinkende edelsteen!' },
+    intro: 'Zand glijdt over de ingang. Archeoloog Lotje roept: "Vind de uitgang voor het donker wordt!"',
+    rewards: ['Het zand zucht zacht.', 'Een scarabee kriebelt langs je hand.', 'De muur rommelt open.', 'Een gouden straal valt naar binnen.', 'De sfinx knipoogt.'],
+    outro: 'Je stapt de zon in. Archeoloog Lotje geeft je een echte gouden scarabee.',
+  },
+  {
+    id: 'zee', name: 'De Diepzee-Duikboot', icon: 'submarine', scene: 'intro-onderwater', bg: ['#06283d', '#0369a1'], floor: '#0b3a52', accent: '#22d3ee',
+    sub: 'Sta oog in oog met de walvis',
+    decor: ['whale', 'shell', 'jellyfish', 'octopus', 'wave'],
+    props: ['whale', 'shell', 'jellyfish', 'octopus', 'wave', 'fish', 'turtle', 'crab'],
+    plan: ['order', 'code', 'slide', 'pattern', 'combine'],
+    recipe: { a: 'shell', b: 'gem', r: 'ring', msg: 'De parel in de schelp wordt een blinkende ring!' },
+    intro: 'De duikboot ligt op de bodem. Bubbel de octopus zwaait: "Kom, laten we naar boven zwemmen!"',
+    rewards: ['Bubbels borrelen omhoog.', 'De walvis zingt een liedje.', 'De lampen schijnen groen.', 'Een schot schuift open.', 'De duikboot begint te stijgen!'],
+    outro: 'Plons! De duikboot schiet omhoog. Bubbel zwaait met alle acht armen.',
+  },
+  {
+    id: 'snoep', name: 'De Snoepfabriek', icon: 'candy', scene: 'intro-snoepland', bg: ['#7a1650', '#f472b6'], floor: '#5b2145', accent: '#f9a8d4',
+    sub: 'Lekker, maar wel op slot',
+    decor: ['donut', 'cupcake', 'lollipop', 'cookie', 'cake'],
+    props: ['donut', 'cupcake', 'lollipop', 'cookie', 'cake', 'candy', 'icecream', 'pie'],
+    plan: ['combine', 'pattern', 'code', 'lights', 'order'],
+    recipe: { a: 'egg', b: 'milk', r: 'cake', msg: 'Ei en melk in de mixer: een geurige taart rolt eruit!' },
+    intro: 'Meneer Zuurstok heeft de fabriek gesloten. "Alleen wie slim is, krijgt een zoete beloning!"',
+    rewards: ['De lopende band zoemt blij.', 'Een regen van hagelslag!', 'De chocoladefontein borrelt.', 'Een suikerdeur gaat piepend open.', 'Meneer Zuurstok lacht.'],
+    outro: 'De fabriek gaat open! Meneer Zuurstok geeft je een zak vol snoep.',
+  },
+];
+export const ROOM_BY_ID = Object.fromEntries(ROOMS.map((r) => [r.id, r]));

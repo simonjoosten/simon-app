@@ -6,6 +6,7 @@ import * as L from './study-logic.js?v=2';
 import * as A from './study-art.js?v=2';
 import { MODES, startLeren, startOefenen, startToets, startTalen, historyCard } from './study-modes.js?v=2';
 import { openMaker, openImportCode } from './study-maker.js?v=2';
+import { isR4, r4Kit, mergeR4 } from './r4-packs.js?v=1';   // ronde 4: 10 extra kits (los van packs/index.js)
 
 export { L as logic };
 export { parsePaste, pairsToQuestions, textToQuestions, generate, GENERATORS, encodeKit, decodeKit, gradeFor, LearnQueue, LivesState, FlashDeck, cleanQ, cleanKit, fieldsToQ, qToFields, kitToText, wordsOf, langQuestion, stepsFor, planSession, timeWords, pickDistractors } from './study-logic.js?v=2';
@@ -94,7 +95,7 @@ export function learnStudyView(ctx) {
     },
     refresh() { if (!dead) { S.mcache.clear(); loadKits().then(() => { if (!dead) drawTab(); }); } },
     list: [], recent: store.get('recent', []), kitId: store.get('kit', null),
-    async getKit(id) { try { return await C.getKit(id); } catch (e) { return null; } },
+    async getKit(id) { try { if (isR4(id)) return await r4Kit(id, C.normalizeQ); return await C.getKit(id); } catch (e) { return null; } },
     async masteryOf(info) {
       if (S.mcache.has(info.id)) return S.mcache.get(info.id);
       let m = null; try { const kit = await S.getKit(info.id); if (kit) m = C.Prog.mastery(info.id, kit); } catch (e) { /* null */ }
@@ -106,6 +107,7 @@ export function learnStudyView(ctx) {
   async function loadKits() {
     try { await C.Kits.load(); } catch (e) { /* lokaal */ }
     try { S.list = (await C.allKits()) || []; } catch (e) { S.list = (C.Kits.list ? C.Kits.list() : []).map((k) => ({ id: k.id, name: k.name, emoji: k.emoji, group: k.group, count: k.qs.length, lang: k.lang, src: 'user' })); }
+    try { S.list = mergeR4(S.list); } catch (e) { /* r4-kits zijn extra */ }
     if (!S.cur()) { const def = S.recent.map((id) => S.list.find((k) => k.id === id)).find(Boolean) || S.list.find((k) => /tafel/i.test(k.name)) || S.list.find((k) => k.src === 'pack') || S.list[0]; S.kitId = def ? def.id : null; }
   }
   async function launch(modeId, info) {

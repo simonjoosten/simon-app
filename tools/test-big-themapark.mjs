@@ -34,7 +34,7 @@ ok(GOALS.length === new Set(GOALS.map((g) => g.id)).size, 'unieke doelen');
 ok(ACHS.length === new Set(ACHS.map((g) => g.id)).size, 'unieke prestaties');
 ok(fmtN(1234) === '1.234' && fmtN(12500) === '12,5 k' && fmtN(3.5e6) === '3,5 mln', 'getalopmaak: ' + fmtN(12500) + ' ' + fmtN(3.5e6));
 const ridesOrder = ORDER.filter((i) => DEFS[i].k === 'ride');
-ok(ridesOrder.length === 21, '21 attracties');
+ok(ridesOrder.length === 26, '26 attracties');
 // fase 2: nieuwe inhoud (26 bouwbare dingen), eigen 3D-icoon, degelijke balans
 {
   const G2 = await import(pathToFileURL(path.join(path.dirname(tmp), 'big-gfx.js')).href);
@@ -611,7 +611,7 @@ for (const seed of [1, 2, 3]) {
   const check = () => {
     for (const P of G.parks) {
       for (const g of P.guests) {
-        if (!Number.isFinite(g.x) || !Number.isFinite(g.y) || !(g.hap >= 0 && g.hap <= 1.0001)) bad = 'gast ongeldig';
+        if (!Number.isFinite(g.x) || !Number.isFinite(g.y) || !(g.hap >= 0 && g.hap <= 1.0001)) bad = 'gast ongeldig x=' + g.x + ' y=' + g.y + ' hap=' + g.hap + ' st=' + g.st;
         if (g.cx < 0 || g.cx >= P.n || g.cy < 0 || g.cy >= P.n) bad = `gast buiten raster ${g.cx},${g.cy}`;
         if (g.st === T.RIDE && !P.rides.some((o) => o.riders.includes(g))) bad = 'rijder zonder attractie';
         if (g.st === T.QUEUE && !(g.uo && g.uo.q.includes(g))) bad = 'wachtende zonder rij';

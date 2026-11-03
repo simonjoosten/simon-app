@@ -84,6 +84,7 @@ const META = {
   aquarium: { n: 'Aquarium Tycoon', c: 'linear-gradient(135deg,#0ea5e9,#14b8a6)', i: svg('<path d="M3 12c3-5 9-6 13-2l5-2v8l-5-2c-4 4-10 3-13-2z"/><circle cx="8" cy="11" r=".8"/>') },
   stadbouwer: { n: 'Stadbouwer', c: 'linear-gradient(135deg,#64748b,#22c55e)', i: svg('<path d="M3 21V9h5v12M8 21V4h6v17M14 21V11h7v10M10 8h2M10 12h2M10 16h2"/>') },
   ruimtebasis: { n: 'Ruimtebasis', c: 'linear-gradient(135deg,#312e81,#7c3aed)', i: svg('<path d="M12 3c3 3 4 7 3 12h-6c-1-5 0-9 3-12z"/><circle cx="12" cy="9" r="1.5"/><path d="M9 15l-3 3 3-1M15 15l3 3-3-1M12 17v4"/>') },
+  escape: { n: 'Escape Room', c: 'linear-gradient(135deg,#7c3aed,#db2777)', i: svg('<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 018 0v3M12 15v2"/>') },
   foodtruck: { n: 'Foodtruck Imperium', c: 'linear-gradient(135deg,#f97316,#dc2626)', i: svg('<path d="M2 16V7h12v9M14 10h4l3 3v3h-7"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 10h6"/>') },
   foto: { n: 'Fotostudio', c: 'linear-gradient(135deg,#f472b6,#6366f1)', i: svg('<rect x="3" y="3" width="8" height="11" rx="1.5"/><rect x="13" y="3" width="8" height="7" rx="1.5"/><rect x="13" y="12" width="8" height="9" rx="1.5"/><rect x="3" y="16" width="8" height="5" rx="1.5"/>') },
   kratjes: { n: 'Kratjes schuiven', c: 'linear-gradient(135deg,#b45309,#78350f)', i: svg('<rect x="4" y="6" width="16" height="14" rx="1.5"/><path d="M4 11h16M9 6v14M15 6v14M8 3l4 3 4-3"/>') },
@@ -266,12 +267,12 @@ async function homeView() {
   document.querySelectorAll('[data-app]').forEach((b) => b.onclick = () => openApp(b.dataset.app));
   const col = collection(db, 'limoRequests');
   if (me.admin && me.apps.includes('limoadmin')) live(query(col, where('status', '==', 'pending')), (sn) => setBadge('limoadmin', sn.size));
-  if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js?v=2').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
+  if (me.apps.includes('klusjes') || (me.admin && me.apps.includes('klusjesadmin'))) import('./klusjes.js?v=3').then((m) => m.watchKlusjesBadge({ db, me, live }, setBadge)).catch(() => {});
   const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
   if (me.apps.includes('vraag')) getDoc(doc(db, 'dailyq', today, 'answers', me.uid)).then((s) => { if (!s.exists()) setBadge('vraag', 1); }).catch(() => {});
-  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js?v=4'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
-  if (me.apps.includes('agenda')) import('./agenda.js?v=2').then((m) => m.agendaToday(db)).then((n) => setBadge('agenda', n || 0)).catch(() => {});
-  if (me.apps.includes('chat')) import('./chat.js?v=2').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
+  if (me.apps.includes('huisdier')) getDoc(doc(db, 'pets', me.uid)).then(async (s) => { if (!s.exists()) return; const m = await import('./huisdier.js?v=5'); if (m.needsAttention && m.needsAttention((s.data() || {}).data, Date.now())) setBadge('huisdier', 1); }).catch(() => {});
+  if (me.apps.includes('agenda')) import('./agenda.js?v=3').then((m) => m.agendaToday(db)).then((n) => setBadge('agenda', n || 0)).catch(() => {});
+  if (me.apps.includes('chat')) import('./chat.js?v=3').then((m) => m.watchChatBadge({ db, me, live }, setBadge)).catch(() => {});
   if (me.apps.includes('limo')) live(query(col, where('uid', '==', me.uid)), (sn) => setBadge('limo', sn.docs.filter((d) => { const r = d.data(); return !r.dismissed && ['payment_requested', 'accepted', 'declined'].includes(r.status); }).length));
 }
 
@@ -280,7 +281,7 @@ async function openApp(id) {
   $('#app').innerHTML = `<div class="appview"><div class="appbar">${ico(id)}<b>${esc(META[id].n)}</b><button id="close">Sluiten</button></div><main id="view"></main>
     <div style="flex:1"></div><button class="home" id="home" aria-label="Home"></button></div>`;
   $('#close').onclick = homeView; $('#home').onclick = homeView;
-  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp, vraag: vraagApp, agenda: agendaApp, gewoontes: gewoontesApp, huisdier: huisdierApp, tijd: tijdApp, rekenen: rekenenApp, vraagadmin: vraagAdminApp, learnstudy: learnStudyApp, learnspel: learnSpelApp, shorts: shortsApp, kratjes: puzzelApp('kratjes'), verbind: puzzelApp('verbind'), knopen: puzzelApp('knopen'), pinnen: puzzelApp('pinnen'), tangram: puzzelApp('tangram'), foto: fotoApp, themapark: bigApp('themapark'), aquarium: bigApp('aquarium'), stadbouwer: bigApp('stadbouwer'), ruimtebasis: bigApp('ruimtebasis'), foodtruck: bigApp('foodtruck') })[id](); }
+  try { await ({ installer: installerView, notifications: notificationsView, lijst: lijstView, join: joinView, notify: notifyView, limo: limoView, limoadmin: limoAdminView, chat: chatApp, gamescroller: gameApp, weer: weerApp, klusjes: klusjesApp, klusjesadmin: klusjesAdminApp, emojimix: emojiApp, dobbel: dobbelApp, pixel: pixelApp, piano: pianoApp, kompas: kompasApp, mop: mopApp, meme: memeApp, muziek: muziekApp, kleur: kleurApp, vraag: vraagApp, agenda: agendaApp, gewoontes: gewoontesApp, huisdier: huisdierApp, tijd: tijdApp, rekenen: rekenenApp, vraagadmin: vraagAdminApp, learnstudy: learnStudyApp, learnspel: learnSpelApp, shorts: shortsApp, kratjes: puzzelApp('kratjes'), verbind: puzzelApp('verbind'), knopen: puzzelApp('knopen'), pinnen: puzzelApp('pinnen'), tangram: puzzelApp('tangram'), foto: fotoApp, themapark: bigApp('themapark'), aquarium: bigApp('aquarium'), stadbouwer: bigApp('stadbouwer'), ruimtebasis: bigApp('ruimtebasis'), foodtruck: bigApp('foodtruck'), escape: escapeApp })[id](); }
   catch (e) { $('#view').innerHTML = `<div class="box err">${esc(nice(e))}</div>`; }
 }
 
@@ -366,45 +367,46 @@ async function notifyView() {
 }
 
 /* ---------- Klusjes ---------- */
-async function klusjesApp() { const m = await import('./klusjes.js?v=2'); await m.klusjesView({ db, me, esc, nice, view: $('#view') }); }
-async function klusjesAdminApp() { const m = await import('./klusjes.js?v=2'); await m.klusjesAdminView({ db, me, esc, nice, view: $('#view') }); }
+async function klusjesApp() { const m = await import('./klusjes.js?v=3'); await m.klusjesView({ db, me, esc, nice, view: $('#view') }); }
+async function klusjesAdminApp() { const m = await import('./klusjes.js?v=3'); await m.klusjesAdminView({ db, me, esc, nice, view: $('#view') }); }
 
 /* ---------- Dobbel & kies, Pixel-art, Piano ---------- */
-async function dobbelApp() { const m = await import('./dice.js?v=2'); m.diceView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
-async function pixelApp() { const m = await import('./pixel.js?v=2'); m.pixelView({ view: $('#view'), esc, uid: me.uid }); }
-async function pianoApp() { const m = await import('./piano.js?v=2'); m.pianoView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
+async function dobbelApp() { const m = await import('./dice.js?v=3'); m.diceView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
+async function pixelApp() { const m = await import('./pixel.js?v=3'); m.pixelView({ view: $('#view'), esc, uid: me.uid }); }
+async function pianoApp() { const m = await import('./piano.js?v=3'); m.pianoView({ view: $('#view'), uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
 
 /* ---------- Vraag, Agenda, Gewoontes, Huisdier, Tijd, Rekenen ---------- */
 let gfxBound = false;
 const appCtx = () => { if (!gfxBound && window.__gfxSettings && me) { gfxBound = true; try { window.__gfxSettings.bindCloud(db, me.uid); } catch (e) { /* lokaal */ } } return appCtx0(); };
 const appCtx0 = () => ({ db, me, esc, nice, uid: me.uid, view: $('#view'), addCleanup: (f) => unsubs.push(f) });
-async function vraagApp() { const m = await import('./vraag.js?v=2'); await m.vraagView(appCtx()); }
-async function vraagAdminApp() { const m = await import('./vraag.js?v=2'); await m.vraagView({ ...appCtx(), adminOnly: true }); }
-async function agendaApp() { const m = await import('./agenda.js?v=2'); await m.agendaView(appCtx()); }
-async function gewoontesApp() { const m = await import('./gewoontes.js?v=2'); await m.gewoontesView(appCtx()); }
-async function learnStudyApp() { const m = await import('./learn/study.js?v=2'); await m.learnStudyView(appCtx()); }
+async function vraagApp() { const m = await import('./vraag.js?v=3'); await m.vraagView(appCtx()); }
+async function vraagAdminApp() { const m = await import('./vraag.js?v=3'); await m.vraagView({ ...appCtx(), adminOnly: true }); }
+async function agendaApp() { const m = await import('./agenda.js?v=3'); await m.agendaView(appCtx()); }
+async function gewoontesApp() { const m = await import('./gewoontes.js?v=3'); await m.gewoontesView(appCtx()); }
+async function learnStudyApp() { const m = await import('./learn/study.js?v=3'); await m.learnStudyView(appCtx()); }
+async function escapeApp() { const m = await import('./escape.js?v=1'); await m.escapeView(appCtx()); }
 async function shortsApp() { const m = await import('./shorts.js?v=2'); await m.shortsView(appCtx()); }
-async function learnSpelApp() { const m = await import('./learn/games.js?v=3'); await m.learnSpelView(appCtx()); }
-const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=3'); await m.puzzelView(appCtx(), id); };
-const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=2`); await m[`${id}View`](appCtx()); };
-async function fotoApp() { const m = await import('./foto.js?v=4'); m.fotoView(appCtx()); }
-async function huisdierApp() { const m = await import('./huisdier.js?v=4'); await m.huisdierView(appCtx()); }
-async function tijdApp() { const m = await import('./tijd.js?v=2'); m.tijdView(appCtx()); }
-async function rekenenApp() { const m = await import('./rekenen.js?v=2'); m.rekenenView(appCtx()); }
+async function learnSpelApp() { const m = await import('./learn/games.js?v=4'); await m.learnSpelView(appCtx()); }
+const puzzelApp = (id) => async () => { const m = await import('./puzzel.js?v=4'); await m.puzzelView(appCtx(), id); };
+const bigApp = (id) => async () => { const m = await import(`./big-${id}.js?v=3`); await m[`${id}View`](appCtx()); };
+async function fotoApp() { const m = await import('./foto.js?v=5'); m.fotoView(appCtx()); }
+async function huisdierApp() { const m = await import('./huisdier.js?v=5'); await m.huisdierView(appCtx()); }
+async function tijdApp() { const m = await import('./tijd.js?v=3'); m.tijdView(appCtx()); }
+async function rekenenApp() { const m = await import('./rekenen.js?v=3'); m.rekenenView(appCtx()); }
 
 /* ---------- Kompas, Mop, Meme, Muziek, Kleurplaten ---------- */
-async function kompasApp() { const m = await import('./kompas.js?v=2'); m.kompasView({ view: $('#view'), db, uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
-async function mopApp() { const m = await import('./mop.js?v=2'); await m.mopView({ view: $('#view'), esc, uid: me.uid }); }
-async function memeApp() { const m = await import('./meme.js?v=2'); m.memeView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
-async function muziekApp() { const m = await import('./music.js?v=2'); m.muziekView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
-async function kleurApp() { const m = await import('./kleur.js?v=2'); m.kleurView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
+async function kompasApp() { const m = await import('./kompas.js?v=3'); m.kompasView({ view: $('#view'), db, uid: me.uid, esc, addCleanup: (f) => unsubs.push(f) }); }
+async function mopApp() { const m = await import('./mop.js?v=3'); await m.mopView({ view: $('#view'), esc, uid: me.uid }); }
+async function memeApp() { const m = await import('./meme.js?v=3'); m.memeView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
+async function muziekApp() { const m = await import('./music.js?v=3'); m.muziekView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
+async function kleurApp() { const m = await import('./kleur.js?v=3'); m.kleurView({ view: $('#view'), esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) }); }
 
 /* ---------- Emoji-mixer ---------- */
-async function emojiApp() { const m = await import('./emoji.js'); m.emojiView({ view: $('#view'), esc, uid: me.uid }); }
+async function emojiApp() { const m = await import('./emoji.js?v=2'); m.emojiView({ view: $('#view'), esc, uid: me.uid }); }
 
 /* ---------- Weer ---------- */
 async function weerApp() {
-  const m = await import('./weer.js?v=2');
+  const m = await import('./weer.js?v=3');
   await m.weerView({ view: $('#view'), db, esc, uid: me.uid, addCleanup: (f) => unsubs.push(f) });
 }
 
@@ -417,7 +419,7 @@ async function gameApp() {
 
 /* ---------- Chat ---------- */
 async function chatApp() {
-  const m = await import('./chat.js?v=2');
+  const m = await import('./chat.js?v=3');
   await m.chatView({ db, me, live, $, esc, nice, isAdmin: me.admin, stop });
 }
 

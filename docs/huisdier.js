@@ -5,7 +5,10 @@
 // huisdier-extra.js (Steun, Uitlaten, Camera), huisdier-koken.js, huisdier-social.js (vrienden, cadeaus, evenement, hulp).
 import { doc, getDoc, setDoc }
   from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import { MORE_FOODS, MORE_TOYS, extendRooms, overlaySpots, seasonOf, eventsOn, cleanClaims, claimable, addClaim, eventKey } from './huisdier-more.js?v=1';
+import { MORE_FOODS, MORE_TOYS, MORE_FURN, FURN_META, extendRooms, overlaySpots, seasonOf, eventsOn, cleanClaims, claimable, addClaim, eventKey } from './huisdier-more.js?v=1';
+// Ronde 4: nieuwe dieren, kleurlagen, kleding, kamers, album, trucjes, prestaties, feestdagen (huisdier-r4-*.js)
+import { R4_SPECIES, R4_SPECIES_BY, isR4Species, r4AvatarInner, wrapArt, R4_ROOMS, registerR4Furniture, extendRoomsR4, roomBackdropHTML, R4_ACH, R4_CSS, tintClass, r4EventsOn, R4_GAME_IDS, PACKS_MAX } from './huisdier-r4-data.js?v=1';
+registerR4Furniture(MORE_FURN, FURN_META);   // +24 meubels voor de nieuwe kamers
 
 /* =====================================================================
    1. DATA
@@ -27,6 +30,7 @@ const TYPES = { kat: '🐱', hond: '🐶', konijn: '🐰', panda: '🐼', eend: 
 const TYPE_NL = { kat: 'Kat', hond: 'Hond', konijn: 'Konijn', panda: 'Panda', eend: 'Eend', kikker: 'Kikker', eenhoorn: 'Eenhoorn', draakje: 'Draakje', mix: 'Mix-huisdier' };
 // minstens 24 dieren/wezens voor het mix-huisdier (allemaal met officiële Emoji Kitchen-mixen)
 const MIXLIST = ['🐱', '🐶', '🐰', '🐼', '🐸', '🦄', '🐻', '🦊', '🐵', '🐷', '🐮', '🐔', '🐧', '🐢', '🐙', '🦋', '🐝', '🐞', '🦉', '🦁', '🐯', '🐨', '🐭', '🐳', '🦈', '👻', '🤖', '👽'];
+for (const sp of R4_SPECIES) { TYPES[sp.id] = sp.e; TYPE_NL[sp.id] = sp.n; }   // +9 nieuwe dieren (huisdier-r4-data.js)
 const NPAL = 6;                                   // 6 paletten per soort; `hue` in de state is de paletindex
 const SPECIES_ID = (t) => (t === 'draakje' ? 'draak' : t); // id in huisdier-art-pets.js
 const PAL_FALLBACK = ['Natuurlijk', 'Zonnig', 'Mint', 'Zee', 'Lila', 'Roze'];
@@ -169,7 +173,7 @@ const ROOMS = [
   { id: 'bad', a: 'badkamer', e: '🛁', n: 'Badkamer', w: '#d9f1f8', f: '#b6dde8', sp: 62 },
   { id: 'tuin', a: 'tuin', e: '🌳', n: 'Tuin', w: '#d3effc', f: '#a9d98b', sp: 55 },
   { id: 'speel', a: 'speelkamer', e: '🎾', n: 'Speelkamer', w: '#ffe1ee', f: '#f6c8da', sp: 62 },
-].map((r) => ({ ...r, bg: `linear-gradient(180deg,${r.w} 0,${r.w} ${r.sp}%,${r.f} ${r.sp}%,${r.f} 100%)` }));
+].concat(R4_ROOMS.map(({ id, a, e, n, w, f, sp }) => ({ id, a, e, n, w, f, sp }))).map((r) => ({ ...r, bg: `linear-gradient(180deg,${r.w} 0,${r.w} ${r.sp}%,${r.f} ${r.sp}%,${r.f} 100%)` }));
 const ROOM = Object.fromEntries(ROOMS.map((r) => [r.id, r]));
 const FP_N = 8;   // plekken per kamer (plek 7 en 8 zijn later toegevoegd: indexen 0-5 blijven gelijk)
 const IC_MAX = 160;   // max. aantal bijgehouden meubel-cooldowns in de state
@@ -241,6 +245,7 @@ const ACH = [
   ['iaall', '🎠', 'Alles uitproberen', '20 verschillende interactieve meubels gebruikt', (s) => Object.keys(s.ic || {}).length >= 20],
   ['ia100', '🤹', 'Speelvogel', '100 keer met meubels gespeeld', (s) => c(s, 'ia') >= 100],
 ].map(([id, e, n, d, t]) => ({ id, e, n, d, t }));
+for (const a of R4_ACH) ACH.push({ id: a.id, e: a.e, n: a.n, d: a.d, t: a.t });   // +30 prestaties
 function c(s, k) { return (s.st && s.st[k]) || 0; }
 
 const TOYS = [['bal', '⚽', 'Bal'], ['teddy', '🧸', 'Teddy'], ['vlieger', '🪁', 'Vlieger'], ['ballon', '🎈', 'Ballon'], ['puzzel', '🧩', 'Puzzel']];
@@ -704,6 +709,7 @@ input[type=range].hd-in{padding:0}
 @keyframes hd-up{from{transform:translateY(0) scale(.6);opacity:1}to{transform:translateY(-110px) scale(1.2);opacity:0}}
 @keyframes hd-pop{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%) scale(1);opacity:1}}
 @keyframes hd-eggwob{0%,100%{transform:rotate(-4deg)}50%{transform:rotate(4deg)}}
+${R4_CSS}
 @media (prefers-reduced-motion:reduce){.hd-walk.hd-ia{transition:none}.hd-ia i:before,.hd-ia i:after,.hd-pet[class*="hd-ia-"]{animation:none!important}.hd-walk,.hd-flip,.hd-mood,.hd-eggfb,.pet-idle .pet-body,.pet-idle .pet-tail,.pet-idle .pet-ears,.pet-idle .pet-wings{animation:none!important}}
 `;
 
@@ -711,11 +717,12 @@ input[type=range].hd-in{padding:0}
    5. WEERGAVE VAN HET HUISDIER
    Getekend met petSVG (huisdier-art-pets.js). Zonder die module: emoji. Het Mix-huisdier blijft het Emoji-Kitchen-plaatje.
    ===================================================================== */
+let R4_URL = null;   // urlOf van huisdier-gfx.js (3D-icoon-url) voor de nieuwe dieren
 let ART = null;      // { petSVG, eggSVG, accessorySVG, ACCESSORIES, MOODS } zodra huisdier-art-pets.js geladen is
 const ACC = {};      // accessoire-id -> { id, name, price, minLevel, slot }
 function setArt(m) {
-  ART = m;
-  if (m && m.ACCESSORIES) for (const sl of ART_SLOTS) for (const a of m.ACCESSORIES[sl] || []) ACC[a.id] = { ...a, slot: sl };
+  ART = wrapArt(m);   // + 20 nieuwe kledingstukken
+  if (ART && ART.ACCESSORIES) for (const sl of ART_SLOTS) for (const a of ART.ACCESSORIES[sl] || []) ACC[a.id] = { ...a, slot: sl };
 }
 const MIX_CLOTHES = true; // kleding als overlay op het Emoji-Kitchen-plaatje (zet op false als het niet mooi staat)
 const MIX_ANCHOR = { // middelpunt (% van het plaatje) en breedte van de overlay
@@ -743,6 +750,10 @@ function avatarHTML(s, stage, mood, o = {}) {
     const img = u ? `<img class="hd-mixi" src="${u}" data-a="${s.mix[0]}" data-b="${s.mix[1]}" crossorigin="anonymous" alt="" draggable="false">` : mixFallback(s.mix[0], s.mix[1]);
     return `<div class="hd-mixwrap" style="transform:scale(${(STAGES[stage] || STAGES.volwassen).sc})">${img}${mixOverlay(s)}</div>`;
   }
+  if (isR4Species(s.type)) {
+    const u = R4_URL ? R4_URL(R4_SPECIES_BY[s.type].ic) : null;
+    return `<div class="hd-mixwrap" style="transform:scale(${(STAGES[stage] || STAGES.volwassen).sc})">${r4AvatarInner(s.type, s.hue, u)}${mixOverlay(s)}</div>`;
+  }
   if (ART) {
     try { return ART.petSVG(SPECIES_ID(s.type), { palette: s.hue || 0, stage, mood: artMood(o.love ? 'liefde' : mood), outfit: outfitOf(s), size: o.size || 200 }); } catch (e) { console.error(e); }
   }
@@ -758,12 +769,12 @@ function petHTML(s, now, o = {}) {
   const stage = stageOf(s, now);
   if (stage === 'ei') return `<div class="hd-pet hd-egg ${o.cls || ''}">${eggHTML(o.hatching ? 1 : (now - s.born) / EGG_MS)}</div>`;
   const mood = o.mood || moodNow(s, now);
-  return `<div class="hd-pet pet-idle hd-m-${mood} ${o.cls || ''}">${avatarHTML(s, stage, mood, o)}<span class="hd-mood">${MOOD_EMO[mood] || ''}</span></div>`;
+  return `<div class="hd-pet pet-idle hd-m-${mood} ${o.cls || ''} ${tintClass(s.st)}">${avatarHTML(s, stage, mood, o)}<span class="hd-mood">${MOOD_EMO[mood] || ''}</span></div>`;
 }
 // Los plaatje zonder stemmingsicoon (voor spelletjes, extra's, modal)
 function plainPetHTML(s, now, size, mood) {
   const stage = stageOf(s, now) === 'ei' ? 'volwassen' : stageOf(s, now);
-  return `<span class="pet-idle hd-m-${mood || 'blij'}" style="display:inline-block;position:relative;width:${size}px;height:${size}px;line-height:0;vertical-align:top">${avatarHTML(s, stage, mood || 'blij', { size })}</span>`;
+  return `<span class="pet-idle hd-m-${mood || 'blij'} ${tintClass(s.st)}" style="display:inline-block;position:relative;width:${size}px;height:${size}px;line-height:0;vertical-align:top">${avatarHTML(s, stage, mood || 'blij', { size })}</span>`;
 }
 
 // Zinnen: eigen karakter + algemeen
@@ -799,7 +810,7 @@ export async function huisdierView(ctx) {
   let tab = 'home', sub = '', edit = false, shopTab = 'eten', ftab = 'vrienden', rankBy = 'age', room = 'woon';
   let gm = null, gmErr = '', soc = null, socErr = '', ev = null, away = null, loadErr = '';
   let ar = null, snd = null, ex = null, kk = null, extraErr = '', kookErr = '';   // optionele modules
-  let gfxm = null, g2 = null, e3d = null;   // huisdier-gfx.js (3D-iconen, scènes, ⚙) en huisdier-minigames.js: optioneel
+  let gfxm = null, g2 = null, g3 = null, r4x = null, e3d = null;   // huisdier-gfx.js (3D-iconen, scènes, ⚙) en huisdier-minigames.js: optioneel
   let saveT = null, dirty = false, lastDecay = Date.now(), wasSleep = false, wasNight = false, hatching = false, lastEv = 0, lastHelp = 0;
   let sayText = '', sayUntil = 0, phrase = '', phraseAt = 0, phraseMood = '', petKey = '', checking = false, loveUntil = 0;
   let toastQ = [], toastBusy = false, game = null;
@@ -877,7 +888,7 @@ export async function huisdierView(ctx) {
     if (!snd) return;
     try { snd.play(SFX_MAP[name] || name, opts); } catch { /* geen geluid */ }
   }
-  const speciesNow = () => (S && S.type !== 'mix' ? SPECIES_ID(S.type) : undefined);
+  const speciesNow = () => (S && S.type !== 'mix' ? (isR4Species(S.type) ? R4_SPECIES_BY[S.type].snd : SPECIES_ID(S.type)) : undefined);
   function voice() { sfx('stem', { species: speciesNow(), mood: artMood(S ? moodNow(S, Date.now()) : 'blij') }); }
   function savePref() { try { localStorage.setItem('huisdier:snd', JSON.stringify({ on: pref.on ? 1 : 0, vol: Math.round(pref.vol * 100) / 100 })); } catch { /* ok */ } }
   const loopsOn = new Set();
@@ -1011,7 +1022,7 @@ export async function huisdierView(ctx) {
   // feestdagen en verjaardag: elk jaar eenmalig een bonus ophalen (bewaard in localStorage, de save zelf blijft ongewijzigd)
   const claimKey = () => `huisdier:evclaim:${me.uid}`;
   const getClaims = () => { try { return cleanClaims(JSON.parse(localStorage.getItem(claimKey()) || '[]')); } catch { return []; } };
-  const todayEvents = () => (S && S.h ? eventsOn(new Date(), S.born) : []);
+  const todayEvents = () => (S && S.h ? eventsOn(new Date(), S.born).concat(r4EventsOn(new Date())) : []);
   function specialHTML() {
     const evs = todayEvents(); if (!evs.length) return '';
     const open = claimable(evs, getClaims(), new Date()).map((e) => e.id);
@@ -1029,9 +1040,9 @@ export async function huisdierView(ctx) {
     syncLoops();
   }
   /* ---------- adopteren ---------- */
-  const palName = (type, i) => { const sp = ART && ART.SPECIES && ART.SPECIES.find((x) => x.id === SPECIES_ID(type)); return sp && sp.palettes[i] ? sp.palettes[i].name : PAL_FALLBACK[i]; };
-  const palColors = (type, i) => { const sp = ART && ART.SPECIES && ART.SPECIES.find((x) => x.id === SPECIES_ID(type)); const p = sp && sp.palettes[i]; return p ? [p.main, p.accent] : ['#ddd', '#bbb']; };
-  const speciesThumb = (k) => { if (ART) { try { return ART.petSVG(SPECIES_ID(k), { palette: 0, stage: 'volwassen', mood: 'blij', size: 44 }); } catch { /* emoji */ } } return TYPES[k]; };
+  const palName = (type, i) => { if (isR4Species(type)) return R4_SPECIES_BY[type].pal[i].n; const sp = ART && ART.SPECIES && ART.SPECIES.find((x) => x.id === SPECIES_ID(type)); return sp && sp.palettes[i] ? sp.palettes[i].name : PAL_FALLBACK[i]; };
+  const palColors = (type, i) => { if (isR4Species(type)) return R4_SPECIES_BY[type].pal[i].c; const sp = ART && ART.SPECIES && ART.SPECIES.find((x) => x.id === SPECIES_ID(type)); const p = sp && sp.palettes[i]; return p ? [p.main, p.accent] : ['#ddd', '#bbb']; };
+  const speciesThumb = (k) => { if (isR4Species(k)) return `<span style="position:relative;display:inline-block;width:44px;height:44px">${r4AvatarInner(k, 0, R4_URL ? R4_URL(R4_SPECIES_BY[k].ic) : null)}</span>`; if (ART) { try { return ART.petSVG(SPECIES_ID(k), { palette: 0, stage: 'volwassen', mood: 'blij', size: 44 }); } catch { /* emoji */ } } return TYPES[k]; };
   function adoptPreview() {
     if (ad.type === 'mix') {
       const u = mixUrl(ad.a, ad.b);
@@ -1147,6 +1158,7 @@ export async function huisdierView(ctx) {
   }
 
   // meubels uit huisdier-more.js (3D-iconen) staan als plaatje boven de kamer-SVG, die ze zelf niet kent
+  const r4Backdrop = (roomId) => roomBackdropHTML(roomId, gfxm ? gfxm.urlOf : null, (n) => (gfxm ? gfxm.gfxApi.emoji(n) : '⭐'));
   function extraFurnHTML(roomId) {
     if (!ar || !ar.SLOT_POS) return '';
     const spots = overlaySpots(fpOf(roomId), ar.SLOT_POS[ROOM[roomId].a], ROOM[roomId].a);
@@ -1164,7 +1176,7 @@ export async function huisdierView(ctx) {
     body.innerHTML = `<div class="hd-roombar">${ROOMS.map((r) => `<button data-do="room" data-v="${r.id}" class="${r.id === room ? 'pri' : ''}">${r.e} ${r.n}</button>`).join('')}</div>${awayBoxHTML()}
       <div class="hd-stage" id="hd-stage" style="background:${R.bg}">
         <div class="hd-roomsvg" id="hd-room">${roomSvg(S.hc, room, fpOf(room), nightOf(S, now))}</div>
-        ${extraFurnHTML(room)}${spotsHTML(S, room, edit)}${iaHTML(S, room, edit)}
+        ${r4Backdrop(room)}${extraFurnHTML(room)}${spotsHTML(S, room, edit)}${iaHTML(S, room, edit)}
         <div class="hd-bubble" id="hd-bub"></div>
         <div class="hd-walk" id="hd-walk" style="--fy:${fyOf(room)}" data-do="petvoice"><div class="hd-flip" id="hd-pet"></div></div>
         ${sl ? '<div class="hd-night" id="hd-night"><span>💤</span></div>' : ''}${seasonHTML()}
@@ -1197,7 +1209,7 @@ export async function huisdierView(ctx) {
     const el = $('#hd-pet'); if (!el || !S) return;
     const now = Date.now(); const mood = moodNow(S, now); const stage = stageOf(S, now);
     const love = now < loveUntil && mood !== 'slaap' && mood !== 'ziek';
-    const key = [S.type, S.mix && S.mix.join(''), S.hue, stage, mood, SLOTS.map((k) => (S.wr && S.wr[k]) || '').join(','), !!MIX, !!ART, love, hatching, stage === 'ei' ? Math.floor(Math.max(0, Math.min(1, (now - S.born) / EGG_MS)) * 10) : ''].join('|');
+    const key = [S.type, S.mix && S.mix.join(''), S.hue, tintClass(S.st), stage, mood, SLOTS.map((k) => (S.wr && S.wr[k]) || '').join(','), !!MIX, !!ART, love, hatching, stage === 'ei' ? Math.floor(Math.max(0, Math.min(1, (now - S.born) / EGG_MS)) * 10) : ''].join('|');
     if (force || key !== petKey) { petKey = key; el.innerHTML = petHTML(S, now, { mood, love, hatching }); }
     const w = $('#hd-walk'); if (w) w.classList.toggle('hd-still', !S.h || mood === 'slaap' || edit || hatching);
   }
@@ -1471,6 +1483,8 @@ export async function huisdierView(ctx) {
     const f = Number.isFinite(Number(fun)) ? Math.max(0, Math.min(100, Number(fun))) : score;
     const joy = Math.round(0.3 * f);
     S.happy = cp(S.happy + joy); S.energy = cp(S.energy - 4); S.bond = cp(S.bond + 1 + (score >= 70 ? 1 : 0));
+    if (R4_GAME_IDS.includes(g.g.id)) bump('rgame');
+    if (score >= 60) S.st.packs = Math.min(PACKS_MAX, c(S, 'packs') + 1);   // 60+ punten = plaatjespakje voor het album
     bump('game'); addXp(r.xp); changed(); paintTop();
     return { coins, xp: r.xp, rec, capped: r.capped, joy };
   }
@@ -1480,7 +1494,7 @@ export async function huisdierView(ctx) {
     if (award && !g.done && g.score > 0 && S) { g.done = true; const r = rewardGame(g, g.score); toast(`${g.g.emoji} Score ${g.score}: +${r.coins} 🪙`); }
     destroyGame(g);
   }
-  const gamesList = () => (gm && Array.isArray(gm.GAMES) ? gm.GAMES.concat(g2 && g2.GAMES2 ? g2.GAMES2 : []) : []);
+  const gamesList = () => (gm && Array.isArray(gm.GAMES) ? gm.GAMES.concat(g2 && g2.GAMES2 ? g2.GAMES2 : [], g3 && g3.GAMES_R4 ? g3.GAMES_R4 : []) : []);
   function renderGames(body) {
     if (game) return renderGamePlay(body);
     if (!gm || !Array.isArray(gm.GAMES) || !gm.GAMES.length) {
@@ -1541,6 +1555,7 @@ export async function huisdierView(ctx) {
   let exP = null, kkP = null;
   const ensureExtra = () => exP || (exP = ex ? Promise.resolve(ex) : loadModule('ex', './huisdier-extra.js?v=1', (m) => { ex = m; }, () => { extraErr = 'Dit onderdeel kon niet geladen worden.'; exP = null; }));
   const ensureKoken = () => kkP || (kkP = kk ? Promise.resolve(kk) : loadModule('kk', './huisdier-koken.js?v=1', (m) => { kk = m; }, () => { kookErr = 'Koken kon niet geladen worden.'; kkP = null; }));
+  const exAll = () => (ex && ex.EXTRAS ? ex.EXTRAS : []).concat(r4x && r4x.R4_EXTRAS ? r4x.R4_EXTRAS : []);
   function destroyExtra() { const i = extraInst; extraInst = null; if (i) try { if (i.destroy) i.destroy(); } catch (e) { console.error(e); } }
   function destroyCook() { const i = cookInst; cookInst = null; if (i) try { if (i.destroy) i.destroy(); } catch (e) { console.error(e); } }
 
@@ -1573,12 +1588,26 @@ export async function huisdierView(ctx) {
     while (size() > X_MAX && others.length) delete x[others.shift()];
     S.x = x; checkAch(); changed();
   }
+  // tellers voor de Ronde-4-onderdelen (album, trucjes, salon, kalender): alles in S.st (kleine ints met letters-sleutels)
+  function r4Api() {
+    const key = (k) => /^[a-z]{2,8}$/.test(String(k));
+    return {
+      get: (k) => (S && key(k) ? c(S, k) : 0),
+      set: (k, v) => { if (!S || !key(k)) return; S.st = S.st || {}; S.st[k] = int(v); },
+      add: (k, n) => { if (!S || !key(k)) return; S.st = S.st || {}; S.st[k] = c(S, k) + Math.max(0, Math.floor(Number(n) || 0)); },
+      spend: (n) => { n = Math.max(0, Math.floor(Number(n) || 0)); if (!S || S.coins < n) return false; spend(n); return true; },
+      earn: (n) => { if (!S) return 0; return earn(Math.max(0, Math.min(60, Math.floor(Number(n) || 0))), { noMult: true }); },
+      level: () => level(), born: S ? S.born : 0,
+      evOn: (d) => eventsOn(d, S ? S.born : 0).concat(r4EventsOn(d)),
+      refresh: () => { checkAch(); changed(); paintTop(); petKey = ''; },
+    };
+  }
   function modApi(who, w, h) {
     return {
       w, h, uid: me.uid, level: level(), pet: petApi(),
       getState: () => ({ personality: PERS[S.pe].n, name: S.name, level: level(), mood: moodNow(S, Date.now()), hunger: S.hunger, happy: S.happy, energy: S.energy, clean: S.clean, bond: S.bond }),
       award: (a) => { try { awardMod(a, who); } catch (e) { console.error(e); } },
-      loadExtra: loadX, saveExtra: saveX,
+      loadExtra: loadX, saveExtra: saveX, gfx: gfxm ? gfxm.gfxApi : null, r4: r4Api(),
       toast: (m) => { if (alive) toast(String(m).slice(0, 120)); },
       sound: (n, o) => { sfx(String(n), o); if (who === 'camera' && n === 'klaar' && S && !c(S, 'cam')) { bump('cam'); changed(); } },
     };
@@ -1586,16 +1615,16 @@ export async function huisdierView(ctx) {
   function renderExtra(body) {
     if (extraOpen) return mountExtra(body);
     destroyExtra();
-    if (!ex) {
+    if (!ex && !r4x) {
       if (!extraErr) ensureExtra().then(() => { if (alive && tab === 'extra') render(); });
       body.innerHTML = `<div class="box center"><div style="font-size:40px">🌈</div><p>${extraErr ? esc(extraErr) : 'Even laden…'}</p></div>`;
       return;
     }
     body.innerHTML = `<div class="box center"><b>🌈 Extra met ${esc(S.name)}</b><br><small>Een rustig momentje, samen wandelen of kijken door de camera.</small></div>
-      <div class="hd-grid3">${ex.EXTRAS.map((x) => `<div class="hd-card"><div class="em">${x.emoji}</div><b>${esc(x.name)}</b><br><small>${esc(x.desc || '')}</small>${b('Open', 'xopen', `data-v="${esc(x.id)}"`, 'pri')}</div>`).join('')}</div>`;
+      <div class="hd-grid3">${exAll().map((x) => `<div class="hd-card"><div class="em">${x.emoji}</div><b>${esc(x.name)}</b><br><small>${esc(x.desc || '')}</small>${b('Open', 'xopen', `data-v="${esc(x.id)}"`, 'pri')}</div>`).join('')}</div>`;
   }
   function mountExtra(body) {
-    const x = ex && ex.EXTRAS.find((e) => e.id === extraOpen);
+    const x = exAll().find((e) => e.id === extraOpen);
     if (!x) { extraOpen = ''; return renderExtra(body); }
     destroyExtra();
     body.innerHTML = `<div class="row" style="justify-content:space-between;margin-bottom:6px">${b('← Terug', 'xback')}<b>${x.emoji} ${esc(x.name)}</b><span></span></div><div id="hd-xw"><div id="hd-xh" class="hd-exhost"></div></div>`;
@@ -1766,7 +1795,7 @@ export async function huisdierView(ctx) {
     const house = HOUSE_A[hc];
     body.innerHTML = `<p>${b('← Terug', 'vback')}</p>
       <div class="hd-roombar">${ROOMS.map((r) => `<button data-do="vroom" data-v="${r.id}" class="${r.id === R.id ? 'pri' : ''}">${r.e} ${r.n}</button>`).join('')}</div>
-      <div class="hd-stage" style="background:${R.bg}"><div class="hd-roomsvg">${roomSvg(hc, R.id, (s.fp && s.fp[R.id]) || [], night)}</div>
+      <div class="hd-stage" style="background:${R.bg}"><div class="hd-roomsvg">${roomSvg(hc, R.id, (s.fp && s.fp[R.id]) || [], night)}</div>${r4Backdrop(R.id)}
         <div class="hd-bubble">${esc(phraseFor(s, mood))}</div>
         <div class="hd-walk ${mood === 'slaap' || st === 'ei' ? 'hd-still' : ''}" style="--fy:${fyOf(R.id)}"><div class="hd-flip" id="hd-vpet">${petHTML(s, now, { mood })}</div></div>
         ${mood === 'slaap' ? '<div class="hd-night"><span>💤</span></div>' : ''}<div class="hd-fx" id="hd-fx"></div></div>
@@ -1873,6 +1902,8 @@ export async function huisdierView(ctx) {
         const u = mixUrl(S.mix[0], S.mix[1]);
         if (u && withImg) { const im = await loadImg(u); g.drawImage(im, px + size * 0.04, py + size * 0.04, size * 0.92, size * 0.92); }
         else { g.font = font(size * 0.6); g.fillText(S.mix[0], px + size * 0.3, py + size * 0.5); g.font = font(size * 0.5); g.fillText(S.mix[1], px + size * 0.74, py + size * 0.6); }
+      } else if (isR4Species(S.type) && withImg && R4_URL && R4_URL(R4_SPECIES_BY[S.type].ic)) {
+        const im = await loadImg(R4_URL(R4_SPECIES_BY[S.type].ic)); g.drawImage(im, px + size * 0.04, py + size * 0.04, size * 0.92, size * 0.92);
       } else if (withImg && ART) {
         const svg = ART.petSVG(SPECIES_ID(S.type), { palette: S.hue || 0, stage: stage === 'ei' ? 'volwassen' : stage, mood: artMood(mood), outfit: outfitOf(S), size: 400 });
         g.drawImage(await svgImg(svg), px, py, size, size);
@@ -2180,7 +2211,7 @@ export async function huisdierView(ctx) {
       tab = 'games'; game = { g, score: 0, done: false, inst: null }; render();
     },
     gstop() { if (game) endGame(true); render(); },
-    xopen(el) { if (!ex || !ex.EXTRAS.some((x) => x.id === el.dataset.v)) return; extraOpen = el.dataset.v; sfx('tik'); render(); },
+    xopen(el) { if (!exAll().some((x) => x.id === el.dataset.v)) return; extraOpen = el.dataset.v; sfx('tik'); render(); },
     xback() { destroyExtra(); extraOpen = ''; sfx('terug'); render(); },
     // vrienden
     ftab(el) { ftab = el.dataset.v; if (ftab === 'inbox') cache.inbox = null; render(); },
@@ -2416,12 +2447,14 @@ export async function huisdierView(ctx) {
     load(),
     import('./huisdier-games.js?v=1').then((m) => { gm = m; }).catch((e) => { console.error(e); gmErr = 'De spelletjes konden niet geladen worden.'; }),
     import('./huisdier-social.js?v=1').then((m) => { soc = m; }).catch((e) => { console.error(e); socErr = 'De vriendenfunctie kon niet geladen worden.'; }),
-    import('./huisdier-art-pets.js?v=1').then((m) => { setArt(m); }).catch((e) => { console.error(e); }),
-    import('./huisdier-art-rooms.js?v=2').then((m) => { ar = extendRooms(m, (n) => (gfxm ? gfxm.urlOf(n) : null)); for (const f of ar.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
+    import('./huisdier-art-pets.js?v=2').then((m) => { setArt(m); }).catch((e) => { console.error(e); }),
+    import('./huisdier-art-rooms.js?v=2').then((m) => { ar = extendRoomsR4(extendRooms(m, (n) => (gfxm ? gfxm.urlOf(n) : null))); for (const f of ar.FURNITURE || []) FURN_A[f.id] = f; for (const h of m.HOUSES || []) HOUSE_A[h.id] = h; }).catch((e) => { console.error(e); }),
     import('./huisdier-sound.js?v=2').then((m) => { snd = m.createSound(); snd.setEnabled(pref.on); snd.setVolume(pref.vol); }).catch((e) => { console.error(e); snd = null; }),
     ensureExtra(),
-    import('./huisdier-gfx.js?v=1').then((m) => { gfxm = m; m.ensureCss(); }).catch((e) => { console.error(e); gfxm = null; }),
-    import('./huisdier-minigames.js?v=1').then((m) => { g2 = m; }).catch((e) => { console.error(e); g2 = null; }),
+    import('./huisdier-gfx.js?v=1').then((m) => { gfxm = m; R4_URL = m.urlOf; m.ensureCss(); }).catch((e) => { console.error(e); gfxm = null; }),
+    import('./huisdier-minigames.js?v=2').then((m) => { g2 = m; }).catch((e) => { console.error(e); g2 = null; }),
+    import('./huisdier-r4-games.js?v=1').then((m) => { g3 = m; }).catch((e) => { console.error(e); g3 = null; }),
+    import('./huisdier-r4-extra.js?v=1').then((m) => { r4x = m; }).catch((e) => { console.error(e); r4x = null; }),
   ]);
   if (!alive) return;
   if (gfxm) { try { e3d = gfxm.attach3D(view, { selector: '.em,.hd-fxi,.hd-row,.hd-banner,.hd-ev,.chip,.hd-nav,.hd-acts,.hd-card,.hd-roombar,.hd-sub,.hd-top' }); } catch (e) { console.error(e); } }

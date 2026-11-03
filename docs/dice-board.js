@@ -1,6 +1,6 @@
 // Tekenwerk voor het bord van Slangen en ladders (canvas, geen DOM-afhankelijkheid behalve ctx).
 import { drawIcon } from './gfx/art.js?v=1';
-import { SNAKES, LADDERS, cellRC } from './dice-games.js?v=1';
+import { SNAKES, LADDERS, cellRC } from './dice-games.js?v=2';
 
 export const TOKENS = [{ icon: 'rocket', color: '#ef4444' }, { icon: 'dino', color: '#22c55e' }, { icon: 'unicorn', color: '#a855f7' }, { icon: 'robot', color: '#3b82f6' }];
 export const cellCenter = (n, W) => { const c = W / 10, { row, col } = cellRC(Math.max(1, n)); return [col * c + c / 2, (9 - row) * c + c / 2]; };

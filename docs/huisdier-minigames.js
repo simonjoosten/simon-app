@@ -5,7 +5,7 @@
 
 const FONT = 'system-ui,-apple-system,"Segoe UI","Apple Color Emoji","Noto Color Emoji",sans-serif';
 export const scale100 = (raw, max) => { const r = Number(raw), m = Number(max); if (!isFinite(r) || !isFinite(m) || m <= 0) return 0; return Math.max(0, Math.min(100, Math.round((r / m) * 100))); };
-const pickOf = (arr, rnd = Math.random) => arr[Math.floor(rnd() * arr.length)];
+export const pickOf = (arr, rnd = Math.random) => arr[Math.floor(rnd() * arr.length)];
 export function shuffled(arr, rnd = Math.random) { const a = arr.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; }
 
 // ---- pure spelregels (getest in tools/test-huisdier-more.mjs)
@@ -29,7 +29,7 @@ export const memoryScore = (moves, pairs = 6) => Math.max(20, Math.min(100, 100 
 export const tapWindow = (i) => Math.max(650, 1500 - i * 55); // hoe lang een doel blijft staan (ms)
 export function tapPoints(hit, reactMs, win) { return hit ? Math.max(1, Math.round(3 - 2 * Math.min(1, reactMs / win))) : 0; }
 
-function mkKit(host, api, bg) {
+export function mkKit(host, api, bg) {
   const W = api.w || host.clientWidth || 360, H = api.h || host.clientHeight || 480;
   const removers = [], timers = new Set();
   let dead = false, ended = false, raf = 0, loopFn = null, last = 0;

@@ -108,12 +108,27 @@ def('vuurtoren', { k: 'decor', n: 'Vuurtoren', e: '🗼', w: 1, h: 1, c: 1200, r
 def('drakenbeeld', { k: 'decor', n: 'Drakenbeeld', e: '🐉', w: 1, h: 1, c: 1800, rp: 1500, bty: 10, d: 'Gelukkig is hij van steen.' });
 def('regenboog', { k: 'decor', n: 'Regenboog', e: '🌈', w: 2, h: 1, c: 2500, rp: 2000, bty: 12, d: 'Altijd een beetje zon na regen.' });
 
+// ---- ronde 4: 5 attracties, 3 kraampjes, 4 seizoensdecoraties (alleen achteraan toevoegen)
+def('kikkerhop', { k: 'ride', n: 'Kikkerhop', e: '🐸', w: 2, h: 2, c: 650, rp: 70, cap: 6, dur: 8, thr: 3, pr: 4.5, col: '#6bbf59', d: 'Spring mee met de kikkers!' });
+def('kanovaart', { k: 'ride', n: 'Kanovaart', e: '🌊', w: 3, h: 2, c: 2100, rp: 330, cap: 10, dur: 14, thr: 3.5, pr: 9, col: '#2a9d8f', d: 'Peddel door de stroomversnelling.' });
+def('spiegelpaleis', { k: 'ride', n: 'Spiegelpaleis', e: '🔮', w: 3, h: 2, c: 6200, rp: 1000, cap: 12, dur: 14, thr: 2.5, pr: 13, col: '#a8dadc', d: 'Waar ben ik? Overal ben ik!' });
+def('rupsbaan', { k: 'ride', n: 'Rupsbaan', e: '🦋', w: 3, h: 3, c: 24000, rp: 5200, cap: 20, dur: 15, thr: 6.5, pr: 30, col: '#8ac926', d: 'Rondjes als een rups, steeds sneller.' });
+def('ijsbaan', { k: 'ride', n: 'Ijsbaan', e: '❄️', w: 4, h: 3, c: 95000, rp: 22000, cap: 28, dur: 20, thr: 4, pr: 70, col: '#90e0ef', d: 'Glijd over het ijs, ook in de zomer.' });
+def('suikerspin', { k: 'food', n: 'Suikerspinkraam', e: '🍭', w: 1, h: 1, c: 200, rp: 60, pr: 3, hun: 0.2, thi: -0.1, hap: 0.1, col: '#ffb3d9', d: 'Roze wolkjes aan een stokje.' });
+def('poffertjes', { k: 'food', n: 'Poffertjeskraam', e: '🍪', w: 1, h: 1, c: 340, rp: 180, pr: 5, hun: 0.5, thi: -0.05, hap: 0.1, col: '#e9c46a', d: 'Met boter en poedersuiker.' });
+def('pannenkoek', { k: 'food', n: 'Pannenkoekenhuis', e: '🥧', w: 2, h: 1, c: 1300, rp: 800, pr: 11, hun: 0.9, thi: 0.1, hap: 0.14, col: '#f4a261', d: 'Reuzenpannenkoeken voor de hele familie.' });
+def('pompoen', { k: 'decor', n: 'Pompoenenveld', e: '🍂', w: 1, h: 1, c: 40, rp: 60, bty: 1.6, d: 'Een grijnzende pompoen. Boe!' });
+def('kerstboom', { k: 'decor', n: 'Kerstboom', e: '🌲', w: 1, h: 1, c: 60, rp: 80, bty: 2.2, d: 'Met lichtjes en een ster.' });
+def('sneeuwpop', { k: 'decor', n: 'Sneeuwpop', e: '☁️', w: 1, h: 1, c: 50, rp: 70, bty: 1.8, d: 'Smelt nooit in jouw park.' });
+def('lichtboog', { k: 'decor', n: 'Lichtjesboog', e: '💡', w: 2, h: 1, c: 900, rp: 700, bty: 6, d: 'Duizend lampjes boven het pad.' });
+
 const CAT_RAW = [
   ['rides', '🎢', 'Attracties', ['theekopjes', 'draaimolen', 'kinderboerderij', 'botsauto', 'spookhuis', 'reuzenrad', 'piratenschip', 'waterglijbaan', 'achtbaan', 'valtoren', 'draakentrein',
-    'minitrein', 'ballonvaart', 'sprookjeskasteel', 'ruimtereis', 'diepzeereis', 'helikoptertour', 'ufodraaier', 'dinosafari', 'vulkaanglijbaan', 'vliegtuigjes']],
-  ['food', '🍦', 'Eten & drinken', ['ijskraam', 'drinkkraam', 'patat', 'popcorn', 'pizza', 'restaurant', 'souvenir', 'hotdog', 'donut', 'koffie', 'burger', 'taart', 'snoepwinkel', 'fotohokje', 'speelgoed']],
+    'minitrein', 'ballonvaart', 'sprookjeskasteel', 'ruimtereis', 'diepzeereis', 'helikoptertour', 'ufodraaier', 'dinosafari', 'vulkaanglijbaan', 'vliegtuigjes',
+    'kikkerhop', 'kanovaart', 'spiegelpaleis', 'rupsbaan', 'ijsbaan']],
+  ['food', '🍦', 'Eten & drinken', ['ijskraam', 'drinkkraam', 'patat', 'popcorn', 'pizza', 'restaurant', 'souvenir', 'hotdog', 'donut', 'koffie', 'burger', 'taart', 'snoepwinkel', 'fotohokje', 'speelgoed', 'suikerspin', 'poffertjes', 'pannenkoek']],
   ['fac', '🚻', 'Voorzieningen', ['toilet', 'bankje', 'prullenbak', 'lab']],
-  ['deco', '🌳', 'Decoratie', ['boom', 'struik', 'bloemen', 'vijver', 'lantaarn', 'bloemperk', 'fontein', 'standbeeld', 'tent', 'palm', 'den', 'zonnebloemen', 'brug', 'windmolen', 'vuurtoren', 'drakenbeeld', 'regenboog']],
+  ['deco', '🌳', 'Decoratie', ['boom', 'struik', 'bloemen', 'vijver', 'lantaarn', 'bloemperk', 'fontein', 'standbeeld', 'tent', 'palm', 'den', 'zonnebloemen', 'brug', 'windmolen', 'vuurtoren', 'drakenbeeld', 'regenboog', 'pompoen', 'kerstboom', 'sneeuwpop', 'lichtboog']],
 ];
 export const CATS = CAT_RAW.map((c) => [c[0], c[1], c[2], c[3].slice().sort((a, b) => DEFS[a].c - DEFS[b].c)]);
 export const ROAD_COST = 5;
@@ -222,6 +237,14 @@ export const GOALS = [
   { id: 'g39', t: 'Bouw de Vulkaanglijbaan', prog: (G) => [hasObj(G, 'vulkaanglijbaan') ? 1 : 0, 1], rw: { m: 800, s: 1000, rp: 15000 } },
   { id: 'g40', t: 'Bouw 20 attracties', prog: (G) => [rideCount(G), 20], rw: { m: 800, s: 1500, rp: 30000 } },
   { id: 'g41', t: 'Verdien in totaal €500 miljoen', prog: (G) => [G.earnedRun, 5e8], rw: { m: 800, s: 2000, rp: 60000 } },
+  // ronde 4
+  { id: 'g42', t: 'Bouw een Kikkerhop', prog: (G) => [hasObj(G, 'kikkerhop') ? 1 : 0, 1], rw: { m: 600, s: 80, rp: 80 } },
+  { id: 'g43', t: 'Bouw een Kanovaart', prog: (G) => [hasObj(G, 'kanovaart') ? 1 : 0, 1], rw: { m: 700, s: 160, rp: 300 } },
+  { id: 'g44', t: 'Bouw een Spiegelpaleis', prog: (G) => [hasObj(G, 'spiegelpaleis') ? 1 : 0, 1], rw: { m: 800, s: 300, rp: 800 } },
+  { id: 'g45', t: 'Zet een Pompoen, Kerstboom en Sneeuwpop neer', prog: (G) => [['pompoen', 'kerstboom', 'sneeuwpop'].filter((t) => hasObj(G, t)).length, 3], rw: { m: 800, s: 300, rp: 300 } },
+  { id: 'g46', t: 'Bouw een Rupsbaan', prog: (G) => [hasObj(G, 'rupsbaan') ? 1 : 0, 1], rw: { m: 800, s: 800, rp: 4000 } },
+  { id: 'g47', t: 'Bouw een Ijsbaan', prog: (G) => [hasObj(G, 'ijsbaan') ? 1 : 0, 1], rw: { m: 800, s: 1800, rp: 20000 } },
+  { id: 'g48', t: 'Bouw 25 attracties', prog: (G) => [rideCount(G), 25], rw: { m: 800, s: 2500, rp: 80000 } },
 ];
 
 // prestaties (blijvend; geven soms een gouden ticket)
@@ -257,6 +280,11 @@ export const ACHS = [
   { id: 'a28', e: '🍩', t: 'Smulpaap', d: 'Bouw 8 soorten eten of winkels', prog: (G) => [foodTypes(G), 8] },
   { id: 'a29', e: '🐉', t: 'Drakenridder', d: 'Zet een Drakenbeeld neer', prog: (G) => [hasObj(G, 'drakenbeeld') ? 1 : 0, 1] },
   { id: 'a30', e: '🎢', t: 'Attractiegek', d: 'Bouw alle soorten attracties', prog: (G) => [new Set(G.parks.flatMap((P) => P.objs.filter((o) => DEFS[o.t].k === 'ride').map((o) => o.t))).size, ORDER.filter((i) => DEFS[i].k === 'ride').length], tk: 3 },
+  { id: 'a31', e: '🐸', t: 'Kikkerkoning', d: 'Bouw een Kikkerhop', prog: (G) => [hasObj(G, 'kikkerhop') ? 1 : 0, 1] },
+  { id: 'a32', e: '🛶', t: 'Kanokapitein', d: 'Bouw een Kanovaart', prog: (G) => [hasObj(G, 'kanovaart') ? 1 : 0, 1] },
+  { id: 'a33', e: '🎃', t: 'Feestdagenpark', d: 'Pompoen, kerstboom en sneeuwpop in een park', prog: (G) => [['pompoen', 'kerstboom', 'sneeuwpop'].filter((t) => hasObj(G, t)).length, 3] },
+  { id: 'a34', e: '🥞', t: 'Pannenkoekenbakker', d: 'Bouw een Pannenkoekenhuis', prog: (G) => [hasObj(G, 'pannenkoek') ? 1 : 0, 1] },
+  { id: 'a35', e: '⛸️', t: 'IJskoning', d: 'Bouw een Ijsbaan', prog: (G) => [hasObj(G, 'ijsbaan') ? 1 : 0, 1] },
 ];
 
 /* =====================================================================
@@ -770,6 +798,7 @@ function updGuest(G, P, g, dt, wx) {
   if (tgt < 0.02) tgt = 0.02;
   if (P.entertain) { for (const e of P.entertain) { const dx = e.x - g.x, dy = e.y - g.y; if (dx * dx + dy * dy < 9) { tgt += 0.12; break; } } }
   if (g.hap > tgt) g.hap = Math.max(tgt, g.hap - dt * 0.012); else g.hap = Math.min(tgt, g.hap + dt * 0.02);
+  if (g.hap > 1) g.hap = 1;   // ronde 4: de doelwaarde kan met showacts boven 1 uitkomen
   if (g.st === USE) { g.ut -= dt; if (g.ut <= 0) finishUse(G, P, g); return; }
   if (g.st === RIDE) return;
   if (g.st === QUEUE) {
@@ -2098,10 +2127,99 @@ export function objHeight(o) {
     case 'reuzenrad': return 126; case 'piratenschip': return 84; case 'achtbaan': return 80; case 'valtoren': return 135; case 'waterglijbaan': return 62;
     case 'spookhuis': return 64; case 'boom': return 40; case 'tent': return 60; case 'draaimolen': return 56; case 'theekopjes': return 46; case 'botsauto': return 38; case 'lab': return 58;
     case 'minitrein': return 34; case 'ballonvaart': return 88; case 'sprookjeskasteel': return 84; case 'ruimtereis': return 78; case 'diepzeereis': return 40; case 'helikoptertour': return 56; case 'ufodraaier': return 66; case 'dinosafari': return 56; case 'vulkaanglijbaan': return 92; case 'vliegtuigjes': return 72;
+    case 'kikkerhop': return 46; case 'kanovaart': return 38; case 'spiegelpaleis': return 62; case 'rupsbaan': return 56; case 'ijsbaan': return 36; case 'kerstboom': return 42; case 'lichtboog': return 46;
     case 'windmolen': return 70; case 'vuurtoren': return 80; case 'regenboog': return 60; case 'drakenbeeld': return 40; case 'palm': return 48; case 'den': return 54;
     case 'restaurant': return 46; case 'fontein': return 30; case 'standbeeld': return 36; case 'lantaarn': return 38; default: return 30;
   }
 }
+
+/* ---------- ronde 4: tekeningen van de nieuwe objecten ---------- */
+DR.kikkerhop = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 1.0, 0.16);
+  ell(cx, cy, 0.5, 0.95, '#7fcf6a', 'rgba(30,90,30,.4)'); ell(cx, cy, 1, 0.55, '#4fa3d8');
+  for (let i = 0; i < 4; i++) {
+    const an = i * 1.5708 + (runOf(o) ? a * 0.8 : 0), px = cx + Math.cos(an) * 0.7, py = cy + Math.sin(an) * 0.7, hop = runOf(o) ? Math.abs(Math.sin(a * 3 + i * 1.6)) * 14 : 0;
+    ball(px, py, 6 + hop, 6, COLS4[i]); ball(px - 0.05, py, 13 + hop, 3.4, '#8ac926'); ball(px - 0.1, py + 0.05, 16 + hop, 1.6, '#fff');
+  }
+  pole(cx, cy, 0, 24, '#8d6e63', 2.5); ball(cx, cy, 26, 4, '#ffca3a');
+  text('🐸', X(cx, cy), Y(cx, cy, 44), 15); glow(cx, cy, 16, 40, '180,255,150');
+};
+DR.kanovaart = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 1.3, 0.14);
+  ell(cx, cy, 0.5, 1.4, '#2f9ad6', 'rgba(255,255,255,.5)', 2);
+  const wv = runOf(o) ? a * 2 : 0;
+  for (let i = 0; i < 6; i++) { const an = wv * 0.4 + i * 1.047, px = cx + Math.cos(an) * 1.0, py = cy + Math.sin(an) * 0.65; ell(px, py, 1.2, 0.12, 'rgba(255,255,255,.7)'); }
+  for (let i = 0; i < 3; i++) { const an = -(wv * 0.35) + i * 2.09, px = cx + Math.cos(an) * 1.0, py = cy + Math.sin(an) * 0.65; box(px - 0.18, py - 0.1, 0.36, 0.2, 1, 5, COLS4[i + 1]); ball(px, py, 8, 2.4, '#ffd6a5'); }
+  cone(o.x + 0.4, o.y + 0.4, 0.4, 2, 16, ['#6d6875', '#8a817c'], 6, 0.3);
+  text('🛶', X(cx, cy), Y(cx, cy, 36), 15);
+};
+DR.spiegelpaleis = (o) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 1.5, 0.18);
+  box(o.x + 0.2, o.y + 0.2, 2.6, 1.6, 0, 30, '#cfe7ee', 1);
+  for (let i = 0; i < 6; i++) { const x = o.x + 0.3 + i * 0.4; quad3(x, o.y + 1.8, 4, x + 0.3, o.y + 1.8, 4, x + 0.3, o.y + 1.8, 26, x, o.y + 1.8, 26, i % 2 ? 'rgba(255,255,255,.8)' : 'rgba(150,210,235,.9)'); }
+  gable(o.x + 0.1, o.y + 0.1, 2.8, 1.8, 30, 12, '#7b6ff0');
+  ball(cx, cy + 0.9, 46, 5, '#ffd23f'); text('🪞', X(cx, cy + 0.9), Y(cx, cy + 0.9, 20), 16); glow(cx, cy, 30, 60, '200,230,255');
+};
+DR.rupsbaan = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 1.5, 0.18);
+  ell(cx, cy, 0.5, 1.45, '#6c757d', 'rgba(255,255,255,.3)');
+  const n = 9, sp = runOf(o) ? a * 1.6 : 0.3;
+  for (let i = n - 1; i >= 0; i--) {
+    const an = sp - i * 0.42, px = cx + Math.cos(an) * 1.1, py = cy + Math.sin(an) * 1.1, hz = 3 + Math.abs(Math.sin(an * 3)) * 8;
+    ball(px, py, 8 + hz, i === 0 ? 7 : 5.5, i === 0 ? '#ef476f' : i % 2 ? '#8ac926' : '#c5e063');
+    if (i === 0) { ball(px + 0.05, py - 0.04, 13 + hz, 1.6, '#fff'); ball(px + 0.05, py + 0.06, 13 + hz, 1.6, '#fff'); }
+  }
+  cone(cx, cy, 0.55, 0, 34, ['#ff595e', '#ffca3a', '#1982c4', '#8ac926'], 8, a * 0.1);
+  text('🐛', X(cx, cy), Y(cx, cy, 52), 15); glow(cx, cy, 30, 60);
+};
+DR.ijsbaan = (o, a) => {
+  const [cx, cy] = rideCtr(o);
+  shadow(cx, cy, 2, 0.12);
+  flat(o.x + 0.1, o.y + 0.1, 3.8, 2.8, 0, '#c9e8f5', 'rgba(255,255,255,.7)');
+  flat(o.x + 0.3, o.y + 0.3, 3.4, 2.4, 0.5, '#e6f6fd');
+  for (let i = 0; i < 5; i++) {
+    const an = (runOf(o) ? a * (0.7 + i * 0.1) : 0) + i * 1.25, px = cx + Math.cos(an) * (0.9 + 0.12 * i), py = cy + Math.sin(an) * (0.7 + 0.08 * i);
+    box(px - 0.06, py - 0.06, 0.12, 0.12, 1, 9, COLS4[i % 4]); ball(px, py, 12, 2.6, '#ffd6a5');
+  }
+  for (let i = 0; i <= 8; i++) pole(o.x + 0.1 + i * 0.475, o.y + 0.1, 0, 5, '#a8dadc', 2);
+  text('⛸️', X(cx, cy), Y(cx, cy, 34), 15); glow(cx, cy, 14, 60, '180,230,255');
+};
+function stall(o, roof, body) {
+  const x = o.x, y = o.y, d = DEFS[o.t], w = d.w;
+  shadow(x + w / 2, y + 0.5, 0.5 * w, 0.16);
+  box(x + 0.1, y + 0.2, w - 0.2, 0.65, 0, 14, body); awning(x + 0.05, y + 0.1, w - 0.1, 0.65, 18, roof, '#fff');
+  text(d.e, X(x + w / 2, y + 0.5), Y(x + w / 2, y + 0.5, 28), 13); glow(x + w / 2, y + 0.5, 20, 30);
+}
+DR.suikerspin = (o) => stall(o, '#ff8fc7', '#fbe3f1');
+DR.poffertjes = (o) => stall(o, '#e9c46a', '#fff1d0');
+DR.pannenkoek = (o) => stall(o, '#f4a261', '#fde2c4');
+DR.pompoen = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5; shadow(x, y, 0.4, 0.16);
+  ball(x - 0.12, y, 5, 5.5, '#f77f00'); ball(x + 0.12, y + 0.05, 6, 6.5, '#fb8500'); ball(x, y - 0.1, 5, 4.5, '#e76f51');
+  pole(x + 0.12, y + 0.05, 11, 15, '#386641', 2.4); text('🎃', X(x, y), Y(x, y, 24), 11, 0.9);
+};
+DR.kerstboom = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5; shadow(x, y, 0.45, 0.18);
+  cyl(x, y, 0.1, 0, 5, '#7a5230'); cone(x, y, 0.5, 4, 14, ['#2d6a4f', '#40916c'], 8, 0); cone(x, y, 0.38, 14, 13, ['#2d6a4f', '#52b788'], 8, 0.4); cone(x, y, 0.25, 24, 11, ['#40916c', '#74c69d'], 8, 0.2);
+  ball(x, y, 37, 3, '#ffd23f'); for (let i = 0; i < 6; i++) ball(x + Math.cos(i * 1.7) * 0.3, y + Math.sin(i * 1.7) * 0.3, 10 + i * 4, 1.6, (Math.floor(ENV.T * 2) + i) % 2 ? '#ff595e' : '#ffd23f');
+  glow(x, y, 20, 40, '255,220,120');
+};
+DR.sneeuwpop = (o) => {
+  const x = o.x + 0.5, y = o.y + 0.5; shadow(x, y, 0.35, 0.16);
+  ball(x, y, 7, 8, '#f1f7fb'); ball(x, y, 17, 6, '#fafdff'); ball(x, y, 25, 4.5, '#ffffff');
+  ball(x + 0.04, y + 0.06, 26, 1, '#222'); ball(x - 0.04, y + 0.06, 26, 1, '#222'); ball(x, y + 0.1, 24, 1.4, '#ff8c42');
+  box(x - 0.1, y - 0.1, 0.2, 0.2, 29, 4, '#333');
+};
+DR.lichtboog = (o) => {
+  const x0 = o.x, y0 = o.y + 0.5; shadow(x0 + 1, y0, 0.9, 0.12);
+  pole(x0 + 0.2, y0, 0, 30, '#6c757d', 2.5); pole(x0 + 1.8, y0, 0, 30, '#6c757d', 2.5);
+  for (let i = 0; i <= 10; i++) { const t = i / 10, px = x0 + 0.2 + 1.6 * t, z = 30 + Math.sin(t * Math.PI) * 14; ball(px, y0, z, 2, (Math.floor(ENV.T * 3) + i) % 3 === 0 ? '#ffd23f' : (Math.floor(ENV.T * 3) + i) % 3 === 1 ? '#ff595e' : '#8ecae6'); }
+  glow(x0 + 1, y0, 40, 60, '255,230,150');
+};
 
 export function drawObject(c, o, anim, dim) {
   C = c;
@@ -3487,6 +3605,7 @@ export function themaparkView(ctx) {
     centerOn(P.gx, P.n - 7, V.W < 500 ? 0.68 : 0.9);
     fitMargin();
     A.sfx = !!G.set.sfx; A.mus = !!G.set.mus;
+    r4Attach(ctx, root, () => G);
     hideModal();
     renderDrawer(); updateHUD(true); updateTutorial();
     try { BG.intro(root, 'themapark', 'intro-pretpark', { title: 'Themapark Tycoon', sub: 'Bouw het mooiste pretpark!' }); } catch (e) { /* geen intro */ }
@@ -3515,4 +3634,25 @@ export function themaparkView(ctx) {
     try { css.remove(); root.remove(); } catch (e) { /* weg */ }
   });
   return { G: () => G, V, advance, draw, onAct, setTab, A };
+}
+
+/* =====================================================================
+   RONDE 4: tellers voor de extra laag (seizoenen, opdrachten, prestaties; zie big-r4-themapark.js)
+   ===================================================================== */
+const R4_ITEMS = ['kikkerhop', 'kanovaart', 'spiegelpaleis', 'rupsbaan', 'ijsbaan', 'suikerspin', 'poffertjes', 'pannenkoek'];
+const R4_SEASON = ['pompoen', 'kerstboom', 'sneeuwpop'];
+export function r4Metrics(G) {
+  const kinds = (k) => G.parks.reduce((s, P) => s + P.objs.filter((o) => DEFS[o.t] && DEFS[o.t].k === k).length, 0);
+  return {
+    earned: G.earnedAll, visitors: G.st.visitors, riders: G.st.riders, tips: G.st.tips, repairs: G.st.repairs, cleaned: G.st.cleaned, built: G.st.built, events: G.st.events,
+    camps: G.st.camps, play: G.st.play, stars: bestStars(G), rides: rideCount(G), decor: kinds('decor'), shopTypes: foodTypes(G), parks: G.parks.length,
+    goals: Object.keys(G.goals).length, franchises: G.st.prestiges, money: G.money,
+    r4Items: R4_ITEMS.filter((t) => hasObj(G, t)).length, seasonDecor: R4_SEASON.filter((t) => hasObj(G, t)).length,
+  };
+}
+function r4Attach(ctx, root, getG) {
+  import('./big-r4-themapark.js?v=1').then((m) => m.attach(ctx, {
+    host: root, metrics: () => r4Metrics(getG()), rate: () => totalRate(getG()).net, add: (v) => earn(getG(), v),
+    ng: { label: 'Nieuwe franchise', desc: 'Begin je park opnieuw met gouden tickets en blijvende voordelen.', count: () => getG().st.prestiges, can: () => franchiseGain(getG()) >= 1, need: 'Verdien meer in dit park om een franchise te kunnen starten.' },
+  })).catch(() => { /* extra laag is optioneel */ });
 }

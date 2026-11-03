@@ -1,5 +1,7 @@
 // Pixel-art studio: lagen, animatie (frames), spritesheets, palet-sets, vormen, selecteren/kopiëren, zoom/pan, export (PNG/GIF/spritesheet), sjablonen en galerij.
 import * as P from './pixel-core.js?v=1';
+import { docToCode, codeToDoc } from './creatief-r4-pixelshare.js?v=1';
+import { shareBlob } from './creatief-r4-share.js?v=1';
 import { mountShell, celebrate, toast, icon, esc } from './fun-ui.js?v=1';
 
 const TOOLS = [
@@ -124,7 +126,7 @@ export function pixelView(ctx) {
     </div>
     <div class="box">
       <div class="px-hd">${icon('star', { size: 30 })} Sjablonen en formaat</div>
-      <div class="px-tpl">${P.TEMPLATES.map((t, i) => `<button data-tpl="${i}"><canvas width="64" height="64" data-tplc="${i}"></canvas><small>${esc(t.name)}</small></button>`).join('')}</div>
+      <div class="px-tpl">${P.TEMPLATES.map((t, i) => `<button data-tpl="${i}"><canvas width="64" height="64" data-tplc="${i}"></canvas><small>${t.anim ? '▶ ' : ''}${esc(t.name)}</small></button>`).join('')}</div>
       <div class="row wrap" style="margin-top:.6rem"><small>Nieuw leeg raster:</small>${P.SIZES.map((z) => `<button data-size="${z}" class="${z === doc.n ? 'pri' : ''}" style="min-height:${s(44)}">${z}</button>`).join('')}</div>
     </div>
     <div class="box">
@@ -132,7 +134,8 @@ export function pixelView(ctx) {
       <input id="px-name" placeholder="Naam van je werk" maxlength="30" value="${esc(name)}" style="width:100%;box-sizing:border-box;min-height:${s(46)};margin:.4rem 0;font-size:calc(1rem*var(--gfx-font,1))">
       <div class="px-act"><button class="pri" id="px-save">💾 Bewaar in galerij</button></div>
       <div class="row wrap" style="gap:.5rem"><small>Grootte:</small>${[1, 4, 8, 16, 32].map((z) => `<button data-xs="${z}" class="${z === exportScale ? 'pri' : ''}" style="min-height:${s(44)}">×${z}</button>`).join('')}</div>
-      <div class="px-act"><button id="px-png">⬇ PNG (plaatje)</button><button id="px-gif" ${doc.frames.length > 1 ? '' : 'disabled'}>⬇ GIF (animatie)</button><button id="px-sheet" ${doc.frames.length > 1 ? '' : 'disabled'}>⬇ Spritesheet</button></div>
+      <div class="px-act"><button id="px-png">⬇ PNG (plaatje)</button><button id="px-gif" ${doc.frames.length > 1 ? '' : 'disabled'}>⬇ GIF (animatie)</button><button id="px-sheet" ${doc.frames.length > 1 ? '' : 'disabled'}>⬇ Spritesheet</button><button id="px-share">📤 Deel</button></div>
+      <div class="row wrap" style="gap:.5rem"><button id="px-code">🔗 Maak code</button><input id="px-codein" placeholder="Plak hier een code van een vriend" style="flex:1;min-width:150px;min-height:${s(44)}"><button id="px-codeload">Laad</button></div>
       <div class="row wrap" style="gap:.5rem"><small>Spritesheet kolommen:</small>${[1, 2, 4, 8].map((z) => `<button data-sc="${z}" class="${z === sheetCols ? 'pri' : ''}" style="min-height:${s(44)}">${z}</button>`).join('')}</div>
       <div id="px-msg" style="min-height:1.2rem"><small>${editing !== null ? 'Je past een bewaarde tekening aan.' : ''}</small></div>
     </div>
@@ -248,6 +251,9 @@ export function pixelView(ctx) {
     on('#px-png', () => { prep(); const sc = maxScale(doc.n); hexCanvas(doc.n, doc.n, P.composite(doc, fi), sc).toBlob((bl) => { if (!bl) return msg('Plaatje maken lukt niet.', true); download(bl, safeName() + '.png'); msg('PNG opgeslagen.'); }); });
     on('#px-sheet', () => { prep(); const sh = P.spritesheet(doc, sheetCols), sc = maxScale(sh.w); hexCanvas(sh.w, sh.h, sh.cells, sc).toBlob((bl) => { if (!bl) return msg('Maken lukt niet.', true); download(bl, safeName() + '-spritesheet.png'); msg(`Spritesheet ${sh.cols}×${sh.rows} opgeslagen.`); }); });
     on('#px-gif', () => { prep(); try { const sc = Math.max(1, Math.min(Math.max(2, exportScale), Math.floor(640 / doc.n))); const bytes = P.gifFromDoc(doc, sc); download(new Blob([bytes], { type: 'image/gif' }), safeName() + '.gif'); msg(`GIF opgeslagen (${doc.frames.length} plaatjes).`); if (doc.frames.length >= 4) celebrate('levelup', { title: 'Je animatie is klaar!', sub: 'GIF opgeslagen' }); } catch { msg('GIF maken lukt niet.', true); } });
+    on('#px-share', () => { prep(); try { if (doc.frames.length > 1) { const sc = Math.max(1, Math.min(Math.max(2, exportScale), Math.floor(640 / doc.n))); shareBlob(new Blob([P.gifFromDoc(doc, sc)], { type: 'image/gif' }), safeName() + '.gif', name).then((r) => msg(r === 'shared' ? 'Gedeeld!' : r === 'downloaded' ? 'Opgeslagen (delen kan niet op dit apparaat).' : '')); } else { const sc = maxScale(doc.n); hexCanvas(doc.n, doc.n, P.composite(doc, fi), sc).toBlob((bl) => { if (!bl) return msg('Plaatje maken lukt niet.', true); shareBlob(bl, safeName() + '.png', name).then((r) => msg(r === 'shared' ? 'Gedeeld!' : r === 'downloaded' ? 'Opgeslagen (delen kan niet op dit apparaat).' : '')); }); } } catch { msg('Delen lukt niet.', true); } });
+    on('#px-code', () => { prep(); const c = docToCode(doc, name); const inp = q('#px-codein'); if (inp) inp.value = c; try { navigator.clipboard.writeText(c).then(() => msg('Code gekopieerd! Stuur hem naar een vriend.'), () => msg('Code staat in het vak. Kopieer hem zelf.')); } catch { msg('Code staat in het vak. Kopieer hem zelf.'); } });
+    on('#px-codeload', () => { const r = codeToDoc((q('#px-codein') || {}).value); if (!r) return msg('Deze code klopt niet. Plak de hele code.', true); if (hasContent() && !confirm('Een code laden? Je huidige tekening gaat verloren (bewaar hem eerst).')) return; snap(); doc = r.doc; fi = li = 0; name = r.name || 'Tekening van een vriend'; flt = sel = null; editing = null; zoom = 1; vx = vy = 0; autosave(); draw(); toast('Tekening geladen!'); });
     on('#px-save', () => {
       prep(); if (!doc.frames.some((f) => f.some((c) => c.some(Boolean)))) return msg('Teken eerst iets.', true);
       const g = readG(); const item = P.encodeDoc(doc, name);

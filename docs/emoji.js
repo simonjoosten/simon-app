@@ -1,7 +1,9 @@
 // Emoji-mixer: echte emoji-mixen (Google Emoji Kitchen) voor 154 emoji, met een eigen mix als er geen officiële bestaat.
 // De plaatjes komen van Google's servers (gstatic.com); in docs/emoji-data.json staat alleen welke mixen er bestaan.
 
-const FALLBACK_MODES = [['half', '◐ Half-half'], ['hoed', '🎩 Hoedje'], ['hoek', '📎 Sticker'], ['draai', '🌀 Draai'], ['totem', '🗼 Totem'], ['smoothie', '🥤 Smoothie']];
+const FALLBACK_MODES = [['half', '◐ Half-half'], ['hoed', '🎩 Hoedje'], ['hoek', '📎 Sticker'], ['draai', '🌀 Draai'], ['totem', '🗼 Totem'], ['smoothie', '🥤 Smoothie'], ...EXTRA_MODES];
+import { shareBlob } from './creatief-r4-share.js?v=1';
+import { EXTRA_MODES, drawExtraMix, mixStory, mixOfTheDay, quizRound, quizPick, posterLayout, POSTER_MAX } from './creatief-r4-emoji.js?v=1';
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
 // Tekent een zelfgemaakte mix op een vierkant canvas (alleen als er geen officiële mix bestaat).
@@ -12,6 +14,7 @@ function drawMix(ctx, a, b, mode, s) {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(e, 0, size * 0.04); ctx.restore();
   };
   const c = s / 2;
+  if (drawExtraMix(ctx, a, b, mode, s)) return;
   if (mode === 'half') {
     ctx.save(); ctx.beginPath(); ctx.rect(0, 0, c, s); ctx.clip(); put(a, c, c, s * 0.82); ctx.restore();
     ctx.save(); ctx.beginPath(); ctx.rect(c, 0, c, s); ctx.clip(); put(b, c, c, s * 0.82); ctx.restore();
@@ -57,7 +60,9 @@ export async function emojiView(ctx) {
   const readFav = () => { try { return JSON.parse(localStorage.getItem(FAV) || '[]'); } catch { return []; } };
   const writeFav = (l) => { try { localStorage.setItem(FAV, JSON.stringify(l.slice(0, 60))); } catch {} };
   const cats = Object.keys(data.sets); const all = [...info.keys()];
-  let a = '🐱', b = '🍕', fbMode = 'half', slot = 'a', cat = cats[0];
+  let a = '🐱', b = '🍕', fbMode = 'half', slot = 'a', cat = cats[0], story = '', storyFor = '', quiz = null;
+  const QKEY = `emix:quiz:${uid}`, readQ = () => { try { return JSON.parse(localStorage.getItem(QKEY) || '{}') || {}; } catch { return {}; } }, writeQ = (o) => { try { localStorage.setItem(QKEY, JSON.stringify(o)); } catch {} };
+  const officialPairs = []; for (const [k] of mix) { const [l, r] = k.split('|'); const x = byCode.get(l), y = byCode.get(r); if (x && y) officialPairs.push([x, y]); }
   if (!official(a, b)) b = '🍔';
 
   const randomMix = () => { for (let i = 0; i < 400; i++) { const x = all[Math.floor(Math.random() * all.length)], y = all[Math.floor(Math.random() * all.length)]; if (official(x, y)) { a = x; b = y; return; } } };
@@ -73,6 +78,8 @@ export async function emojiView(ctx) {
         <small>${a} ${esc(info.get(a)?.name || '')}  ＋  ${b} ${esc(info.get(b)?.name || '')}</small>
         ${url ? '' : '<div><small class="err">Voor deze twee bestaat geen officiële mix. Dit is een eigen mix.</small></div>'}
         <div class="row wrap" style="justify-content:center;margin-top:.6rem"><button id="em-rnd">🎲 Willekeurig</button><button id="em-swap">🔁 Wissel</button><button class="pri" id="em-save">💾 Opslaan</button><button id="em-fav">⭐ Bewaar</button></div>
+        <div class="row wrap" style="justify-content:center"><button id="em-day">📅 Mix van de dag</button><button id="em-story">📖 Verhaaltje</button><button id="em-share">📤 Deel</button></div>
+        ${story && storyFor === a + '|' + b ? `<p id="em-storytxt" style="margin:.5rem auto;max-width:34rem;text-align:left">${esc(story)}</p>` : ''}
         ${url ? '' : `<div class="row wrap" style="justify-content:center">${FALLBACK_MODES.map(([k, l]) => `<button data-mode="${k}" class="${k === fbMode ? 'pri' : ''}">${l}</button>`).join('')}</div>`}
       </div>
       <div class="box"><b>Kies je emoji</b>
@@ -81,7 +88,11 @@ export async function emojiView(ctx) {
         <div class="row wrap" style="margin:.4rem 0">${cats.map((k) => `<button data-cat="${k}" class="${k === cat ? 'pri' : ''}" style="padding:.25rem .55rem">${k}</button>`).join('')}</div>
         <div style="display:flex;flex-wrap:wrap;gap:.15rem">${data.sets[cat].map(([e, n, c]) => `<button data-e="${e}" title="${esc(n)}" style="border:0;background:none;font-size:1.7rem;padding:.2rem;${okSet && !okSet.has(c) ? 'opacity:.25' : ''}">${e}</button>`).join('')}</div>
       </div>
-      <div class="box"><b>Mijn verzameling</b>${favs.length ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:.5rem">${favs.map((f, i) => { const u = official(f.a, f.b); return `<div style="text-align:center">${u ? `<img data-f="${i}" src="${u}" alt="" style="width:100%;border-radius:12px;background:#0001;cursor:pointer">` : `<canvas data-f="${i}" width="160" height="160" style="width:100%;border-radius:12px;background:#0001;cursor:pointer"></canvas>`}</div>`; }).join('')}</div><small>Tik om te openen. Houd lang ingedrukt om te verwijderen.</small>` : '<br><small>Nog leeg. Tik op ⭐ Bewaar bij een mix die je mooi vindt.</small>'}</div>
+      <div class="box"><b>Mijn verzameling</b>${favs.length ? `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:.5rem;margin-top:.5rem">${favs.map((f, i) => { const u = official(f.a, f.b); return `<div style="text-align:center">${u ? `<img data-f="${i}" src="${u}" alt="" style="width:100%;border-radius:12px;background:#0001;cursor:pointer">` : `<canvas data-f="${i}" width="160" height="160" style="width:100%;border-radius:12px;background:#0001;cursor:pointer"></canvas>`}</div>`; }).join('')}</div><small>Tik om te openen. Houd lang ingedrukt om te verwijderen.</small>` : '<br><small>Nog leeg. Tik op ⭐ Bewaar bij een mix die je mooi vindt.</small>'}${favs.length ? '<div style="margin-top:.5rem"><button id="em-poster">🖼 Maak een poster</button></div>' : ''}</div>
+      <div class="box"><b>🎮 Raad de mix</b> <small>Beste: ${readQ().best | 0} punten</small>${quiz ? `<div class="center"><canvas id="em-qcv" width="320" height="320" style="width:min(100%,260px);border-radius:16px;background:#0001"></canvas>
+        <div><small>${quiz.done ? (quiz.score === 3 ? '🎉 Allebei goed! +3' : quiz.score === 1 ? 'Eén goed. +1' : 'Helaas, niet goed.') + ` Het waren ${quiz.a} en ${quiz.b}.` : 'Welke twee emoji zitten erin? Tik er twee aan.'}</small></div>
+        <div style="display:flex;gap:.3rem;justify-content:center;flex-wrap:wrap;margin:.4rem 0">${quiz.opts.map((e) => `<button data-q="${e}" ${quiz.done ? 'disabled' : ''} class="${quiz.picked.includes(e) ? 'pri' : ''}" style="font-size:1.7rem;min-width:56px;min-height:56px">${e}</button>`).join('')}</div>
+        ${quiz.done ? '<button id="em-qnext" class="pri">Volgende</button> <button id="em-qstop">Stop</button>' : ''}</div>` : '<div><button id="em-qstart" class="pri">Start het spel</button><small> Je ziet een mix en raadt welke twee emoji erin zitten.</small></div>'}</div>
       <small style="display:block;text-align:center;opacity:.6;margin-bottom:1rem">Mixen: Google Emoji Kitchen</small>`;
     const cv = view.querySelector('#em-cv'); if (cv) drawMix(cv.getContext('2d'), a, b, fbMode, 512);
     view.querySelectorAll('canvas[data-f]').forEach((x) => { const f = favs[Number(x.dataset.f)]; drawMix(x.getContext('2d'), f.a, f.b, f.mode || 'half', 160); });
@@ -93,6 +104,33 @@ export async function emojiView(ctx) {
     view.querySelector('#em-rnd').onclick = () => { randomMix(); draw(); };
     view.querySelector('#em-swap').onclick = () => { [a, b] = [b, a]; draw(); };
     view.querySelector('#em-fav').onclick = () => { const l = readFav(); if (!l.some((f) => f.a === a && f.b === b)) l.unshift({ a, b, mode: fbMode }); writeFav(l); draw(); };
+    view.querySelector('#em-day').onclick = () => { const p = mixOfTheDay(officialPairs); if (p) { a = p[0]; b = p[1]; story = ''; draw(); } };
+    view.querySelector('#em-story').onclick = () => { story = mixStory(info.get(a)?.name, info.get(b)?.name, mixName(a, b), Math.floor(Math.random() * 1e6)); storyFor = a + '|' + b; draw(); };
+    view.querySelector('#em-share').onclick = async () => {
+      try { const blob = url ? await (await fetch(url)).blob() : await new Promise((r) => cv.toBlob(r, 'image/png')); if (!blob) return; await shareBlob(blob, `${mixName(a, b).toLowerCase().replace(/[^a-z0-9]+/g, '-')}.png`, mixName(a, b)); }
+      catch { try { window.open(url, '_blank'); } catch {} }
+    };
+    const qcv = view.querySelector('#em-qcv'); if (qcv && quiz) drawMix(qcv.getContext('2d'), quiz.a, quiz.b, quiz.mode, 320);
+    const qs = view.querySelector('#em-qstart'); if (qs) qs.onclick = () => { quiz = quizRound(all); draw(); };
+    view.querySelectorAll('[data-q]').forEach((x) => x.onclick = () => { quizPick(quiz, x.dataset.q); if (quiz.done) { const o = readQ(); o.total = (o.total | 0) + quiz.score; o.best = Math.max(o.best | 0, o.total); o.rounds = (o.rounds | 0) + 1; writeQ(o); } draw(); });
+    const qn = view.querySelector('#em-qnext'); if (qn) qn.onclick = () => { quiz = quizRound(all); draw(); };
+    const qx = view.querySelector('#em-qstop'); if (qx) qx.onclick = () => { quiz = null; const o = readQ(); o.total = 0; writeQ(o); draw(); };
+    const po = view.querySelector('#em-poster'); if (po) po.onclick = async () => {
+      po.disabled = true; po.textContent = 'Bezig…';
+      try {
+        const S = 1024, list = readFav().slice(0, POSTER_MAX), lay = posterLayout(list.length, S), pc = document.createElement('canvas'); pc.width = pc.height = S; const c2 = pc.getContext('2d');
+        const g = c2.createLinearGradient(0, 0, S, S); g.addColorStop(0, '#fde68a'); g.addColorStop(1, '#f9a8d4'); c2.fillStyle = g; c2.fillRect(0, 0, S, S);
+        c2.fillStyle = '#7c2d12'; c2.font = 'bold 64px sans-serif'; c2.textAlign = 'center'; c2.textBaseline = 'middle'; c2.fillText('Mijn emoji-mixen', S / 2, S * 0.075);
+        for (let i = 0; i < list.length; i++) {
+          const f = list[i], L = lay[i], u = official(f.a, f.b); let done = false;
+          if (u) { try { const im = await new Promise((res, rej) => { const x = new Image(); x.crossOrigin = 'anonymous'; x.onload = () => res(x); x.onerror = rej; setTimeout(rej, 5000); x.src = u; }); c2.drawImage(im, L.x, L.y, L.s, L.s); done = true; } catch {} }
+          if (!done) { const t = document.createElement('canvas'); t.width = t.height = 512; drawMix(t.getContext('2d'), f.a, f.b, f.mode || 'half', 512); c2.drawImage(t, L.x, L.y, L.s, L.s); }
+        }
+        const blob = await new Promise((r) => { try { pc.toBlob(r, 'image/png'); } catch { r(null); } });
+        if (blob) await shareBlob(blob, 'mijn-emoji-mixen.png', 'Mijn emoji-mixen');
+      } catch {}
+      po.disabled = false; po.textContent = '🖼 Maak een poster';
+    };
     view.querySelector('#em-save').onclick = async () => {
       const name = `${mixName(a, b).toLowerCase()}.png`;
       const give = (blob) => { const u = URL.createObjectURL(blob); const an = document.createElement('a'); an.href = u; an.download = name; document.body.appendChild(an); an.click(); an.remove(); setTimeout(() => URL.revokeObjectURL(u), 4000); };

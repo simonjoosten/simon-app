@@ -4,11 +4,12 @@ import { doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/10.14.1/
 import { injectKit, head, wireHead, tabsHtml, ic, playScene, showToast } from './appkit.js?v=1';
 import { ICONS } from './gfx/icons.js?v=1';
 import * as G from './gewoontes-core.js?v=1';
+import { inzichtHtml, terugblik } from './tools-r4-gewoontes.js?v=1';
 
 export { dayKey, streakOf, bestStreak } from './gewoontes-core.js?v=1';
 const { COLORS, EMOJI, ICON_CHOICES, DAY_NAMES, dayKey, shiftKey, isDue } = G;
 const DEBOUNCE = 1500;
-const TABS = [['nu', 'Vandaag', 'sun'], ['week', 'Week', 'compass'], ['cijfers', 'Cijfers', 'lightbulb'], ['prijzen', 'Prijzen', 'trophy'], ['sjablonen', 'Sjablonen', 'puzzle']];
+const TABS = [['nu', 'Vandaag', 'sun'], ['week', 'Week', 'compass'], ['cijfers', 'Cijfers', 'lightbulb'], ['prijzen', 'Prijzen', 'trophy'], ['sjablonen', 'Sjablonen', 'puzzle'], ['inzicht', 'Inzicht', 'lightbulb']];
 
 const CSS = `
 .gw-ring{width:calc(4.4rem*var(--gfx-scale,1));height:calc(4.4rem*var(--gfx-scale,1));min-width:calc(4.4rem*var(--gfx-scale,1));border-radius:50%;border:3px solid var(--line);background:var(--card);padding:0;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s,background .2s;position:relative}
@@ -181,7 +182,7 @@ export async function gewoontesView(ctx) {
   }
   function draw() {
     if (!alive) return;
-    const body = { nu: vNu, week: vWeek, cijfers: vCijfers, prijzen: vPrijzen, sjablonen: vSjablonen }[tab]();
+    const body = { nu: vNu, week: vWeek, cijfers: vCijfers, prijzen: vPrijzen, sjablonen: vSjablonen, inzicht: () => inzichtHtml({ habits, today: today(), ic }) }[tab]();
     const L = lvl();
     view.innerHTML = `<style>${CSS}</style><div class="ak">${head({ icon: 'flame', title: 'Gewoontes', sub: `Niveau ${L.level} · ${G.levelTitle(L.level)}`, c1: '#34d399', c2: '#0f766e' })}${tabsHtml(tab, TABS)}${body}</div>`;
     paintStatus(); bind();
@@ -191,6 +192,7 @@ export async function gewoontesView(ctx) {
     wireHead(view);
     const $$ = (s) => view.querySelectorAll(s);
     $$('[data-tab]').forEach((b) => b.onclick = () => { tab = b.dataset.tab; form = null; draw(); });
+    $$('[data-copyweek]').forEach((b) => b.onclick = async () => { const m = view.querySelector('[data-copymsg]'); try { await navigator.clipboard.writeText(terugblik(habits, today())); if (m) m.textContent = 'Gekopieerd!'; } catch (e) { if (m) m.textContent = 'Kopiëren lukt niet op dit toestel.'; } });
     $$('[data-toggle]').forEach((b) => b.onclick = () => toggleDay(find(b.dataset.toggle), today()));
     $$('[data-tg]').forEach((b) => b.onclick = () => { const [id, k] = b.dataset.tg.split('|'); toggleDay(find(id), k); });
     $$('[data-del]').forEach((b) => b.onclick = () => { delId = b.dataset.del; draw(); });

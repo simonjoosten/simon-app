@@ -6,7 +6,7 @@ import { WeatherScene } from './weer-scene.js?v=1';
 import { icon, GFX, Themes, injectCss, topBar, bindGear, tabsHtml, makeStore, makeCanvas, playScene, escHtml } from './tools-ui.js?v=1';
 import { preload, drawIcon } from './gfx/art.js?v=1';
 
-const TABS = [['nu', 'Nu', 'sun'], ['uur', 'Per uur', 'hourglass'], ['dagen', '14 dagen', 'ticket'], ['zon', 'Zon en maan', 'moon'], ['radar', 'Regenradar', 'rain'], ['leren', 'Leren', 'book'], ['plaatsen', 'Plaatsen', 'map']];
+const TABS = [['nu', 'Nu', 'sun'], ['uur', 'Per uur', 'hourglass'], ['dagen', '14 dagen', 'ticket'], ['zon', 'Zon en maan', 'moon'], ['radar', 'Regenradar', 'rain'], ['leren', 'Leren', 'book'], ['mijn', 'Mijn weer', 'heart'], ['plaatsen', 'Plaatsen', 'map']];
 
 export async function weerView(ctx) {
   const { view, addCleanup, uid } = ctx;
@@ -113,7 +113,14 @@ export async function weerView(ctx) {
     view.querySelectorAll('[data-tab]').forEach((b) => { b.onclick = () => { tab = b.dataset.tab; render(); }; });
     tabCleanups.splice(0).forEach((f) => { try { f(); } catch { /* stil */ } }); clearInterval(tickTimer);
     const b = $('[data-body]'); b.innerHTML = '';
-    ({ nu: tabNu, uur: tabUur, dagen: tabDagen, zon: tabZon, radar: tabRadar, leren: tabLeren, plaatsen: tabPlaatsen })[tab](b);
+    ({ nu: tabNu, uur: tabUur, dagen: tabDagen, zon: tabZon, radar: tabRadar, leren: tabLeren, mijn: tabMijn, plaatsen: tabPlaatsen })[tab](b);
+  }
+
+  /* ----- Mijn weer (ronde 4) ----- */
+  function tabMijn(b) {
+    b.innerHTML = '<div class="tu-card center"><small>Laden…</small></div>'; const my = seq;
+    import('./tools-r4-weer.js?v=1').then((m) => { if (!alive || tab !== 'mijn') return; b.innerHTML = ''; m.mijnWeerTab(b, { st, store, icon, track, loc }); })
+      .catch((e) => { b.innerHTML = `<div class="tu-card"><span class="err">Kon dit niet laden: ${esc(e.message)}</span></div>`; });
   }
 
   /* ----- Nu ----- */

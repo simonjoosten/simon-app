@@ -32,7 +32,7 @@ const wait = () => new Promise((r) => T.realST(r, 30));
 await M.weerView({ view, esc, uid: 't1', addCleanup: (f) => cleanups.push(f) });
 T.advance(300);
 ok(T.fetches.some((u) => u.includes('open-meteo.com/v1/forecast') && u.includes('latitude=52.09') && u.includes('minutely_15') && !/apikey|key=/i.test(u)), 'bestaande API, geen sleutel');
-ok(text().includes('Utrecht') && text().includes('14°') && text().includes('Lichte regen'), 'hero: ' + text().slice(0, 120)); ok(qa('.tu-tab').length === 7 && q('[data-gear]'), 'tabs');
+ok(text().includes('Utrecht') && text().includes('14°') && text().includes('Lichte regen'), 'hero: ' + text().slice(0, 120)); ok(qa('.tu-tab').length === 8 && q('[data-gear]'), 'tabs');
 ok(text().includes('Het gaat regenen over') && text().includes('Wat trek ik aan?') && text().includes('Windkracht 4') && text().includes('uit het zuidwesten'), 'regenwaarschuwing en wind');
 await wait(); T.advance(100); ok(q('[data-air]').textContent.includes('Redelijk') && q('[data-air]').textContent.includes('berk'), 'luchtkwaliteit en pollen: ' + q('[data-air]').textContent);
 ok(q('[data-clock]').textContent.length >= 5, 'klok'); T.frames(3); T.advance(2000, 100);

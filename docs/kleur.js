@@ -1,8 +1,10 @@
-// Kleur: 35 kleurplaten (getekende plaatjes, mandala's, pixelkunst) met emmer, gum, pipet, ongedaan/opnieuw, achtergrond, 8 kleursets en eigen paletten,
+// Kleur: 109 kleurplaten (35 + 74 nieuwe) (getekende plaatjes, mandala's, pixelkunst) met emmer, gum, pipet, ongedaan/opnieuw, achtergrond, 8 kleursets en eigen paletten,
 // plus een Kleurlab (kleurenwiel, harmonieën, palet-generator, verlopen, contrast, kleurenblind, kleuren uit een foto) en vier kleurspelletjes.
 // Opslag van kleurplaten blijft hetzelfde: localStorage `kleur:<uid>:art` = { plaatId: { vormIndex: kleur, bg?: kleur } }.
 
 import { PLATEN_EXTRA } from './kleur-art.js?v=1';
+import { PLATEN_R4, GROEPEN_R4 } from './creatief-r4-kleur.js?v=1';
+import { shareBlob, svgToPng, printSvg, download, safeName } from './creatief-r4-share.js?v=1';
 import * as K from './kleur-color.js?v=1';
 import { mountLab } from './kleur-lab.js?v=1';
 import { mountGames } from './kleur-games.js?v=1';
@@ -95,7 +97,7 @@ const PLATEN_OLD = [
 ];
 
 
-export const PLATEN = [...PLATEN_OLD, ...PLATEN_EXTRA];
+export const PLATEN = [...PLATEN_OLD, ...PLATEN_EXTRA, ...PLATEN_R4];
 
 // ---- SVG opbouwen ----
 export function svgString(plaat, kleuren = {}, { id = false } = {}) {
@@ -113,6 +115,7 @@ const GROEPEN = [
   ['gebouwen', 'Gebouwen', ['huis', 'kasteel', 'vuurtoren']],
   ['fun', 'Leuk', ['ballon', 'ijsje', 'sneeuwman', 'robot', 'cupcake', 'vlieger']],
   ['mandala', 'Mandala & pixels', ['mandala1', 'mandala2', 'mandala3', 'mandala4', 'pixels']],
+  ...GROEPEN_R4,
 ];
 const countFilled = (k) => Object.keys(k || {}).filter((x) => x !== 'bg').length;
 
@@ -239,7 +242,7 @@ export function kleurView(ctx) {
       <div class="kl-pg">${cs.colors.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:${c === color ? '4px solid var(--accent)' : '1px solid var(--line)'}"></button>`).join('')}</div>
       ${recent.length ? `<small class="mute">Laatst gebruikt</small><div class="kl-rec">${recent.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:${c === color ? '3px solid var(--accent)' : '1px solid var(--line)'}"></button>`).join('')}</div>` : ''}
       <small class="mute">Past erbij (${esc(K.colorName(valid))}):</small><div class="kl-rec">${tips.map((c) => `<button data-col="${c}" aria-label="Kleur ${c}" style="background:${c};border:1px solid var(--line)"></button>`).join('')}</div>
-      <div class="kl-row">${confirmClear ? '<small>Alles wissen?</small><button id="kl-yes" class="on">Ja, wis alles</button><button id="kl-no">Nee</button>' : '<button id="kl-clear">🗑 Alles wissen</button>'}<button id="kl-png" class="on">⬇ Bewaar als plaatje</button></div></div>`;
+      <div class="kl-row">${confirmClear ? '<small>Alles wissen?</small><button id="kl-yes" class="on">Ja, wis alles</button><button id="kl-no">Nee</button>' : '<button id="kl-clear">🗑 Alles wissen</button>'}<button id="kl-png" class="on">⬇ Bewaar als plaatje</button><button id="kl-share">📤 Deel</button><button id="kl-svg">⬇ SVG</button><button id="kl-print">🖨 Print</button></div></div>`;
     const art = $('#kl-art'), undoBtn = $('#kl-undo');
     const refresh = () => { const n2 = countFilled(kleuren), p2 = Math.min(100, Math.round(n2 / cur.shapes.length * 100)), bar = view.querySelector('.kl-timebar i'); if (bar) bar.style.width = p2 + '%'; $('#kl-undo').disabled = !undo.length; $('#kl-redo').disabled = !redo.length; };
     art.addEventListener('pointerdown', (e) => {
@@ -290,6 +293,10 @@ export function kleurView(ctx) {
       img.onerror = () => { URL.revokeObjectURL(url); say('Plaatje maken is mislukt.'); };
       img.src = url;
     };
+    const R4svg = () => svgString(cur, kleuren);
+    $('#kl-share').onclick = async () => { try { const r = await shareBlob(await svgToPng(R4svg(), 800), `kleurplaat-${safeName(cur.id)}.png`, cur.naam); say(r === 'shared' ? 'Gedeeld!' : r === 'downloaded' ? 'Plaatje bewaard (delen kan niet op dit apparaat).' : ''); } catch { say('Delen is mislukt.'); } };
+    $('#kl-svg').onclick = () => { try { download(new Blob([R4svg()], { type: 'image/svg+xml' }), `kleurplaat-${safeName(cur.id)}.svg`); } catch { say('Bewaren is mislukt.'); } };
+    $('#kl-print').onclick = () => { if (!printSvg(R4svg(), cur.naam)) say('Afdrukken kon niet. Sta pop-ups toe.'); };
     if (msg) say(msg);
   }
 

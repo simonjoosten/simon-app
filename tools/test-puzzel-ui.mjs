@@ -33,7 +33,7 @@ const view = new El('div'); const cleanups = [];
 const click = (a, extra = {}) => { const b = { dataset: { a, ...extra }, closest: () => b }; (view.listeners.click || []).forEach((f) => f({ target: b })); };
 await puzzelView({ db: {}, uid: 'u1', view, addCleanup: (f) => cleanups.push(f) }, 'pinnen');
 ok(/data-a="daily"/.test(view.querySelector('#pz-ui')._html), 'menu toont dagelijkse puzzel');
-ok(/100 extra levels/.test(view.querySelector('#pz-ui')._html), 'menu toont extra levels');
+ok(/400 extra levels/.test(view.querySelector('#pz-ui')._html), 'menu toont extra levels');
 
 // extra level 5 spelen
 click('pick'); ok(/data-n="99"/.test(view.querySelector('#pz-ui')._html), 'pick toont 100 levels');

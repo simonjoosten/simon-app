@@ -3,9 +3,10 @@
 // Geometrie en rendering: dice-3d.js; spelregels: dice-games.js; bord: dice-board.js.
 
 import { createDie, DIE_COLORS, DIE_TYPES } from './dice-3d.js?v=1';
-import * as G from './dice-games.js?v=1';
+import * as G from './dice-games.js?v=2';
+import { R4_GAMES, isR4Game, mountR4 } from './creatief-r4-dice.js?v=1';
 import { drawBoard, TOKENS, cellCenter } from './dice-board.js?v=1';
-import { newAudio, makeNoise } from './music-synth.js?v=1';
+import { newAudio, makeNoise } from './music-synth.js?v=2';
 import { Settings } from './gfx/settings.js?v=1';
 import { styleTag, gearHtml, wireGear, worldSelectHtml, hero, icon, GFX, Themes, playScene, copyText } from './apps3-ui.js?v=1';
 
@@ -240,7 +241,8 @@ export function diceView(ctx) {
       <button data-act="game" data-g="y">${icon('dice', { size: 54 })}Yathzee<small class="mute">5 dobbelstenen, 13 rondes</small></button>
       <button data-act="game" data-g="sl">${icon('rocket', { size: 54 })}Slangen &amp; ladders<small class="mute">Wie is het eerst op 100?</small></button>
       <button data-act="game" data-g="tt">${icon('target', { size: 54 })}Boter, kaas en eieren<small class="mute">Tegen de computer</small></button>
-      <button data-act="game" data-g="pig">${icon('bomb', { size: 54 })}Varkentje<small class="mute">Durf jij door te gooien?</small></button></div></div>`;
+      <button data-act="game" data-g="pig">${icon('bomb', { size: 54 })}Varkentje<small class="mute">Durf jij door te gooien?</small></button>
+      ${Object.entries(R4_GAMES).map(([k, v]) => `<button data-act="game" data-g="${k}">${icon(v.icon, { size: 54 })}${v.title}<small class="mute">${v.sub}</small></button>`).join('')}</div></div>`;
     return `<div class="card"><button data-act="gmenu">← Spellen</button> <b id="gm-title"></b></div><div id="gm-body"></div>`;
   }
   function afterGames() { if (gm) gameRender(); }
@@ -252,6 +254,12 @@ export function diceView(ctx) {
     else if (gm.g === 'sl') { t.textContent = 'Slangen en ladders'; slRender(body, my); }
     else if (gm.g === 'tt') { t.textContent = 'Boter, kaas en eieren'; ttRender(body); }
     else if (gm.g === 'pig') { t.textContent = 'Varkentje'; pigRender(body, my); }
+    else if (isR4Game(gm.g)) { t.textContent = R4_GAMES[gm.g].title; r4Mount(body); }
+  }
+  const R4KEY = 'dice:r4';
+  function r4Mount(body) {
+    const store = { get: (k) => (rd(R4KEY, {}) || {})[k], set: (k, v) => { const o = rd(R4KEY, {}) || {}; o[k] = v; wr(R4KEY, o); } };
+    mountR4(gm.g, { body, esc, icon, rand: G.rand, mkDice, rollAll, dice: () => dice, colorOf, sfx, say, playScene: (n, o) => playScene(view, n, o), token: () => token, sleep, store, state: (k, init) => { gm.r4 = gm.r4 || {}; if (!gm.r4[k]) gm.r4[k] = init(); return gm.r4[k]; } });
   }
   const setupHtml = (opts) => `<div class="card"><b>Met hoeveel spelers?</b><div class="dc-games" style="margin-top:.5rem">${opts.map(([k, l]) => `<button data-act="gsetup" data-v="${k}">${l}</button>`).join('')}</div></div>`;
 

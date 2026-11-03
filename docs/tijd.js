@@ -328,13 +328,13 @@ export function tijdView(ctx) {
   // =====================================================================
   // schil
   // =====================================================================
-  const TABS = [['nu', 'Klok', 'hourglass'], ['wekker', 'Wekker', 'bell'], ['kook', 'Kookwekker', 'egg'], ['stop', 'Stopwatch', 'bolt'], ['focus', 'Focus', 'target'], ['interval', 'Interval', 'flame'], ['beurt', 'Beurtklok', 'dice'], ['wereld', 'Wereldklok', 'earth'], ['aftellen', 'Aftellen', 'gift'], ['leren', 'Klok leren', 'book']];
+  const TABS = [['nu', 'Klok', 'hourglass'], ['wekker', 'Wekker', 'bell'], ['kook', 'Kookwekker', 'egg'], ['stop', 'Stopwatch', 'bolt'], ['focus', 'Focus', 'target'], ['interval', 'Interval', 'flame'], ['beurt', 'Beurtklok', 'dice'], ['wereld', 'Wereldklok', 'earth'], ['aftellen', 'Aftellen', 'gift'], ['leren', 'Klok leren', 'book'], ['spel', 'Ritmes en spel', 'dice']];
   injectCss(); injectCss('tj-css', '.tj button{min-height:calc(44px * var(--gfx-scale,1))}.tj input[type=time],.tj input[type=date],.tj input[type=number]{min-height:calc(44px * var(--gfx-scale,1))}');
   view.innerHTML = `<div class="tu tj">${topBar('Tijd', 'hourglass')}<div id="tj-tabs"></div><div id="tj-body"></div></div>`;
   bindGear(view, 'Instellingen');
   let tabCleanups = [], renderSeq = 0;
   const api = { get body() { return view.querySelector('#tj-body'); }, esc, load, save, uid, db, tickFns, unlock, beep, chime, soft, buzz, later, newId, track: (f) => tabCleanups.push(f), rerender: () => renderTab() };
-  const REMOTE = { nu: ['./tijd-clock.js?v=1', 'nowTab'], leren: ['./tijd-clock.js?v=1', 'learnTab'], wereld: ['./tijd-world.js?v=1', 'worldTab'], aftellen: ['./tijd-extra.js?v=1', 'countTab'], interval: ['./tijd-extra.js?v=1', 'intervalTab'], beurt: ['./tijd-extra.js?v=1', 'turnTab'] };
+  const REMOTE = { nu: ['./tijd-clock.js?v=1', 'nowTab'], leren: ['./tijd-clock.js?v=1', 'learnTab'], wereld: ['./tijd-world.js?v=1', 'worldTab'], aftellen: ['./tijd-extra.js?v=1', 'countTab'], interval: ['./tijd-extra.js?v=1', 'intervalTab'], beurt: ['./tijd-extra.js?v=1', 'turnTab'], spel: ['./tools-r4-tijd.js?v=1', 'spelTab'] };
   function renderTab() {
     tickFns.length = 0; tabCleanups.splice(0).forEach((f) => { try { f(); } catch {} }); const seq = ++renderSeq;
     view.querySelector('#tj-tabs').innerHTML = tabsHtml(TABS, tab);

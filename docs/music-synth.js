@@ -9,6 +9,8 @@ export const noteName = (m) => NOTE_NAMES[pitchClass(m)] + (Math.floor(m / 12) -
 export const isBlack = (m) => [1, 3, 6, 8, 10].includes(pitchClass(m));
 
 // ---- instrumenten ----
+import { R4_INSTRUMENTS, R4_DRUMS, buildExtra, drumExtra } from './creatief-r4-synth.js?v=1';
+
 export const INSTRUMENTS = [
   { id: 'piano', name: 'Piano', icon: 'piano', group: 'Toetsen' },
   { id: 'epiano', name: 'E-piano', icon: 'piano', group: 'Toetsen' },
@@ -27,6 +29,7 @@ export const INSTRUMENTS = [
   { id: 'bel', name: 'Bel', icon: 'bell', group: 'Slagwerk-melodie' },
   { id: 'fluit', name: 'Fluit', icon: 'wand', group: 'Blazers' },
   { id: 'koper', name: 'Koper', icon: 'trophy', group: 'Blazers' },
+  ...R4_INSTRUMENTS,
 ];
 export const INST_IDS = INSTRUMENTS.map((i) => i.id);
 export const instInfo = (id) => INSTRUMENTS.find((i) => i.id === id) || INSTRUMENTS[0];
@@ -45,6 +48,7 @@ export const DRUMKIT = [
   { id: 'crash', lab: 'Crash', name: 'Crashbekken', color: '#06b6d4' },
   { id: 'shaker', lab: 'Shk', name: 'Shaker', color: '#3b82f6' },
   { id: 'conga', lab: 'Cng', name: 'Conga', color: '#6366f1' },
+  ...R4_DRUMS,
 ];
 export const DRUM_IDS = DRUMKIT.map((d) => d.id);
 export const drumInfo = (id) => DRUMKIT.find((d) => d.id === id) || DRUMKIT[0];
@@ -160,7 +164,7 @@ function build(c, dest, id, f, t, vel, nb) {
     case 'bel': o.osc('sine', 1, 0.5); o.osc('sine', 2.76, 0.2); o.osc('sine', 5.4, 0.1); o.osc('sine', 8.9, 0.04); e = { a: 0.002, d: 2.0, s: 0.01, r: 0.5, peak: 0.55 }; break;
     case 'fluit': { const x = o.osc('sine', 1, 0.5); o.osc('sine', 2, 0.08); o.vibrato(x, 5, 9, 0.3); o.noise('bandpass', f * 2, 1.5, 0.05, 0.25); e = { a: 0.06, d: 0.1, s: 0.85, r: 0.12, peak: 0.55 }; break; }
     case 'koper': { const lp = o.filt('lowpass', 800, 1); o.sweep(lp, 700, 3200, 0.12); o.osc('sawtooth', 1, 0.3, -4, lp); o.osc('sawtooth', 1, 0.3, 4, lp); e = { a: 0.04, d: 0.2, s: 0.8, r: 0.12, peak: 0.45 }; break; }
-    default: o.osc('triangle', 1, 0.6); e = { a: 0.01, d: 0.5, s: 0.3, r: 0.2, peak: 0.5 };
+    default: { const x = buildExtra(o, id, f); if (x) e = x; else { o.osc('triangle', 1, 0.6); e = { a: 0.01, d: 0.5, s: 0.3, r: 0.2, peak: 0.5 }; } }
   }
   const peak = e.peak * Math.max(0.05, Math.min(1.2, vel));
   return { amp, oscs, srcs, e: { ...e, peak } };
@@ -226,7 +230,7 @@ export function playDrum(c, dest, nb, id, t, vel = 1) {
     case 'crash': noise('highpass', 5200, 0.5, 0.45, 1.2); noise('bandpass', 9000, 1, 0.25, 0.8); break;
     case 'shaker': noise('bandpass', 7000, 1.6, 0.35, 0.07); break;
     case 'conga': tone('sine', 330, 250, 0.06, 0.8, 0.22); noise('bandpass', 1800, 2, 0.12, 0.02); break;
-    default: break;
+    default: drumExtra(id, t, tone, noise); break;
   }
 }
 

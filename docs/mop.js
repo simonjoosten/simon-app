@@ -1,6 +1,7 @@
 // Moppentrommel: mop van de dag, veel moppen in groepen, favorieten, sterren, voorlezen, raad-de-grap, eigen moppen delen met je broer, score en rangen.
 import * as M from './mop-core.js?v=1';
 import { mountShell, celebrate, toast, icon, esc } from './fun-ui.js?v=1';
+import { mountShow } from './tools-r4-mop.js?v=1';
 
 // ctx: { view, esc, uid, addCleanup? }
 export async function mopView(ctx) {
@@ -72,7 +73,7 @@ export async function mopView(ctx) {
   const catChips = (selected, attr, withOwn) => `<div style="display:flex;gap:6px;overflow-x:auto;padding:4px 0;margin:.2rem 0"><button data-${attr}="" class="${!selected ? 'pri' : ''}" style="flex:none">Alles</button>${M.CATS.map((c) => `<button data-${attr}="${c.id}" class="${selected === c.id ? 'pri' : ''}" style="flex:none;display:flex;gap:.3rem;align-items:center">${icon(c.icon, { size: 24 })}${esc(c.name)}</button>`).join('')}${withOwn ? `<button data-${attr}="eigen" class="${selected === 'eigen' ? 'pri' : ''}" style="flex:none">${icon('star', { size: 24 })} Eigen</button>` : ''}</div>`;
 
   function draw() {
-    const tabs = [['mop', '😄 Mop'], ['raad', '🎯 Raad'], ['alle', '📚 Alle'], ['fav', `⭐ (${favs.length})`], ['eigen', '✍ Eigen'], ['score', '🏆 Score']];
+    const tabs = [['mop', '😄 Mop'], ['raad', '🎯 Raad'], ['alle', '📚 Alle'], ['fav', `⭐ (${favs.length})`], ['eigen', '✍ Eigen'], ['score', '🏆 Score'], ['show', '🎭 Show']];
     let body = '';
     if (tab === 'mop') {
       const j = get(id) || ALL[todayId];
@@ -86,6 +87,8 @@ export async function mopView(ctx) {
     } else if (tab === 'fav') {
       const fl = favs.map(get).filter(Boolean);
       body = fl.length ? fl.map((j) => `<div class="box"><b>${esc(j.q)}</b><div style="color:var(--accent);font-weight:700;margin-top:.3rem">${esc(j.a)}</div><div class="row wrap"><button data-un="${esc(String(j.id))}">Verwijder</button><button data-sh="${esc(String(j.id))}">📤 Deel</button></div></div>`).join('') : `<div class="box center"><div>${icon('star', { size: 64 })}</div><small>Nog geen favorieten. Tik op ☆ Bewaar bij een mop die je goed vindt.</small></div>`;
+    } else if (tab === 'show') {
+      body = '<div id="mp-showhost"></div>';
     } else if (tab === 'eigen') {
       body = `<div class="box"><b>Verzin je eigen mop</b>
         <input id="own-q" placeholder="De vraag of het begin" maxlength="160" style="width:100%;box-sizing:border-box;min-height:calc(48px*var(--gfx-scale,1));margin:.4rem 0;font-size:calc(1rem*var(--gfx-font,1))">
@@ -105,6 +108,7 @@ export async function mopView(ctx) {
     }
     root.innerHTML = `<div class="row wrap" style="gap:.4rem">${tabs.map(([k, l]) => `<button data-tab="${k}" class="${tab === k ? 'pri' : ''}" style="flex:1;min-height:calc(48px*var(--gfx-scale,1));font-size:calc(.95rem*var(--gfx-font,1))">${l}</button>`).join('')}</div>${body}<small style="display:block;text-align:center;opacity:.6;margin:.4rem 0 1rem">${ALL.length} ingebouwde moppen${own.length ? ` + ${own.length} eigen` : ''}</small>`;
     bind();
+    const sh = root.querySelector('#mp-showhost'); if (sh) mountShow(sh, { ALL, ratings, M, icon, toast });
   }
 
   // ---- raad de grap ----

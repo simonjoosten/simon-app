@@ -11,7 +11,7 @@ const q = (s) => view.querySelector(s), qa = (s) => view.querySelectorAll(s), te
 const wait = () => new Promise((r) => T.realST(r, 25));
 M.tijdView({ view, esc, uid: 't1', db: null, addCleanup: (f) => cleanups.push(f) });
 await wait(); T.advance(200);
-ok(q('[data-clockhost]') && text().includes('Week'), 'klok-tab'); ok(qa('.tu-tab').length === 10, '10 tabs'); ok(q('[data-gear]'), 'gear');
+ok(q('[data-clockhost]') && text().includes('Week'), 'klok-tab'); ok(qa('.tu-tab').length === 11, '11 tabs'); ok(q('[data-gear]'), 'gear');
 const tab = async (k) => { click(q(`[data-tab="${k}"]`)); await wait(); T.advance(100); };
 
 // wekker

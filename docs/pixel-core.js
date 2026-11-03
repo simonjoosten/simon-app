@@ -19,6 +19,7 @@ export const PALETTES = [
 export const SIZES = [8, 16, 24, 32, 48, 64];
 export const MAX_FRAMES = 24, MAX_LAYERS = 6;
 
+import { R4_TEMPLATES } from './creatief-r4-pixel.js?v=1';
 export const blank = (n) => Array(n * n).fill(null);
 
 // ---------- document: { n, fps, layers:[{name,vis}], frames:[ [cells per laag] ] } ----------
@@ -188,11 +189,13 @@ export const TEMPLATES = [
   { name: 'Raket', key: { w: '#f1f5f9', r: '#ef4444', b: '#3b82f6', g: '#94a3b8', y: '#facc15', o: '#f97316' }, rows: ['.......ww.......', '......wwww......', '.....wwwwww.....', '.....wwbbww.....', '.....wbbbbw.....', '.....wwbbww.....', '.....wwwwww.....', '....rwwwwwwr....', '...rrwwwwwwrr...', '..rrrwwwwwwrrr..', '..rr.gggggg.rr..', '.....gggggg.....', '......yyyy......', '......oyyo......', '.......oo.......', '................'] },
   { name: 'Ijsje', key: { p: '#f9a8d4', c: '#fcd9b6', b: '#b45309', w: '#ffffff', r: '#ef4444' }, rows: ['................', '.......r........', '......rr........', '.....pppp.......', '...pppppppp.....', '..ppwppppppp....', '..pppppppppp....', '..ppppppppppp...', '...cccccccccc...', '....cbcbcbcb....', '....bcbcbcbc....', '.....cbcbcb.....', '.....bcbcbc.....', '......cbcb......', '.......bc.......', '........b.......'] },
   { name: 'Spookje', key: { w: '#f8fafc', g: '#cbd5e1', k: '#111827', p: '#fda4af' }, rows: ['................', '......wwww......', '....wwwwwwww....', '...wwwwwwwwww...', '..wwwwwwwwwwww..', '..wwkkwwwwkkww..', '..wwkkwwwwkkww..', '..wwwwwwwwwwww..', '..wwppwwwwppww..', '..wwwwkkkkwwww..', '..wwwwwwwwwwww..', '..wwwwwwwwwwww..', '..wwwwwwwwwwww..', '..ww.www.www.w..', '..w...w...w.....', '................'] },
+  ...R4_TEMPLATES,
 ];
 export function templateDoc(t) {
-  const n = 16, c = blank(n);
-  t.rows.forEach((row, y) => { for (let x = 0; x < n; x++) { const ch = row[x]; if (ch && ch !== '.' && t.key[ch]) c[y * n + x] = t.key[ch]; } });
-  const d = newDoc(n); d.frames[0][0] = c; return d;
+  const n = 16, paint = (rows) => { const c = blank(n); rows.forEach((row, y) => { for (let x = 0; x < n; x++) { const ch = row[x]; if (ch && ch !== '.' && t.key[ch]) c[y * n + x] = t.key[ch]; } }); return c; };
+  const d = newDoc(n);
+  if (t.frames) { d.frames = t.frames.slice(0, MAX_FRAMES).map((rows) => [paint(rows)]); d.fps = t.fps || 6; } else d.frames[0][0] = paint(t.rows);
+  return d;
 }
 
 // ---------- opslag ----------

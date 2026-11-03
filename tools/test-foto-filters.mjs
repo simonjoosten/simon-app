@@ -32,8 +32,8 @@ const checkSane = (img, src, name) => {
   ok(alphaBad === 0, name + ' alpha veranderd');
 };
 
-ok(F.FILTERS.length === 75, 'precies 75 filters, nu ' + F.FILTERS.length);
-ok(new Set(F.FILTERS.map((f) => f.id)).size === 75, 'unieke ids');
+ok(F.FILTERS.length === 87, 'precies 87 filters, nu ' + F.FILTERS.length);
+ok(new Set(F.FILTERS.map((f) => f.id)).size === 87, 'unieke ids');
 ok(F.FILTERS.every((f) => f.id && f.name && f.group), 'velden gevuld');
 console.log('groepen:', [...new Set(F.FILTERS.map((f) => f.group))].join(', '));
 

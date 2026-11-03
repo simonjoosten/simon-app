@@ -1,5 +1,5 @@
 // Meme-maker: sjablonen, foto of eigen camera, filters, meerdere tekstvakken en tekstballonnen, 3D-stickers, rand, opslaan en delen.
-import * as C from './meme-core.js?v=1';
+import * as C from './meme-core.js?v=2';
 import { mountShell, celebrate, toast, icon, esc } from './fun-ui.js?v=1';
 import { preload, drawIcon } from './gfx/art.js?v=1';
 import { GFX } from './gfx/settings.js?v=1';

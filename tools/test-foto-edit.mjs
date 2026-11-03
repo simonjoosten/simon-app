@@ -46,7 +46,7 @@ for (const id of M.FRAME_IDS) {
   for (const t of [0, 40, 100]) {
     const L = M.frameLayout(id, 800, 600, t);
     assert.ok(L.W >= 1 && L.H >= 1 && L.iw === 800 && L.ih === 600, id);
-    if (id !== 'circle' && id !== 'heart') assert.ok(L.W >= 800 && L.H >= 600, id);
+    if (!['circle', 'heart', 'star', 'diamond'].includes(id)) assert.ok(L.W >= 800 && L.H >= 600, id);
     else assert.equal(L.W, 600);
   }
 }
@@ -68,6 +68,7 @@ console.log('pure logica OK');
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'fe-'));
 fs.copyFileSync(src, path.join(tmp, 'foto-edit.js'));
 fs.copyFileSync(path.join(here, 'foto-filters-stub.mjs'), path.join(tmp, 'foto-filters.js'));
+fs.copyFileSync(path.join(here, '..', 'docs', 'tools-r4-foto.js'), path.join(tmp, 'tools-r4-foto.js'));
 fs.writeFileSync(path.join(tmp, 'package.json'), '{"type":"module"}');
 const ctr = { fill: 0, draw: 0 };
 const mkEl = (tag) => {

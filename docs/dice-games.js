@@ -164,10 +164,12 @@ export function wheelTarget(from, i, n, frac = 0.5, extra = 5) {
   target += Math.ceil((from - target) / T) * T + extra * T; return target;
 }
 export const EIGHTBALL = ['Ja, zeker!', 'Zonder twijfel.', 'Het ziet er goed uit.', 'Je kunt erop rekenen.', 'Waarschijnlijk wel.', 'Ja.', 'Probeer het later nog eens.', 'Ik weet het nog niet, vraag het straks.', 'Daar zeg ik nu liever niets over.', 'Concentreer je en vraag opnieuw.', 'Ik zou er niet op rekenen.', 'Mijn bronnen zeggen nee.', 'Nee.', 'Het ziet er niet goed uit.', 'Heel twijfelachtig.', 'Absoluut niet!'];
+import { R4_WHEELS } from './creatief-r4-dice.js?v=1';
 export const WHEEL_PRESETS = {
   'Wat eten we?': ['Pizza', 'Pannenkoeken', 'Friet', 'Pasta', 'Sushi', 'Soep', 'Wraps', 'Rijst met kip'],
   'Wie begint?': ['Speler 1', 'Speler 2', 'Speler 3', 'Speler 4'],
   'Ja of nee': ['Ja!', 'Nee', 'Misschien', 'Vraag het later'],
   'Opdracht': ['Maak een dansje', 'Zing een liedje', 'Doe een dier na', 'Vertel een mop', '10 keer springen', 'Trek een gek gezicht'],
   'Spelletje': ['Verstoppertje', 'Memory', 'Kaarten', 'Bordspel', 'Tekenen', 'Buiten spelen'],
+  ...R4_WHEELS,
 };

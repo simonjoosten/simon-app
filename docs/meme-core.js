@@ -1,4 +1,5 @@
 // Meme-kern: achtergronden, sjablonen, stickers, lettertypen, foto-filters en opslagformaat (zonder DOM; alleen een 2D-canvas-interface).
+import { R4_BGS, R4_TEMPLATES, R4_FILTERS, R4_STICKER_GROUPS, R4_FUNNY, applyR4Filter } from './tools-r4-meme.js?v=1';
 
 export const W = 1080;
 export const FONTS = [
@@ -24,6 +25,7 @@ export const STICKER_GROUPS = [
   ['Natuur', ['tree', 'pine', 'palm', 'flower', 'sunflower', 'mushroom', 'cactus', 'rock', 'cloud', 'rain', 'snowflake', 'flame', 'volcano', 'wave', 'rainbow', 'leaf']],
   ['Plekken', ['house', 'castle', 'tower', 'tent', 'barn', 'windmill', 'lighthouse', 'ferriswheel', 'rollercoaster', 'carousel', 'shop', 'school', 'hospital', 'factory', 'skyscraper', 'fountain', 'bridge', 'igloo', 'pyramid']],
   ['Muziek en school', ['piano', 'guitar', 'drum', 'microphone', 'headphones', 'note', 'paint', 'pencil', 'camera', 'book', 'microscope', 'flask', 'globe', 'map', 'compass', 'gear', 'hammer', 'pickaxe']],
+  ...R4_STICKER_GROUPS, // ronde 4
 ];
 
 // ---------- achtergronden: [naam, tekenfunctie(c, w, h)] ----------
@@ -56,6 +58,7 @@ export const BGS = [
   ['Strand', (c, w, h) => { lin(c, w, h * 0.55, '#7dd3fc', '#e0f2fe', 1.5); c.fillStyle = '#38bdf8'; c.fillRect(0, h * 0.5, w, h * 0.2); c.fillStyle = '#fde68a'; c.fillRect(0, h * 0.68, w, h * 0.32); c.fillStyle = '#fef08a'; c.beginPath(); c.arc(w * 0.8, h * 0.18, 70, 0, 7); c.fill(); }],
   ['Rood-zwart', (c, w, h) => lin(c, w, h, '#dc2626', '#111827', 1.1)],
   ['Mint', (c, w, h) => lin(c, w, h, '#a7f3d0', '#0ea5e9', 0.8)],
+  ...R4_BGS, // ronde 4: 8 extra achtergronden (nummers 20 t/m 27)
 ];
 
 // ---------- sjablonen ----------
@@ -79,6 +82,7 @@ export const TEMPLATES = [
   { name: 'Koning van de snacks', bg: 0, top: 'Ik bij de chipskast', bottom: 'Lang leve de koning', layers: [S(0.5, 0.4, 'crown', 360), S(0.5, 0.68, 'fries', 330)] },
   { name: 'Zwemles', bg: 17, top: 'Zwemles vandaag', bottom: 'Ik: wie, ik?', layers: [S(0.5, 0.5, 'duck', 440), S(0.8, 0.8, 'wave', 200)] },
   { name: 'Superheld', bg: 19, top: 'Mijn superkracht:', bottom: 'Altijd honger', layers: [S(0.5, 0.5, 'bolt', 420), S(0.5, 0.78, 'burger', 240)] },
+  ...R4_TEMPLATES, // ronde 4: 14 extra sjablonen
 ];
 // Instantie van een sjabloon als bewerkbare toestand.
 export function fromTemplate(t, idGen) {
@@ -98,6 +102,7 @@ export const FILTERS = [
   ['none', 'Geen'], ['bw', 'Zwart-wit'], ['sepia', 'Sepia'], ['warm', 'Warm'], ['cool', 'Koud'], ['pop', 'Pop'], ['vintage', 'Vintage'], ['invert', 'Negatief'],
   ['poster', 'Poster'], ['pixel', 'Pixels'], ['blur', 'Wazig'], ['dream', 'Droom'], ['duo1', 'Duotoon paars'], ['duo2', 'Duotoon oranje'], ['comic', 'Strip'],
   ['night', 'Nacht'], ['vignette', 'Vignet'], ['noise', 'Korrel'], ['glitch', 'Glitch'], ['mirror', 'Spiegel'],
+  ...R4_FILTERS,
 ];
 const cl = (v) => (v < 0 ? 0 : v > 255 ? 255 : v);
 const lum = (r, g, b) => 0.299 * r + 0.587 * g + 0.114 * b;
@@ -165,7 +170,7 @@ export function applyFilter(img, id, amt = 1) {
     case 'noise': { const r = prng(11); for (let i = 0; i < d.length; i += 4) { const n = (r() - 0.5) * 70; d[i] = cl(d[i] + n); d[i + 1] = cl(d[i + 1] + n); d[i + 2] = cl(d[i + 2] + n); } break; }
     case 'glitch': { const r = prng(5); for (let y = 0; y < h; y++) { const off = r() < 0.12 ? Math.round((r() - 0.5) * w * 0.12) : 0; const sh = Math.round(w * 0.012); for (let x = 0; x < w; x++) { const i = (y * w + x) * 4, xr = Math.min(w - 1, Math.max(0, x + off + sh)), xb = Math.min(w - 1, Math.max(0, x + off - sh)), xg = Math.min(w - 1, Math.max(0, x + off)); d[i] = orig[(y * w + xr) * 4]; d[i + 1] = orig[(y * w + xg) * 4 + 1]; d[i + 2] = orig[(y * w + xb) * 4 + 2]; } } break; }
     case 'mirror': for (let y = 0; y < h; y++) for (let x = Math.floor(w / 2); x < w; x++) { const i = (y * w + x) * 4, j = (y * w + (w - 1 - x)) * 4; d[i] = orig[j]; d[i + 1] = orig[j + 1]; d[i + 2] = orig[j + 2]; } break;
-    default: return img;
+    default: if (!applyR4Filter(img, id)) return img;
   }
   blendTo(img, orig, amt); return img;
 }
@@ -213,4 +218,5 @@ export const FUNNY = [
   ['Snoep delen?', 'Ik denk het niet'], ['Mijn zakgeld op dinsdag', 'Is er nog wel'], ['De bus komt zo', 'De bus: ik ben al weg'],
   ['Ik heb alles onder controle', 'Dat zei de hond ook, voor hij de taart zag'], ['Grote broer: laat mij maar', 'Het ging fout'],
   ['Pannenkoeken of poffertjes?', 'Ja'], ['Ik beloof dat ik niet lach', 'Ik lach'],
+  ...R4_FUNNY, // ronde 4: 24 extra teksten
 ];

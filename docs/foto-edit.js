@@ -2,6 +2,8 @@
 // dubbele belichting en tilt-shift. Alles gebeurt op je eigen toestel: foto's worden nergens geüpload of opgeslagen.
 // De pixel-bewerkingen komen uit foto-filters.js (wordt lui geladen met dynamic import).
 
+import { makeR4Frames, R4_FONTS, R4_EMOJI } from './tools-r4-foto.js?v=1';
+
 const MAXSIDE = 2000, PREV = 1000, HMAX = 21, BMAX = 9;
 const TAU = Math.PI * 2;
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -25,8 +27,9 @@ const FONTS = [
   ['Optima', "Optima,Candara,'Segoe UI',sans-serif"],
   ['Schrijfletter', "'Snell Roundhand','Brush Script MT','Lucida Handwriting',cursive"],
   ['Smal', "'Arial Narrow','Helvetica Neue',Arial,sans-serif"],
+  ...R4_FONTS, // ronde 4
 ];
-const EMOJI = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💖', '⭐', '🌟', '✨', '⚡', '🔥', '🌈', '☀️', '🌙', '☁️', '❄️', '🌸', '🌼', '🌻', '🌹', '🍀', '🌴', '🎉', '🎈', '🎁', '🎂', '🍕', '🍔', '🍦', '🍩', '🍓', '🍉', '🍒', '🥑', '😀', '😂', '😍', '😎', '🥳', '😜', '🤩', '😴', '🤔', '😇', '🥰', '😱', '👍', '👏', '🙌', '💪', '👀', '💋', '👑', '🎩', '🕶️', '🎀', '🐶', '🐱', '🦄', '🐼', '🦊', '🐸', '🐝', '🦋', '🐢', '🐙', '🚀', '⚽', '🎵', '💎', '📸'];
+const EMOJI = ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '💖', '⭐', '🌟', '✨', '⚡', '🔥', '🌈', '☀️', '🌙', '☁️', '❄️', '🌸', '🌼', '🌻', '🌹', '🍀', '🌴', '🎉', '🎈', '🎁', '🎂', '🍕', '🍔', '🍦', '🍩', '🍓', '🍉', '🍒', '🥑', '😀', '😂', '😍', '😎', '🥳', '😜', '🤩', '😴', '🤔', '😇', '🥰', '😱', '👍', '👏', '🙌', '💪', '👀', '💋', '👑', '🎩', '🕶️', '🎀', '🐶', '🐱', '🦄', '🐼', '🦊', '🐸', '🐝', '🦋', '🐢', '🐙', '🚀', '⚽', '🎵', '💎', '📸', ...R4_EMOJI]; // ronde 4: +24
 const RATIOS = [['free', 'Vrij'], ['1:1', '1:1'], ['4:5', '4:5'], ['3:4', '3:4'], ['9:16', '9:16'], ['16:9', '16:9'], ['orig', 'Origineel']];
 const BLENDS = [['screen', 'Screen'], ['multiply', 'Multiply'], ['lighten', 'Lighten'], ['overlay', 'Overlay'], ['normal', 'Normaal'], ['difference', 'Verschil']];
 
@@ -187,6 +190,7 @@ const FRAMES = [
   { id: 'stamp', name: 'Postzegel', icon: '📮', def: '#ffffff', lay: layPad(1.6), draw: (c, L, p, col, src) => { c.fillStyle = col === 'transparent' ? '#ffffff' : col; c.fillRect(0, 0, L.W, L.H); putImg(c, L, src); c.globalCompositeOperation = 'destination-out'; const r = L.ix * .3, nx = Math.max(3, Math.round(L.W / (r * 2.6))), ny = Math.max(3, Math.round(L.H / (r * 2.6))); c.fillStyle = '#000'; for (let i = 0; i <= nx; i++) { const x = i * L.W / nx; [0, L.H].forEach((y) => { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }); } for (let j = 0; j <= ny; j++) { const y = j * L.H / ny; [0, L.W].forEach((x) => { c.beginPath(); c.arc(x, y, r, 0, TAU); c.fill(); }); } c.globalCompositeOperation = 'source-over'; } },
   { id: 'mat', name: 'Passe-partout', icon: '🖼️', def: '#f5f0e6', lay: layPad(2.4), draw: (c, L, p, col, src) => { bgFill(c, L, col); putImg(c, L, src); c.strokeStyle = 'rgba(0,0,0,.35)'; c.lineWidth = 2; c.strokeRect(L.ix - 1, L.iy - 1, L.iw + 2, L.ih + 2); c.strokeStyle = 'rgba(0,0,0,.12)'; c.lineWidth = 1.5; c.strokeRect(L.ix * .3, L.iy * .3, L.W - L.ix * .6, L.H - L.iy * .6); } },
 ];
+FRAMES.push(...makeR4Frames({ bgFill, putImg, layPad, laySq, poly, rrect, TAU, lum })); // ronde 4: 6 extra frames
 const FR = {}; FRAMES.forEach((f) => { FR[f.id] = f; });
 export const FRAME_IDS = FRAMES.map((f) => f.id);
 export function frameLayout(id, w, h, thick) { const F = FR[id] || FR.none; return F.lay(w, h, framePad(w, h, thick)); }
@@ -1165,7 +1169,7 @@ export function fotoEditView(ctx) {
     if (!FR['w-ruimte']) m.worlds().forEach((w) => { const d = m.worldFrameDef(w, { layPad, putImg }); FRAMES.push(d); FR[d.id] = d; });
     if (alive && panel && (S.tool === 'stk' || S.tool === 'frame')) refreshPanel();
   }).catch((e) => { console.error(e); });
-  import('./foto-filters.js?v=2').then((m) => {
+  import('./foto-filters.js?v=3').then((m) => {
     if (!alive) return;
     if (!m || !m.FILTERS || !m.applyFilter || !m.adjust || !m.cloneCanvas) throw new Error('onvolledige module');
     FX = m;

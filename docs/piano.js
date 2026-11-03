@@ -2,8 +2,9 @@
 // opnemen met bewaarde opnames en delen via code, 20 liedjes om te leren (stap voor stap), een spel met vallende noten en slagwerk-pads.
 // Logica staat in piano-songs.js, geluid in music-synth.js.
 
-import { INSTRUMENTS, DRUMKIT, NOTE_NAMES, newAudio, makeBus, makeNoise, applyFx, startNote, playNote, playDrum, midiFreq, noteName, click } from './music-synth.js?v=1';
-import * as P from './piano-songs.js?v=1';
+import { dailyIndex } from './creatief-r4-songs.js?v=1';
+import { INSTRUMENTS, DRUMKIT, NOTE_NAMES, newAudio, makeBus, makeNoise, applyFx, startNote, playNote, playDrum, midiFreq, noteName, click } from './music-synth.js?v=2';
+import * as P from './piano-songs.js?v=2';
 import { styleTag, gearHtml, wireGear, worldSelectHtml, hero, icon, GFX, Themes, Particles, playScene, copyText, starsStr } from './apps3-ui.js?v=1';
 
 const CSS = `<style>
@@ -35,7 +36,7 @@ html[data-reduce="1"] .pi-key.hint{animation:none}
 .pi-chord{font-weight:900;font-size:calc(1.3rem*var(--f));min-height:2rem}
 </style>`;
 
-const PADKEYS = ['q', 'w', 'e', 'r', 'a', 's', 'd', 'f', 'z', 'x', 'c', 'v'];
+const PADKEYS = ['q', 'w', 'e', 'r', 'a', 's', 'd', 'f', 'z', 'x', 'c', 'v', 't', 'g', 'b', 'y', 'h', 'n'];
 
 export function pianoView(ctx) {
   const { view, esc, addCleanup } = ctx;
@@ -299,6 +300,7 @@ export function pianoView(ctx) {
     const el = $('#pi-top'); if (!el) return;
     if (tab === 'learn') {
       el.innerHTML = `<div class="card"><b>${icon('book', { size: 26 })} Kies een liedje</b> <small class="mute">${P.SONGS.length} liedjes · ●=makkelijk ●●●=lastig</small>
+        <div style="margin:.4rem 0"><button data-song="${P.SONGS[dailyIndex(P.SONGS.length)].id}" style="min-height:44px">${icon('star', { size: 24 })} Liedje van de dag: ${esc(P.SONGS[dailyIndex(P.SONGS.length)].name)}</button></div>
         <div class="pi-songs" style="margin-top:.5rem">${P.SONGS.map((s) => { const pr = progress[s.id] || {}; return `<button data-song="${s.id}" class="${learnSong && learnSong.id === s.id ? 'on' : ''}">${icon(s.icon, { size: 30 })}<span>${esc(s.name)}</span><small class="mute">${diffStars(s)}${pr.learned ? ' ✓ geleerd' : ''}</small></button>`; }).join('')}</div>
         ${learnSong ? `<div class="pi-row" style="margin-top:.6rem"><b style="flex:1">${esc(learnSong.name)}</b><button data-act="demo">👂 Laat horen</button><button data-act="learn" class="on">🐢 Stap voor stap</button><button data-act="togame">🎮 Als spel</button><button data-act="stoplearn">⏹</button></div>` : '<small class="mute">Tik op een liedje.</small>'}</div>`;
     } else if (tab === 'game') {

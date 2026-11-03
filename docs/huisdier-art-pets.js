@@ -1028,6 +1028,8 @@ const BODY = {
 };
 
 const DRAW = { hat: HAT, glasses: GLASSES, neck: NECK, body: BODY };
+// Ankerpunten van een soort (hoed, ogen, hals, lijf) voor kleding uit andere modules (huisdier-r4-data.js)
+export function anchorsOf(speciesId) { const d = SPDEF[speciesId]; return Object.assign({}, BASE_A, d ? d.a : {}); }
 const VB = { hat: [-70, -96, 140, 140], glasses: [-60, -60, 120, 120], neck: [-56, -30, 112, 100], body: [-72, -72, 144, 144] };
 const VB_ID = {
   strik: [-15, -31, 70, 70], petje: [-56, -64, 112, 112], hoofdband: [-58, -44, 116, 116], haarspeldjes: [-56, -48, 112, 112],

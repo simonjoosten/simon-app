@@ -98,6 +98,12 @@ export const DISH = {};
   ['wor', 'Wortelcake', '🥕', 'ZO', 106, 7, 'de1 ei1 kr1 me1', 5], ['ban', 'Bananasplit', '🍌', 'ZO', 110, 4, 'fr1 me1 ch1', 5], ['fon', 'Kaasfondue', '🧀', 'FR', 205, 8, 'ka2 me1 br1', 8],
   ['esc', 'Escargots', '🐌', 'FR', 235, 8, 'kr1 me1 br1', 9], ['krb', 'Krab op toast', '🦀', 'FR', 185, 7, 'vi1 ga1 br1', 7], ['dru', 'Druiven-sorbet', '🍇', 'ZO', 370, 6, 'fr2 me1', 11],
   ['bdt', 'Verjaardagstaart', '🎂', 'ZO', 410, 9, 'de1 ch1 fr1 me1 ei1', 10], ['gei', 'Gebakken ei op brood', '🥚', 'NL', 11, 3, 'ei1 br1', 0],
+  // ronde 4: 14 nieuwe gerechten (ook seizoensgerechten: oliebollen en pepernoten)
+  ['pep', 'Pepernoten', '🌰', 'NL', 13, 2, 'de1 kr1', 0], ['pof', 'Poffertjes', '🧈', 'NL', 19, 3, 'de1 me1', 1], ['oli', 'Oliebollen', '🥯', 'NL', 23, 4, 'de1 ei1 fr1', 1],
+  ['erw', 'Erwtensoep', '🥣', 'NL', 30, 6, 'gr1 vl1 ao1', 2], ['nas', 'Nasi goreng', '🍚', 'NL', 50, 6, 'ri2 kr1 ei1', 3], ['sat', 'Saté met pindasaus', '🍢', 'NL', 72, 6, 'vl2 kr1', 4],
+  ['pie', 'Pizza pepperoni', '🍕', 'IT', 68, 6, 'de1 to1 ka1 vl1', 4], ['rav', 'Ravioli', '🥡', 'IT', 112, 8, 'de2 ka1 to1 ei1', 5], ['chu', 'Churros met chocola', '🍫', 'MX', 98, 5, 'de1 ch1', 5],
+  ['pek', 'Pekingeend', '🦆', 'JP', 215, 9, 'vl2 kr1 gr1', 8], ['fou', 'Foie-gras-toast', '🍞', 'FR', 390, 7, 'tr1 br1 me1', 10], ['bbq', 'Barbecue-feest', '🔥', 'US', 415, 10, 'vl3 kr1 ma1', 11],
+  ['gsu', 'Gouden sushi', '🏵️', 'JP', 1300, 11, 'vi2 ga1 tr1', 15], ['kst', 'Kerstdiner', '🎄', 'NL', 1250, 12, 'vl2 ao2 gr1 kr1', 14],
 ].forEach((r) => {
   const price = r[4];
   const ing = r[6] ? r[6].split(' ').map((x) => [x.slice(0, 2), int(x.slice(2))]) : [];
@@ -123,6 +129,8 @@ export const CITIES = [
   { id: 'syd', n: 'Sydney', e: '🏄', likes: ['US', 'ZO'], w: 160, arr: 0.4, cost: 8e12, st: 18, pal: ['#2f7fc4', '#f4e3c3', '#e8764a'], d: 'Surfers, barbecues en een beroemd operagebouw.' },
   { id: 'dub', n: 'Dubai', e: '🏙️', likes: ['TR', 'FR'], w: 250, arr: 0.42, cost: 1.2e14, st: 20, pal: ['#d9b36c', '#6fb5d6', '#8a7a5a'], d: 'Wolkenkrabbers in de woestijn.' },
   { id: 'sin', n: 'Singapore', e: '🦁', likes: ['JP', 'IN'], w: 400, arr: 0.44, cost: 2e15, st: 22, pal: ['#2f9d7a', '#e86a8a', '#3a4a8a'], d: 'Tuinen van de toekomst en straatvoedsel.' },
+  { id: 'lon', n: 'Londen', e: '🎡', likes: ['NL', 'US'], w: 600, arr: 0.46, cost: 3e16, st: 23, pal: ['#6b7a99', '#d9534f', '#e9d8a6'], d: 'Dubbeldekkers, thee en fish & chips.' },
+  { id: 'cpt', n: 'Kaapstad', e: '⛰️', likes: ['ZO', 'US'], w: 900, arr: 0.48, cost: 5e17, st: 24, pal: ['#d97b3a', '#4aa3c4', '#7fb069'], d: 'Tafelberg, pinguïns en braai.' },
 ];
 export const CITY = {}; CITIES.forEach((c) => { CITY[c.id] = c; });
 export const branchBuild = (c) => Math.round(2500 * c.w * Math.pow(1.1, c.st));
@@ -186,6 +194,11 @@ export const DECOR = [
   { id: 'hel', n: 'Helikopter', e: '🚁', slot: 'lucht', price: 6e6, arr: 0.1, pat: 0.04 },
   { id: 'tul', n: 'Zonnebloemen', e: '🌻', slot: 'grond', price: 800, pat: 0.04 }, { id: 'bij', n: 'Bijenkast', e: '🐝', slot: 'grond', price: 15000, arr: 0.03 },
   { id: 'ten', n: 'Feesttent', e: '⛺', slot: 'grond', price: 25000, pat: 0.08 }, { id: 'win', n: 'Windmolen', e: '🌬️', slot: 'grond', price: 400000, arr: 0.05 },
+  // ronde 4
+  { id: 'pmp', n: 'Pompoen', e: '🎃', slot: 'grond', price: 2500, pat: 0.05 }, { id: 'xmt', n: 'Kerstboom', e: '🎄', slot: 'grond', price: 20000, arr: 0.06 },
+  { id: 'snp', n: 'Sneeuwpop', e: '⛄', slot: 'grond', price: 8000, pat: 0.06 }, { id: 'ora', n: 'Oranje vlag', e: '🇳🇱', slot: 'lucht', price: 5000, arr: 0.05 },
+  { id: 'vrw', n: 'Vuurwerk', e: '🎆', slot: 'lucht', price: 300000, arr: 0.09 }, { id: 'hgm', n: 'Hangmat', e: '🏝️', slot: 'grond', price: 90000, pat: 0.1 },
+  { id: 'pzo', n: 'Pizzaoven', e: '🍕', slot: 'zij', price: 30000, tip: 0.05 }, { id: 'fth', n: 'Fotohoek', e: '📸', slot: 'zij', price: 150000, arr: 0.06 },
   { id: 'tre', n: 'Mini-trein', e: '🚆', slot: 'grond', price: 2e7, arr: 0.14 },
 ];
 export const DECM = {}; DECOR.forEach((d) => { DECM[d.id] = d; });
@@ -209,7 +222,13 @@ export const EVENTS = [
   { id: 'zon', n: 'Zonnige dag', e: '☀️', dur: 90, fx: { arr: 1.4, price: 1.1 }, d: 'Mooi weer: iedereen wil een hapje buiten.' },
   { id: 'nmk', n: 'Nachtmarkt', e: '🌙', dur: 100, fx: { arr: 1.25, tip: 0.35 }, d: 'Gezellige sfeer en veel fooi.' },
   { id: 'bru', n: 'Bruiloft', e: '💍', dur: 80, fx: { price: 1.8 }, d: 'Een feestelijk gezelschap: +80% prijs.' },
+  // ronde 4: seizoensevenementen (win = [begin, eind] als maand*100+dag; komen alleen in die periode langs)
+  { id: 'kdg', n: 'Koningsdag-vrijmarkt', e: '👑', dur: 100, fx: { arr: 1.7, price: 1.15 }, win: [426, 506], d: 'Oranje feest! Vrijmarkt en heel veel gasten.' },
+  { id: 'hlw', n: 'Halloweenfeest', e: '🎃', dur: 90, fx: { arr: 1.3, tip: 0.4 }, win: [1020, 1105], d: 'Verklede gasten met extra fooi.' },
+  { id: 'sik', n: 'Sinterklaasmarkt', e: '🎁', dur: 100, fx: { price: 1.4, tip: 0.3 }, win: [1112, 1206], d: 'Pepernoten en cadeautjes: iedereen geeft meer uit.' },
+  { id: 'knt', n: 'Kerstmarkt', e: '🎄', dur: 100, fx: { arr: 1.4, price: 1.2 }, win: [1207, 1226], d: 'Warme chocolademelk en lichtjes.' },
 ];
+export const inEventWindow = (e, d = new Date()) => { if (!e.win) return true; const k = (d.getMonth() + 1) * 100 + d.getDate(); return k >= e.win[0] && k <= e.win[1]; };
 export const EVM = {}; EVENTS.forEach((e) => { EVM[e.id] = e; });
 
 // Franchise-voordelen (Gouden Lepels)
@@ -249,6 +268,10 @@ export const MISSIONS = [
   ['Ontgrendel 30 gerechten', 'rec', 30, 2400, 20000], ['Serveer 5.000 klanten', 'served', 5000, 2400, 30000], ['Haal 14 sterren', 'stars', 14, 3000, 100000],
   ['Koop 10 decoraties 🪴', 'decor', 10, 2400, 20000], ['Verdien in totaal 1 miljard 🪙', 'earned', 1e9, 3600, 2e6], ['Open 10 steden', 'cities', 10, 3600, 5e6],
   ['Haal 20 sterren', 'stars', 20, 3600, 5e7], ['Bereik niveau 10 bij 5 gerechten', 'dishmax', 5, 3600, 1e6],
+  // ronde 4 (achteraan: de voortgang staat als index in de save)
+  ['Ontgrendel 50 gerechten', 'rec', 50, 3600, 5e4], ['Serveer 25.000 klanten', 'served', 25000, 3600, 1e5], ['Koop 20 decoraties 🪴', 'decor', 20, 3600, 5e5],
+  ['Doe 25 keer mee aan een evenement', 'events', 25, 3600, 5e5], ['Verdien in totaal 1 biljoen 🪙', 'earned', 1e12, 4800, 5e8], ['Open 12 steden', 'cities', 12, 4800, 1e8],
+  ['Breng 15 gerechten naar niveau 10', 'dishmax', 15, 4800, 1e8],
 ];
 
 export function metric(S, k) {
@@ -290,6 +313,11 @@ export const ACH = [];
   fam('c2', 'cities', 'Wereldreiziger', '🌍', [10, 12]);
   fam('d2', 'decor', 'Versiering', '🎈', [32, 39]);
   fam('s2', 'staffsum', 'Grote ploeg', '👥', [400, 700]);
+  fam('r4a', 'rec', 'Meesterkok', '🍳', [50, 60]);
+  fam('r4b', 'events', 'Evenementenkoning', '🎪', [200]);
+  fam('r4c', 'cities', 'Wereldburger', '🌍', [14]);
+  fam('r4d', 'decor', 'Versieringskoning', '🎈', [44]);
+  fam('r4e', 'served', 'Klantenmagneet', '🙂', [1000000]);
 })();
 
 // Reviews
@@ -677,7 +705,7 @@ export class Game {
     else if (this.invite) { this.invite.left -= dt; if (this.invite.left <= 0) { this.invite = null; this.emit('inviteGone', {}); } }
     else if (this.S.life.served >= 25) {
       this.evNext -= dt;
-      if (this.evNext <= 0) { const e = EVENTS[Math.floor(this.rng() * EVENTS.length)]; this.invite = { id: e.id, left: 60 }; this.evNext = 240 + this.rng() * 180; this.emit('invite', { id: e.id }); }
+      if (this.evNext <= 0) { const pool = EVENTS.filter((x) => inEventWindow(x)), e = pool[Math.floor(this.rng() * pool.length)]; this.invite = { id: e.id, left: 60 }; this.evNext = 240 + this.rng() * 180; this.emit('invite', { id: e.id }); }
     }
   }
   startEvent() {
@@ -1496,6 +1524,7 @@ export async function foodtruckView(ctx) {
   let away = null;
   { const gap = (Date.now() - S.ts) / 1000; if (!first && gap > 90) { const s0 = starsOf(S.fame), gain = offlineGain(S, gap); if (gain.coins >= 1) away = Object.assign({ gap, stars: starsOf(S.fame) - s0 }, gain); } }
   g = new Game(S, { events: true });
+  r4Attach(ctx, view, () => (g ? g.S : S), () => g);
   if (S.menu.length === 0) S.menu = ['bro'];
   audio.set(S.set.snd, S.set.mus);
 
@@ -2039,4 +2068,27 @@ export async function foodtruckView(ctx) {
   if (!Array.isArray(S.set.seen)) S.set.seen = [];
   if (first) { S.set.seen.push('intro'); playScene('intro-stad', 'Foodtruck Imperium', 'Van één truck naar een wereldketen', null); } else if (!S.set.seen.includes('intro')) S.set.seen.push('intro');
   later(() => { showAway(); showDaily(); }, 600);
+}
+
+/* =====================================================================
+   RONDE 4: tellers voor de extra laag (seizoenen, opdrachten, prestaties; zie big-r4-foodtruck.js)
+   ===================================================================== */
+const R4_DISHES = ['pep', 'pof', 'oli', 'erw', 'nas', 'sat', 'pie', 'rav', 'chu', 'pek', 'fou', 'bbq', 'gsu', 'kst'];
+const R4_DECOR = ['pmp', 'xmt', 'snp', 'ora', 'vrw', 'hgm', 'pzo', 'fth'];
+export function r4Metrics(S) {
+  return {
+    served: S.life.served, earned: S.life.earned, perfect: S.life.perfect, combo: S.life.combo, bought: S.life.bought, events: S.life.events, cooked: S.life.cooked || 0, days: S.life.days || 0,
+    recipes: Object.keys(S.rec).length, menu: S.menu.length, stars: starsOf(S.fame), cities: Object.keys(S.cities).length, decor: S.decor.length, staff: Object.values(S.staff).reduce((a, b) => a + b, 0),
+    upgrades: Object.values(S.up).reduce((a, b) => a + b, 0), franchises: S.life.franch, badges: S.badges, dishmax: Object.values(S.rec).filter((l) => l >= MAX_DISH_LV).length,
+    missions: Object.keys(S.mdone).length, achs: Object.keys(S.ach).length, streak: (S.daily && S.daily.streak) || 0,
+    r4Dishes: R4_DISHES.filter((id) => S.rec[id]).length, r4Decor: R4_DECOR.filter((id) => S.decor.includes(id)).length, r4Cities: ['lon', 'cpt'].filter((id) => S.cities[id]).length,
+  };
+}
+function r4Attach(ctx, host, getS, getG) {
+  import('./big-r4-foodtruck.js?v=1').then((m) => m.attach(ctx, {
+    host, metrics: () => r4Metrics(getS()),
+    rate: () => { const G = getG(), S = getS(); if (!G || !S) return 0; try { return Math.max(0, rates(S, 'idle', G.D).coins); } catch { return 0; } },
+    add: (v) => { const G = getG(); if (G && v > 0) G.addCoins(v); },
+    ng: { label: 'Nieuwe franchise', desc: 'Begin je foodtruck-imperium opnieuw en verdien Gouden Lepels.', count: () => getS().life.franch, can: () => canPrestige(getS()), need: 'Haal 10 sterren en verdien genoeg om een franchise te kunnen openen.' },
+  })).catch(() => { /* extra laag is optioneel */ });
 }

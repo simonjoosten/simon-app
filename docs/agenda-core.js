@@ -1,3 +1,4 @@
+// Let op: occursOn kent ook 'biweekly' en 'monthly', maar REPEAT (de keuzelijst) biedt ze pas aan als firestore.rules die waarden toestaat.
 // Agenda: zuivere logica (datums, herhalingen, feestdagen, categorieën, rooster, herinneringen). Geen DOM/Firebase.
 export const pad = (n) => String(n).padStart(2, '0');
 export const ymd = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
@@ -34,6 +35,11 @@ export const catOf = (c) => CATS.find((x) => x.c.toLowerCase() === String(c || '
 export function occursOn(ev, key) {
   if (!ev || !ev.date || !key) return false;
   if (ev.repeat === 'weekly') return key >= ev.date && (utcDays(key) - utcDays(ev.date)) % 7 === 0;
+  if (ev.repeat === 'biweekly') return key >= ev.date && (utcDays(key) - utcDays(ev.date)) % 14 === 0;
+  if (ev.repeat === 'monthly') { // zelfde dag van de maand; 29/30/31 valt in kortere maanden op de laatste dag
+    if (key < ev.date) return false; const a = parseKey(ev.date), b = parseKey(key), last = new Date(b.y, b.m, 0).getDate();
+    return b.d === Math.min(a.d, last);
+  }
   if (ev.repeat === 'yearly') {
     if (key < ev.date) return false;
     const a = parseKey(ev.date), b = parseKey(key);

@@ -3,6 +3,7 @@
 // ImageData-niveau ({width,height,data:Uint8ClampedArray}) zodat het ook in node testbaar is.
 
 import { makeExtraFilters } from './foto-filters-extra.js?v=1';
+import { makeR4Filters } from './tools-r4-foto.js?v=1';
 
 const clamp = (v, a, b) => (v < a ? a : v > b ? b : v);
 const smooth = (t) => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * (3 - 2 * t));
@@ -420,6 +421,7 @@ const TABLE = [
 ];
 
 TABLE.push(...makeExtraFilters({ G, M, grade, gradientMap, boxBlur, lumArray, quantize, clamp, rng, blockMean, fillBlock }));
+TABLE.push(...makeR4Filters({ G, M, clamp })); // ronde 4: 12 extra filters
 
 export const FILTERS = TABLE.map(([id, name, group]) => ({ id, name, group }));
 const IMPL = {};

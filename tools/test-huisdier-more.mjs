@@ -106,7 +106,7 @@ for (const g of G.GAMES2) {
 { const host = new El('div'); const inst = G.GAMES2[0].create(host, { w: 300, h: 400, score() {}, end() {} }); step(10); inst.destroy(); }
 
 // ---- koppeling in huisdier.js
-for (const needle of ["from './huisdier-more.js?v=1'", "import('./huisdier-gfx.js?v=1')", "import('./huisdier-minigames.js?v=1')", 'data-do="gear"', 'evclaim(el)', "playScene('levelup'", "playScene('daily-bonus'", "playScene('new-record'", "playScene('chest-open'", 'extendRooms(m', 'evclaim(el)', 'hworld(el)', 'worldFrameHTML'])
+for (const needle of ["from './huisdier-more.js?v=1'", "import('./huisdier-gfx.js?v=1')", "import('./huisdier-minigames.js?v=2')", 'data-do="gear"', 'evclaim(el)', "playScene('levelup'", "playScene('daily-bonus'", "playScene('new-record'", "playScene('chest-open'", 'extendRooms(m', 'evclaim(el)', 'hworld(el)', 'worldFrameHTML'])
   assert.ok(src.includes(needle), 'huisdier.js bevat ' + needle);
 console.log('huisdier-more OK');
 // ---- huisdier-gfx.js (brug naar gfx): thema-rand, seizoenslaag, iconen

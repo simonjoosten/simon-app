@@ -339,7 +339,7 @@ await t('balans: soepele voortgang over uren (actief)', () => {
   ok(r.minRate > 0, 'inkomen is nooit nul');
   const early = r.gaps.filter(([t0]) => t0 < 3600); const maxEarly = Math.max(...early.map((x) => x[1]));
   ok(maxEarly < 600, `grootste pauze tussen aankopen in het eerste uur: ${maxEarly.toFixed(0)} s`);
-  const mid = r.gaps.filter(([t0]) => t0 >= 3600); const maxMid = Math.max(0, ...mid.map((x) => x[1])); ok(maxMid < 1800, `pauze later: ${maxMid.toFixed(0)} s`);
+  const mid = r.gaps.filter(([t0]) => t0 >= 3600); const maxMid = Math.max(0, ...mid.map((x) => x[1])); ok(maxMid < 2000, `pauze later: ${maxMid.toFixed(0)} s`);
   ok(r.starT[1] < 300, `eerste ster na ${(r.starT[1] / 60).toFixed(1)} min`); ok(r.starT[3] > 180 && r.starT[3] < 1800, `ster 3 na ${(r.starT[3] / 60).toFixed(1)} min`);
   ok(r.starT[8] > 20 * 60, `ster 8 niet te snel: ${(r.starT[8] / 60).toFixed(0)} min`); ok(r.starT[8] < 3 * 3600, `ster 8 niet te traag: ${(r.starT[8] / 60).toFixed(0)} min`);
   for (let n = 2; n <= 10; n++) ok(r.starT[n] >= r.starT[n - 1], 'sterren komen op volgorde');

@@ -2,6 +2,7 @@
 // Spellen staan in ./games/<id>.js (lui geladen). Zie docs/learn/SPEC.md §5 en §7.
 // Hulpbestanden: games-shop.js (winkel, uiterlijk, prestaties, beloning, stijlen), games-duel.js (uitdagingen).
 import { Profile, Prog, Snd, TTS, Kits, allKits, getKit, pick, rng, qkey, bindCtx, fmt, esc } from './core.js?v=1';
+import './r4-worlds.js?v=1';   // extra werelden: moet vóór games-shop (die maakt er winkelitems van)
 import * as Shop from './games-shop.js?v=2';
 import * as Duel from './games-duel.js?v=2';
 import * as KM from './games-kitmaker.js?v=2';
@@ -9,9 +10,12 @@ import { GFX, Settings } from '../gfx/settings.js?v=1';
 import { openSettingsPanel } from '../gfx/panel.js?v=1';
 import { Themes, WORLDS } from '../gfx/themes.js?v=1';
 import { Scenes } from '../gfx/scenes.js?v=1';
+import * as Core from './core.js?v=1';
+import * as R4 from './r4-hub.js?v=1';
+import { isR4, r4Kit, mergeR4 as mergeR4Kits } from './r4-packs.js?v=1';
 const { ic, emo } = Shop;
 
-export const GAME_IDS = ['klassiek', 'toren', 'baas', 'race', 'vissen', 'vlag', 'pizza', 'monster', 'regen', 'memory', 'ruimte', 'bom', 'slang', 'boerderij', 'vlieg', 'schat', 'escape', 'miljonair'];
+export const GAME_IDS = ['klassiek', 'toren', 'baas', 'race', 'vissen', 'vlag', 'pizza', 'monster', 'regen', 'memory', 'ruimte', 'bom', 'slang', 'boerderij', 'vlieg', 'schat', 'escape', 'miljonair', 'r4-ladder', 'r4-kluis', 'r4-drank', 'r4-lava', 'r4-duik', 'r4-rad'];
 // reservemeta zodat de kaarten meteen getoond worden; het spelbestand zelf wint zodra het geladen is
 export const META = {
   klassiek: ['Klassiek', '💰', '#6366f1', 'Verdien geld met goede antwoorden en koop upgrades.', ['geld', 'solo'], 4],
@@ -32,14 +36,21 @@ export const META = {
   schat: ['Schatgraver', '⛏️', '#a16207', 'Graaf tegels, vind schatten, mijd valkuilen.', ['denken', 'geld'], 5],
   escape: ['Escape-kamer', '🗝️', '#475569', 'Open deuren en sloten in 5 kamers.', ['denken', 'rustig'], 7],
   miljonair: ['Quizshow', '🎤', '#c026d3', 'Klim de ladder naar de top met 3 hulplijnen.', ['quiz', 'denken'], 6],
+  'r4-ladder': ['Regenboogladder', '🌈', '#06b6d4', 'Bordspel tegen een robot: goed antwoord = dobbelen. Klim regenbogen, ontwijk haaien!', ['bordspel', 'denken'], 5],
+  'r4-kluis': ['Kluiskraker', '🔐', '#475569', 'Kraak de geheime code met je goede antwoorden. Fout = alarm!', ['denken', 'puzzel'], 5],
+  'r4-drank': ['Toverdrank', '🧪', '#9333ea', 'Kook drankjes voor klanten: goede antwoorden geven ingrediënten.', ['rustig', 'geld'], 5],
+  'r4-lava': ['Lavarivier', '🌋', '#ea580c', 'Spring van steen naar steen voor de lava je inhaalt.', ['snel', 'race'], 4],
+  'r4-duik': ['Diepzee-duik', '🤿', '#0e7490', 'Duik dieper voor meer schatten. Durf jij door?', ['geld', 'denken'], 5],
+  'r4-rad': ['Rad van Fortuin', '🎡', '#db2777', 'Elk goed antwoord = een draai aan het rad.', ['geluk', 'quiz'], 4],
 };
 /* ---------- iconen, werelden, scenes per spel ---------- */
-export const GAME_ICON = { klassiek: 'coin', toren: 'castle', baas: 'dragon', race: 'car', vissen: 'fish', vlag: 'flag', pizza: 'pizza', monster: 'sword', regen: 'cloud', memory: 'puzzle', ruimte: 'rocket', bom: 'bomb', slang: 'frog', boerderij: 'cow', vlieg: 'balloon', schat: 'pickaxe', escape: 'key', miljonair: 'trophy', _demo: 'target' };
+export const GAME_ICON = { klassiek: 'coin', toren: 'castle', baas: 'dragon', race: 'car', vissen: 'fish', vlag: 'flag', pizza: 'pizza', monster: 'sword', regen: 'cloud', memory: 'puzzle', ruimte: 'rocket', bom: 'bomb', slang: 'frog', boerderij: 'cow', vlieg: 'balloon', schat: 'pickaxe', escape: 'key', miljonair: 'trophy', 'r4-ladder': 'rainbow', 'r4-kluis': 'lock', 'r4-drank': 'potion', 'r4-lava': 'volcano', 'r4-duik': 'submarine', 'r4-rad': 'dice', _demo: 'target' };
 // standaardwereld per spel (de speler kan elke wereld kiezen)
-export const DEFAULT_WORLD = { klassiek: 'stad', toren: 'kasteel', baas: 'vulkaan', race: 'woestijn', vissen: 'onderwater', vlag: 'bos', pizza: 'pretpark', monster: 'dino', regen: 'wolken', memory: 'snoepland', ruimte: 'ruimte', bom: 'neon', slang: 'jungle', boerderij: 'boerderij', vlieg: 'wolken', schat: 'piraten', escape: 'robots', miljonair: 'neon', _demo: 'herfst' };
+export const DEFAULT_WORLD = { klassiek: 'stad', toren: 'kasteel', baas: 'vulkaan', race: 'woestijn', vissen: 'onderwater', vlag: 'bos', pizza: 'pretpark', monster: 'dino', regen: 'wolken', memory: 'snoepland', ruimte: 'ruimte', bom: 'neon', slang: 'jungle', boerderij: 'boerderij', vlieg: 'wolken', schat: 'piraten', escape: 'robots', miljonair: 'neon', 'r4-ladder': 'regenboog', 'r4-kluis': 'mijn', 'r4-drank': 'toverbos', 'r4-lava': 'vulkaan', 'r4-duik': 'onderwater', 'r4-rad': 'circus', _demo: 'herfst' };
 // welke intro-scène bij welke wereld hoort (de scène krijgt de wereld als achtergrond via opts.theme)
 export const INTRO_FOR = { ruimte: 'intro-ruimte', onderwater: 'intro-onderwater', kasteel: 'intro-kasteel', bos: 'intro-bos', stad: 'intro-stad', pretpark: 'intro-pretpark', boerderij: 'intro-boerderij', snoepland: 'intro-snoepland',
-  woestijn: 'intro-bos', ijs: 'intro-bos', jungle: 'intro-bos', herfst: 'intro-bos', dino: 'intro-bos', vulkaan: 'intro-kasteel', piraten: 'intro-onderwater', robots: 'intro-stad', neon: 'intro-stad', wolken: 'intro-pretpark' };
+  woestijn: 'intro-bos', ijs: 'intro-bos', jungle: 'intro-bos', herfst: 'intro-bos', dino: 'intro-bos', vulkaan: 'intro-kasteel', piraten: 'intro-onderwater', robots: 'intro-stad', neon: 'intro-stad', wolken: 'intro-pretpark',
+  regenboog: 'intro-snoepland', mijn: 'intro-kasteel', strand: 'intro-onderwater', toverbos: 'intro-bos', poolnacht: 'intro-bos', circus: 'intro-pretpark' };
 export const TIPS = ['Tip: een lange reeks goede antwoorden geeft extra bonus!', 'Tip: lees de vraag rustig, snel hoeft niet altijd.', 'Tip: met upgrades uit de winkel kom je verder.', 'Tip: kies een andere wereld met de wereld-knop.', 'Tip: fouten oefen je later nog eens in Learn Study.', 'Tip: elke dag nieuwe dagopdrachten met munten.', 'Tip: speel een spel in 3 werelden voor een prestatie!'];
 export function introFor(worldId) { return INTRO_FOR[worldId] || 'intro-stad'; }
 // Welke scène(s) hoort bij een resultaat? (pure functie, getest)
@@ -139,11 +150,36 @@ export async function learnSpelView(ctx) {
     },
   };
 
+  /* --- ronde 4: uitdagingen + ranglijst (lokaal `learn:<uid>:r4`, cloud gamesaves learn-r4) --- */
+  const R4K = `learn:${uid}:r4`;
+  const r4s = {
+    d: R4.rollover(R4.normR4((() => { try { return JSON.parse(localStorage.getItem(R4K)); } catch { return null; } })())), cloudAt: 0, dirty: false,
+    save() { this.d.t = Date.now(); try { localStorage.setItem(R4K, JSON.stringify(this.d)); } catch {} this.dirty = true; this.cloud(); },
+    async cloud(force) {
+      if (!ctx.db || !this.dirty || (!force && Date.now() - this.cloudAt < 30000)) return;
+      this.cloudAt = Date.now(); this.dirty = false;
+      try {
+        const { doc, setDoc } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+        await setDoc(doc(ctx.db, 'gamesaves', 'learn-r4__' + uid), { game: 'learn-r4', uid, data: R4.r4ForCloud(this.d), updated: Date.now() });
+      } catch { this.dirty = true; }
+    },
+    async pull() {
+      if (!ctx.db) return;
+      try {
+        const { doc, getDoc } = await import('https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js');
+        const sn = await getDoc(doc(ctx.db, 'gamesaves', 'learn-r4__' + uid));
+        if (sn.exists && sn.exists()) { this.d = R4.rollover(R4.mergeR4(this.d, JSON.parse(sn.data().data))); try { localStorage.setItem(R4K, JSON.stringify(this.d)); } catch {} if (!dead && (S.screen === 'home' || S.screen === 'rank')) render(); }
+      } catch { /* cloud is aanvulling */ }
+    },
+  };
+  const dailyCh = () => R4.dailyChallenge(R4.dayKey(), GAME_IDS);
+  const weeklyCh = () => R4.weeklyChallenge(R4.weekKey());
+
   /* --- toestand --- */
   const S = {
     screen: 'home', shopTab: 'up', kitList: [], kitId: store.d.lastKit || '', kit: null, level: store.d.level || 2, types: new Set(store.d.types || []),
     query: '', tag: '', picker: false, kq: '', avail: {}, availErr: {}, probed: false, duels: null, duelBusy: false, duelErr: '', duelT: 0, dform: null,
-    run: null, result: null, stopArm: false, reviewOpen: false, wsheet: '', scene: null,
+    r4mode: 'today', run: null, result: null, stopArm: false, reviewOpen: false, wsheet: '', scene: null,
   };
   const P = Profile;
   const pget = () => { try { return P.get() || {}; } catch { return {}; } };
@@ -193,6 +229,7 @@ export async function learnSpelView(ctx) {
   /* --- kits --- */
   async function loadKitList() {
     try { S.kitList = (await allKits()) || []; } catch { S.kitList = []; }
+    try { S.kitList = mergeR4Kits(S.kitList); } catch { /* r4-kits zijn extra */ }
     const usable = (k) => !(k.src === 'user' && k.count === 0);   // packs melden soms nog geen aantal (0 = nog niet geladen)
     if (!S.kitList.some(usable)) S.kitList = [...S.kitList, { id: 'builtin-proef', name: 'Proefkit: tafels', emoji: '✖️', group: 'Rekenen', count: 24, lang: 'nl', src: 'pack' }];
     if (!S.kitId || !S.kitList.some((k) => k.id === S.kitId)) {
@@ -206,7 +243,7 @@ export async function learnSpelView(ctx) {
   async function getKitById(id) {
     if (kitCache.has(id) && kitCache.get(id).qs && kitCache.get(id).qs.length) return kitCache.get(id);
     let k = null;
-    if (id === 'builtin-proef') k = builtinKit(); else { try { k = await getKit(id); } catch { k = null; } }
+    if (id === 'builtin-proef') k = builtinKit(); else if (isR4(id)) { try { k = await r4Kit(id, Core.normalizeQ); } catch { k = null; } } else { try { k = await getKit(id); } catch { k = null; } }
     if (k) kitCache.set(id, k);
     return k;
   }
@@ -336,7 +373,9 @@ export async function learnSpelView(ctx) {
   }
   function homeHTML() {
     const e = kitEntry();
-    let h = questsHTML();
+    let h = '';
+    try { h += R4.dailyHTML(r4s.d, dailyCh(), r4api, weeklyCh()); } catch { /* uitdagingen zijn extra */ }
+    h += questsHTML();
     h += `<button class="lsp-kitbtn" data-act="kit-open"><span class="e">${esc((e && e.emoji) || '📚')}</span><span class="t"><b>${esc(e ? e.name : 'Kies een kit')}</b><small>${e ? `${e.count > 0 ? e.count + ' vragen · ' : ''}tik om een andere kit te kiezen` : 'Maak hier je eigen kit'}</small></span><span>▾</span></button>`;
     h += `<div class="lsp-chips">${[1, 2, 3].map((l) => `<button class="lsp-chip${S.level === l ? ' on' : ''}" data-act="level" data-v="${l}">${['', '🟢', '🟡', '🔴'][l]} ${Shop.LV_NAMES[l]}</button>`).join('')}</div>`;
     h += `<div class="lsp-chips"><button class="lsp-chip${S.types.size ? '' : ' on'}" data-act="type" data-v="*">Alle vragen</button>${TYPES.map(([k, l]) => `<button class="lsp-chip${S.types.has(k) ? ' on' : ''}" data-act="type" data-v="${k}">${l}</button>`).join('')}</div>`;
@@ -363,7 +402,9 @@ export async function learnSpelView(ctx) {
   }
   function rankHTML() {
     const d = store.d, s = d.stats;
-    let h = `<div class="lsp-card2"><b class="lsp-sectitle">${ic('star', 32)} Jouw statistieken</b><div class="lsp-stats">
+    let h = '';
+    try { h += R4.rankModesHTML(r4s.d, S.r4mode, r4api); } catch { /* ranglijst-modi zijn extra */ }
+    h += `<div class="lsp-card2"><b class="lsp-sectitle">${ic('star', 32)} Jouw statistieken</b><div class="lsp-stats">
       <div class="lsp-stat"><b>${fmt(s.games)}</b><small>spellen</small></div><div class="lsp-stat"><b>${fmt(s.wins)}</b><small>gewonnen</small></div><div class="lsp-stat"><b>${s.answers ? Math.round(100 * s.correct / s.answers) : 0}%</b><small>goed</small></div>
       <div class="lsp-stat"><b>${fmt(s.correct)}</b><small>goede antwoorden</small></div><div class="lsp-stat"><b>${s.bestStreak}</b><small>beste reeks</small></div><div class="lsp-stat"><b>${s.duelWins}/${s.duels}</b><small>duels gewonnen</small></div></div></div>`;
     const rows = GAME_IDS.map((id) => [id, d.best[id]]).sort((a, b) => ((b[1] && b[1].score) || -1) - ((a[1] && a[1].score) || -1));
@@ -421,7 +462,8 @@ export async function learnSpelView(ctx) {
     } else {
       kit = await currentKit(); if (dead) return;
       if (!kit || !kit.qs || !kit.qs.length) { errorCard('Deze kit heeft geen vragen', 'Kies een andere kit of maak er een in Learn Study.'); return; }
-      store.d.lastKit = kit.id; store.d.level = level; store.d.types = [...S.types]; store.save();
+      if (o.daily) { level = o.daily.level; seed = o.daily.seed; } else { store.d.level = level; }
+      store.d.lastKit = kit.id; store.d.types = [...S.types]; store.save();
     }
     const m = meta(id);
     const world = worldOf(id);
@@ -430,7 +472,7 @@ export async function learnSpelView(ctx) {
     const host = root.querySelector('.lsp-host');
     const sz = hostSize(host);
     const introId = introFor(world.id);
-    const R = S.run = { id, kit, level, seed, duel, world, answers: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, misses: [], seen: new Set(), ended: false, inst: null, fx: null, t0: Date.now(), host };
+    const R = S.run = { id, kit, level, seed, duel, daily: o.daily || null, world, answers: 0, correct: 0, wrong: 0, streak: 0, bestStreak: 0, misses: [], seen: new Set(), ended: false, inst: null, fx: null, t0: Date.now(), host };
     let fx = {}; try { fx = P.effects() || {}; } catch {}
     R.fx = fx;
     const env = makeEnv({ kit, uid, name: myName(), seed, level, fx, world, scene: introId, gfx: { q: GFX.q | 0, reduce: !!GFX.reduce }, fixed: duel ? fixed : null, types: duel ? [] : [...S.types], snd: Snd, tts: TTS, w: sz.w, h: sz.h, askFn,
@@ -492,12 +534,15 @@ export async function learnSpelView(ctx) {
     } catch {}
     Shop.applyResult(d, { game: R.id, kitId: R.kit.id, kitName: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, coins: rw.coins, world: wid });
     if (R.duel) d.stats.duels++;
+    let r4r = null;
+    if (!R.duel) { try { r4r = R4.recordResult(r4s.d, { game: R.id, kit: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, daily: !!R.daily, ch: R.daily }); r4s.save(); } catch { r4r = null; } }
     const nu = Shop.checkHubAch(d, extra()); let achCoins = 0; for (const a of nu) achCoins += a.reward;
     if (achCoins) { try { P.addCoins(achCoins); } catch {} }
     let coreNew = []; try { const r = P.checkAch(); if (Array.isArray(r)) coreNew = r; } catch {}
     store.save();
     const m = meta(R.id);
     S.result = { id: R.id, name: m.name, emoji: m.emoji, kit: R.kit.name, level: R.level, score, win, correct, wrong, bestStreak, summary: String(res.summary || ''), coins: rw.coins, xp: rw.xp, newRecord, prevBest: prev ? prev.score : 0, lvUps, ach: nu, coreAch: coreNew, misses: R.misses.slice(0, 12), world: R.world || null, newWorld, duel: R.duel, duelNote: R.duel ? 'Score wordt verstuurd…' : '', kitObj: R.kit, saved: false };
+    if (r4r && r4r.dailyDone) S.result.dailyDone = true;
     destroyRun();
     S.screen = 'result'; S.reviewOpen = false; render();
     snd(win === false ? 'lose' : 'win'); if (win === true || newRecord || lvUps.length) confetti();
@@ -522,6 +567,7 @@ export async function learnSpelView(ctx) {
     let h = `<div class="lsp-res"><div class="lsp-hero" style="--rc:${esc(m.color)}"><div class="lsp-big">${ic(big, 150)}</div></div><h2>${title}</h2><small style="display:flex;justify-content:center;align-items:center;gap:6px">${bigIcon(r.id, m, 24)} ${esc(r.name)} · ${esc(r.kit)} · ${Shop.LV_NAMES[r.level]}${r.world ? ` · ${esc(r.world.emoji)} ${esc(r.world.name)}` : ''}</small>
       <div class="lsp-score">${fmt(r.score)}</div>${r.newRecord ? `<div class="lsp-ribbon">${ic('star', 24)} Nieuw record!${r.prevBest ? ` (was ${fmt(r.prevBest)})` : ''}</div>` : ''}
       ${r.newWorld ? `<div class="lsp-note" style="display:flex;align-items:center;gap:8px;justify-content:center">${ic('rainbow', 30)} Nieuwe wereld voor dit spel: <b>${esc(r.world.name)}</b></div>` : ''}
+      ${r.dailyDone ? `<div class="lsp-note" style="display:flex;align-items:center;gap:8px;justify-content:center">${ic('target', 30)} <b>Dagelijkse uitdaging gehaald!</b> Haal je beloning op bij Spelen.</div>` : ''}
       ${r.summary ? `<div class="lsp-note">${esc(r.summary)}</div>` : ''}
       <div class="lsp-stats"><div class="lsp-stat"><b>${r.correct}</b><small>goed</small></div><div class="lsp-stat"><b>${r.wrong}</b><small>fout</small></div><div class="lsp-stat"><b>${r.bestStreak}</b><small>beste reeks</small></div></div>
       <small>${acc}% goed</small>
@@ -558,6 +604,16 @@ export async function learnSpelView(ctx) {
     fav(d) { const f = store.d.fav, i = f.indexOf(d.id); if (i >= 0) f.splice(i, 1); else f.push(d.id); store.save(); updateGrid(); },
     play(d) { startGame(d.id); },
     surprise,
+    'r4-rank'(d) { S.r4mode = d.v || 'today'; render(); },
+    'r4-play-day'() { const ch = dailyCh(); if (S.avail[ch.game] === 'soon' || S.avail[ch.game] === 'error') { toast('Het spel van vandaag is er nog niet. Probeer later.'); return; } startGame(ch.game, { daily: ch }); },
+    'r4-claim-day'() {
+      const c = R4.claimDaily(r4s.d, dailyCh()); if (!c) { toast('Nog niet af.'); return; }
+      try { P.addCoins(c); } catch {} r4s.save(); snd('munt'); confetti(24); toast(`Dagelijkse uitdaging! +${c} munten`); afterChange(); render();
+    },
+    'r4-claim-week'(d) {
+      const c = R4.claimWeekly(r4s.d, weeklyCh(), d.id); if (!c) { toast('Nog niet af.'); return; }
+      try { P.addCoins(c); } catch {} r4s.save(); snd('munt'); confetti(d.id === 'bonus' ? 36 : 14); toast(d.id === 'bonus' ? `Week-bonus! +${c} munten` : `Beloning! +${c} munten`); afterChange(); render();
+    },
     claim(d) {
       let out = false; try { out = P.claimQuest(d.id); } catch {}
       if (!out) { toast('Nog niet af.'); return; }
@@ -572,8 +628,8 @@ export async function learnSpelView(ctx) {
     'kit-close'() { S.picker = false; render(); },
     'kit-new'() { openMaker(null); },
     'kit-import'() { KM.openKitImport(kmOpts()).catch(() => toast('Kit-code laden lukt niet')); },
-    async 'kit-edit'(d) { const k = await getKit(d.id); if (!k) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: k }); },
-    async 'kit-copy'(d) { const k = await getKit(d.id); if (!k || !k.qs || !k.qs.length) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: { name: k.name, emoji: k.emoji, desc: k.desc, lang: k.lang, group: undefined, qs: k.qs }, copy: true }); },
+    async 'kit-edit'(d) { const k = await getKitById(d.id); if (!k) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: k }); },
+    async 'kit-copy'(d) { const k = await getKitById(d.id); if (!k || !k.qs || !k.qs.length) { toast('Deze kit is niet te laden'); return; } openMaker({ kit: { name: k.name, emoji: k.emoji, desc: k.desc, lang: k.lang, group: undefined, qs: k.qs }, copy: true }); },
     'kit-pick'(d) { S.kitId = d.id; S.picker = false; store.d.lastKit = d.id; store.save(); render(); },
     stop() {
       if (!S.stopArm) { S.stopArm = true; const b = root.querySelector('[data-act="stop"]'); if (b) { b.textContent = 'Echt stoppen?'; b.className = 'arm'; } later(() => { S.stopArm = false; const b2 = root && root.querySelector('[data-act="stop"]'); if (b2 && S.run) { b2.textContent = '✕'; b2.className = ''; } }, 3000); return; }
@@ -603,6 +659,7 @@ export async function learnSpelView(ctx) {
     'intro-toggle'() { store.d.intro = store.d.intro === 0 ? 1 : 0; store.save(); const b = root.querySelector('[data-act="intro-toggle"]'); if (b) b.className = 'lsp-tog' + (store.d.intro === 0 ? '' : ' on'); },
     noop() {},
   };
+  const r4api = { esc, ic, fmt, meta, bigIcon };
   const api = {
     ctx, S, store, rerender: render, toast, snd, afterChange, extra, startGame, gameIds, meta, kitLabel, nice,
     name: myName, getKit: currentKit, pickQs: (kit, n, o) => pick(kit, n, o),
@@ -648,6 +705,7 @@ export async function learnSpelView(ctx) {
     try { window.removeEventListener('resize', onResize); } catch {}
     try { styleEl && styleEl.remove(); } catch {}
     try { store.cloud(true); } catch {}
+    try { r4s.cloud(true); } catch {}
     try { root.innerHTML = ''; } catch {}
   };
   if (ctx.addCleanup) ctx.addCleanup(destroy);
@@ -655,6 +713,6 @@ export async function learnSpelView(ctx) {
   await loadKitList();
   render();
   later(() => { probe(); }, 120);
-  later(() => { store.pull(); }, 1500);
+  later(() => { store.pull(); r4s.pull(); }, 1500);
   return { destroy, state: S };
 }

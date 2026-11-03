@@ -17,7 +17,7 @@ const tab = async (k) => { click(q(`[data-tab="${k}"]`)); await wait(); T.advanc
 const pos = (lat, lon, acc = 8) => watchCb({ coords: { latitude: lat, longitude: lon, accuracy: acc, altitude: 12, altitudeAccuracy: 5, speed: 1.2, heading: 45 }, timestamp: Date.now() });
 
 M.kompasView({ view, esc, addCleanup: (f) => cleanups.push(f) });
-ok(text().includes('Kompas') && qa('.tu-tab').length === 7 && q('[data-gear]'), 'shell');
+ok(text().includes('Kompas') && qa('.tu-tab').length === 8 && q('[data-gear]'), 'shell');
 ok(q('[data-sensor]'), 'sensor-kaart'); click(q('[data-sensor]')); await wait();
 orient({ webkitCompassHeading: 90, beta: 5, gamma: 3 }); T.advance(500); T.frames(2);
 ok(q('[data-num]').textContent.includes('90°') && q('[data-name]').textContent === 'Oost', 'koers: ' + q('[data-num]').textContent);

@@ -59,7 +59,15 @@ export function playApp(ctx) {
   /* ---------- navigatie ---------- */
   function go(to, arg) {
     clean(); screen = to; window.scrollTo && window.scrollTo(0, 0);
-    ({ hub: hubScreen, topic: topicScreen, tafels: tafelsScreen, progress: progressScreen, puzzles: puzzlesScreen, race: raceSetup, boss: bossSetup, daily: dailyScreen, tools: toolsScreen })[to](arg);
+    ({ hub: hubScreen, topic: topicScreen, tafels: tafelsScreen, progress: progressScreen, puzzles: puzzlesScreen, race: raceSetup, boss: bossSetup, daily: dailyScreen, tools: toolsScreen, extra: extraScreen })[to](arg);
+  }
+
+  /* ---------- Extra spellen (ronde 4) ---------- */
+  let extraFn = null;
+  function extraScreen(arg) {
+    root.innerHTML = '<div class="tu-card center"><small>Laden…</small></div>';
+    import('./tools-r4-rekenen.js?v=1').then((m) => { if (!alive || screen !== 'extra') return; extraFn = m.extraScreen(root, { S, save, go, icon, C, celebrate, track }); extraFn(arg); })
+      .catch((e) => { root.innerHTML = `<div class="tu-card"><span class="tu-bad">Kon dit niet laden: ${esc(e.message)}</span></div>${back()}`; bindNav(); });
   }
 
   /* ---------- HUB ---------- */
@@ -80,6 +88,7 @@ export function playApp(ctx) {
         <button class="tu-tile" data-go="race">${icon('car', { size: 56 })}<span>Rekenrace</span><small>Win van de bots</small></button>
         <button class="tu-tile" data-go="boss">${icon('dragon', { size: 56 })}<span>Monsterjacht</span><small>${(s.records.boss && s.records.boss.wins) || 0} verslagen</small></button>
         <button class="tu-tile" data-go="tafels">${icon('tent', { size: 56 })}<span>Tafelkamp</span><small>Kleur je tafels groen</small></button>
+        <button class="tu-tile" data-go="extra">${icon('bolt', { size: 56 })}<span>Extra spellen</span><small>6 nieuwe: Romeins, binair…</small></button>
         <button class="tu-tile" data-go="puzzles">${icon('puzzle', { size: 56 })}<span>Puzzels</span><small>6 soorten</small></button>
       </div>
       <h3 style="margin:1rem 0 .3rem">Meer</h3>

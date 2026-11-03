@@ -54,7 +54,7 @@ ok(Shop.normHub({ wp: { a: 'rommel', b: ['x', 5, 'y'] }, wl: 7, eq: { fx: 123 } 
   for (const g of Hub.GAME_IDS) { big.best[g] = { score: 99999, kit: 'Een heel lange kitnaam '.repeat(8), level: 2, t: 1e12 }; big.wp[g] = ['onderwater', 'woestijn', 'snoepland', 'pretpark', 'boerderij', 'robots']; big.played[g] = 999; }
   big.wl = WORLDS.map((w) => w.id); big.own.av = Shop.catalog('av').map((x) => x[0]); big.own.hat = Shop.catalog('hat').map((x) => x[0]); big.own.bg = Shop.catalog('bg').map((x) => x[0]);
   const s = Shop.hubForCloud(big); ok(s.length <= 20000, `hub-cloud ${s.length} <= 20000`);
-  const back = Shop.normHub(JSON.parse(s)); ok(back.wl.length === 18 && back.own.av.length === big.own.av.length, 'ingekorte cloud-hub blijft leesbaar en houdt bezit');
+  const back = Shop.normHub(JSON.parse(s)); ok(back.wl.length === WORLDS.length && back.own.av.length === big.own.av.length, 'ingekorte cloud-hub blijft leesbaar en houdt bezit');
   ok(Shop.hubForCloud(Shop.defaultHub()).length < 1500, 'kleine hub blijft klein');
 }
 

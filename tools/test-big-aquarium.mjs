@@ -82,7 +82,7 @@ t('tekenen zonder fouten', true);
 // fase 2: nieuwe inhoud en uiterlijken
 {
   const G2 = await import(pathToFileURL(path.join(here, '..', 'docs', 'big-gfx.js')).href);
-  const newSp = M.SP.slice(42), newDeco = ['schelp', 'palm', 'fontein', 'vuurtoren'], newUp = ['ijs', 'foto', 'resto', 'vip', 'uv'];
+  const newSp = M.SP.slice(42, 59), newDeco = ['schelp', 'palm', 'fontein', 'vuurtoren'], newUp = ['ijs', 'foto', 'resto', 'vip', 'uv'];
   t('minstens 25 nieuwe dingen (soorten+decor+upgrades+doelen+prestaties+gebieden)', newSp.length + newDeco.length + newUp.length + 10 + 7 + 2 >= 25, newSp.length);
   t('17 nieuwe soorten', newSp.length === 17, newSp.length);
   for (const s of newSp) t('nieuw dier heeft 3D-icoon ' + s.id, !!G2.iconName(s.e) && G2.has(G2.iconName(s.e)), s.e);
